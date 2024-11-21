@@ -6,6 +6,8 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.enableCors();
+
   const config = new DocumentBuilder()
     .setTitle('Base backend')
     .setDescription('The base API description')
@@ -21,6 +23,6 @@ async function bootstrap() {
     transform: true
   }))
   
-  await app.listen(3000);
+  await app.listen(3002);
 }
 bootstrap();
