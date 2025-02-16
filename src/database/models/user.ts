@@ -11,6 +11,12 @@ export class User extends Model {
     @Exclude()
     password: string
 
+    @Column({ allowNull: true })
+    email: string
+
+    @Column({ allowNull: true })
+    phone: string
+
     @Column({
         type: DataType.ENUM(...Object.values(UserRole)),
         defaultValue: UserRole.NORMAL_USER,

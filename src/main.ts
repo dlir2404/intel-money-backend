@@ -2,6 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { Sequelize } from 'sequelize-typescript';  // Thay đổi import
+import { getConnectionToken } from '@nestjs/sequelize';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -22,6 +24,9 @@ async function bootstrap() {
     forbidNonWhitelisted: true,
     transform: true
   }))
+
+  const sequelize = app.get<Sequelize>(getConnectionToken());
+  await sequelize.sync();
   
   await app.listen(3002);
 }
