@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Exclude, Expose, Type } from "class-transformer";
-import { IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsEmail, IsNotEmpty, IsOptional, IsString } from "class-validator";
 import { UserRole } from "src/shared/enums/user";
 import { DateAndPaginationType } from "src/shared/types/base";
 
@@ -10,7 +10,14 @@ export class CreateUserRequest {
     })
     @IsString()
     @IsNotEmpty()
-    username: string;
+    name: string;
+
+    @ApiProperty({
+        type: String
+    })
+    @IsNotEmpty()
+    @IsEmail()
+    email: string;
 
     @ApiProperty({
         type: String
@@ -18,6 +25,12 @@ export class CreateUserRequest {
     @IsString()
     @IsNotEmpty()
     password: string;
+
+    @ApiProperty({
+        type: String
+    })
+    @IsString()
+    phone?: string;
 
     @ApiProperty({
         enum: UserRole

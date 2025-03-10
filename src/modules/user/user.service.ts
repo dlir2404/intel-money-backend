@@ -7,7 +7,7 @@ import { SALT_OR_ROUNDS } from 'src/shared/constants';
 @Injectable()
 export class UserService {
     async createUser(body : CreateUserRequest) {
-        const existUser = await User.findOne({ where: { username: body.username}});
+        const existUser = await User.findOne({ where: { email: body.email}});
 
         if (existUser) {
             //potential bug cuz confict between user role

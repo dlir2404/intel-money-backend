@@ -4,8 +4,8 @@ import { Category } from "./category";
 import { TransactionType } from "src/shared/enums/transaction";
 import { RelatedUser } from "./related.user";
 
-@Table
-export class Transaction extends Model{
+@Table({ timestamps: false })
+export class GeneralTransaction extends Model{
     @Column({
         type: DataType.ENUM(...Object.values(TransactionType)),
         allowNull: false
@@ -18,16 +18,6 @@ export class Transaction extends Model{
     })
     amount: number;
 
-    @Column
-    description: string;
-
-    @ForeignKey(() => Wallet)
-    @Column
-    walletId: number;
-
-    @BelongsTo(() => Wallet)
-    wallet: Wallet;
-
     @ForeignKey(() => Category)
     @Column
     categoryId: number;
@@ -35,22 +25,8 @@ export class Transaction extends Model{
     @BelongsTo(() => Category)
     category: Category;
 
-    @ForeignKey(() => Wallet)
-    @Column({ allowNull: true })
-    recipientWalletId: number;
-
-    @BelongsTo(() => Wallet, 'recipientWalletId')
-    recipientWallet: Wallet;
-
-    @Column({ defaultValue: false })
-    excludeFromReport: boolean;
-
-    @ForeignKey(() => RelatedUser)
-    @Column({ allowNull: true })
-    relatedUserId: number;
-
-    @BelongsTo(() => RelatedUser)
-    relatedUser: RelatedUser;
+    @Column
+    description: string;
 
     @Column({
         type: DataType.DATE,
@@ -58,4 +34,26 @@ export class Transaction extends Model{
         defaultValue: DataType.NOW
     })
     transactionDate: Date;
+
+    @ForeignKey(() => Wallet)
+    @Column
+    sourceWalletId: number;
+
+    @BelongsTo(() => Wallet)
+    sourceWallet: Wallet;
+
+    @Column({ defaultValue: false })
+    notAddToReport: boolean;
+
+    @Column({
+        type: DataType.TEXT,
+        get() {
+            const rawValue = this.getDataValue('images');
+            return rawValue ? JSON.parse(rawValue) : [];
+        },
+        set(value: string[]) {
+            this.setDataValue('images', JSON.stringify(value || []));
+        }
+    })
+    images: string[];
 }

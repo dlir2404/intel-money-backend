@@ -17,8 +17,8 @@ export class AdminAuthService {
         return this.userService.createUser({...body, role: UserRole.ADMIN});
     }
 
-    async login({username, password}: LoginRequest) {
-        const user = await User.findOne({ where: { username: username, role: UserRole.ADMIN }});
+    async login({email, password}: LoginRequest) {
+        const user = await User.findOne({ where: { email: email, role: UserRole.ADMIN }});
 
         if (!user){
             throw new NotFoundException('Admin not found')
@@ -27,7 +27,7 @@ export class AdminAuthService {
         const isMatch = await bcrypt.compare(password, user.password)
 
         if (!isMatch){
-            throw new ForbiddenException('Username or password not match')
+            throw new ForbiddenException('Email or password not match')
         }
 
         const payload = { sub: user.id, role: user.role };

@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
-import { LoginRequest, LoginResponse, RegisterRequest } from './auth.dto';
+import { LoginRequest, LoginResponse, RefreshTokenRequest, RegisterRequest } from './auth.dto';
 import { AuthService } from './auth.service';
 import { CurrentUserId, UserAuth } from 'src/shared/decorators/auth';
 import { plainToInstance } from 'class-transformer';
@@ -26,8 +26,16 @@ export class AuthController {
     async login(@Body() body: LoginRequest) {
         return this.authService.login(body);
     }
+
+    @Post('refresh-token')
+    @ApiResponse({
+        type: LoginResponse
+    })
+    async refreshToken(@Body() body: RefreshTokenRequest) {
+        return this.authService.refreshToken(body.refreshToken);
+    }
     
-    @Get('/me')
+    @Get('me')
     @UserAuth()
     @ApiResponse({
         type: UserResponse

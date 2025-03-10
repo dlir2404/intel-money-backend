@@ -19,6 +19,9 @@ export class Category extends Model {
     })
     type: CategoryType;
 
+    @Column
+    editable: boolean;
+
     @ForeignKey(() => Category)
     @Column({ allowNull: true })
     parentId: number;

@@ -5,17 +5,33 @@ import { UserRole } from "src/shared/enums/user";
 @Table
 export class User extends Model {
     @Column
-    username: string
+    name: string
+    
+    @Column
+    email: string
 
     @Column
     @Exclude()
     password: string
 
-    @Column({ allowNull: true })
-    email: string
 
     @Column({ allowNull: true })
     phone: string
+
+    @Column({
+        defaultValue: 0
+    })
+    totalBalance: number
+
+    @Column({
+        defaultValue: 0
+    })
+    totalLoan: number
+
+    @Column({
+        defaultValue: 0
+    })
+    totalBorrowed: number
 
     @Column({
         type: DataType.ENUM(...Object.values(UserRole)),

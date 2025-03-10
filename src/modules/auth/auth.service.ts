@@ -14,11 +14,14 @@ export class AuthService {
     ) {};
 
     async register(body: RegisterRequest) {
-        return this.userService.createUser({...body, role: UserRole.NORMAL_USER});
+        return this.userService.createUser({
+            ...body, 
+            role: UserRole.NORMAL_USER
+        });
     }
 
-    async login({username, password}: LoginRequest) {
-        const user = await User.findOne({ where: { username: username, role: UserRole.NORMAL_USER }});
+    async login({email, password}: LoginRequest) {
+        const user = await User.findOne({ where: { email: email, role: UserRole.NORMAL_USER }});
 
         if (!user){
             throw new NotFoundException('User not found')
@@ -27,12 +30,36 @@ export class AuthService {
         const isMatch = await bcrypt.compare(password, user.password)
 
         if (!isMatch){
-            throw new ForbiddenException('Username or password not match')
+            throw new ForbiddenException('Email or password not match')
         }
 
-        const payload = { sub: user.id, role: user.role };
+        const payload = { 
+            sub: user.id, 
+            role: user.role,
+            iat: Date.now(),
+            iss: 'Intel Money'
+        };
 
-        return { token: await this.jwtService.signAsync(payload) }
+        return { 
+            accessToken: await this.jwtService.signAsync(payload, { expiresIn: '1d' }),
+            refreshToken: await this.jwtService.signAsync(payload, { expiresIn: '60d' })
+        }
+    }
+
+    async refreshToken(refreshToken: string) {
+        const decoded = this.jwtService.verify(refreshToken);
+
+        const payload = {
+            sub: decoded.sub,
+            role: decoded.role,
+            iat: Date.now(),
+            iss: 'Intel Money'
+        };
+
+        return { 
+            accessToken: await this.jwtService.signAsync(payload, { expiresIn: '1d' }),
+            refreshToken: await this.jwtService.signAsync(payload, { expiresIn: '60d' })
+        }
     }
 
     async getMe(userId: number) {

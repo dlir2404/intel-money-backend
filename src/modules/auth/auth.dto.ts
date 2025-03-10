@@ -1,16 +1,19 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsString } from "class-validator";
+import { IsEmail, IsNotEmpty, IsString } from "class-validator";
 
 export class LoginRequest {
     @ApiProperty({
-        type: String
+        type: String,
+        example: 'example@gmail.com'
     })
     @IsString()
     @IsNotEmpty()
-    username: string;
+    @IsEmail()
+    email: string;
 
     @ApiProperty({
-        type: String
+        type: String,
+        example: '123456'
     })
     @IsString()
     @IsNotEmpty()
@@ -19,21 +22,45 @@ export class LoginRequest {
 
 export class LoginResponse {
     @ApiProperty()
-    token: string;
+    accessToken: string;
+
+    @ApiProperty()
+    refreshToken: string;
 }
 
 export class RegisterRequest {
     @ApiProperty({
-        type: String
+        type: String,
+        example: 'Dinh Linh',
+    })
+    @IsString()
+    name: string;
+    
+    @ApiProperty({
+        type: String,
+        required: true,
+        example: 'example@gmail.com'
     })
     @IsString()
     @IsNotEmpty()
-    username: string;
+    @IsEmail()
+    email: string;
 
     @ApiProperty({
-        type: String
+        type: String,
+        required: true,
+        example: '123456'
     })
     @IsString()
     @IsNotEmpty()
     password: string;
+}
+
+export class RefreshTokenRequest {
+    @ApiProperty({
+        type: String,
+    })
+    @IsString()
+    @IsNotEmpty()
+    refreshToken: string;
 }
