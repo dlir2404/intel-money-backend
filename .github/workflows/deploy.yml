@@ -8,7 +8,7 @@ on:
 jobs:
   build-and-push:
     name: Build & Push Docker image
-    runs_on: ubuntu-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Code
@@ -30,7 +30,7 @@ jobs:
 
   deploy:
     name: Deploy to server
-    runs_on: ubuntu-latest
+    runs-on: ubuntu-latest
     needs: build-and-push
 
     steps:
