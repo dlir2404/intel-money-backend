@@ -22,11 +22,11 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t dlir2404/intel-money-be:latest .
+          docker build -t dlir2404/intel-money-backend:latest .
 
       - name: Push Docker Image
         run: |
-          docker push dlir2404/intel-money-be:latest
+          docker push dlir2404/intel-money-backend:latest
 
   deploy:
     name: Deploy to server
