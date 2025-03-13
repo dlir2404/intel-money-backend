@@ -41,7 +41,11 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            echo Start pull new docker image
             docker pull dlir2404/intel-money-backend:latest
+            echo End pull, start compose down
             docker compose down
+            echo End compose down, start compose up
             docker compose up -d
+            echo End compose up, start prunning
             docker system prune -af
