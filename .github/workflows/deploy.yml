@@ -41,6 +41,8 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            cd /home/github/data/intel-money/intel-money-backend
+            git pull
             echo Start pull new docker image
             docker pull dlir2404/intel-money-backend:latest
             echo End pull, start compose down
