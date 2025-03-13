@@ -43,19 +43,41 @@ export class CreateUserRequest {
 @Expose()
 export class UserResponse {
     @ApiProperty()
-    username: string;
+    id: number;
 
     @ApiProperty()
-    role: UserRole;
+    name: string;
 
     @ApiProperty()
-    createdAt: string;
+    email: string;
+    
+    @Exclude()
+    password: string;
 
     @ApiProperty()
-    updatedAt: UserRole;
+    phone: string;
+
+    @ApiProperty()
+    totalBalance: number;
+
+    @ApiProperty()
+    totalLoan: number;
+
+    @ApiProperty()
+    totalBorrowed: number; 
 
     @Exclude()
-    password: string
+    role: UserRole;
+
+    @Exclude()
+    createdAt: string;
+
+    @Exclude()
+    updatedAt: string;
+
+    constructor(partial: Partial<UserResponse>) {
+        Object.assign(this, partial);
+    }
 }
 
 export class GetListUsersRequest extends DateAndPaginationType {

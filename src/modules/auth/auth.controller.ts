@@ -1,9 +1,8 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseInterceptors } from '@nestjs/common';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { LoginRequest, LoginResponse, RefreshTokenRequest, RegisterRequest } from './auth.dto';
 import { AuthService } from './auth.service';
 import { CurrentUserId, UserAuth } from 'src/shared/decorators/auth';
-import { plainToInstance } from 'class-transformer';
 import { UserResponse } from '../user/user.dto';
 import { BaseResponse } from 'src/shared/types/base';
 
@@ -42,6 +41,6 @@ export class AuthController {
     })
     async getMe(@CurrentUserId() userId: number): Promise<UserResponse>{
         const user = await this.authService.getMe(userId);
-        return plainToInstance(UserResponse, user);
+        return new UserResponse(user);
     }
 }
