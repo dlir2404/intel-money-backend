@@ -19,13 +19,13 @@ services:
     environment:
       PORT: 3001
       JWT_SECRET: intel-money-dlir
-      DATABASE_HOST: db
-      DATABASE_PORT: 3306
-      DATABASE_USER: root
-      DATABASE_PASS: 12345678
-      DATABASE_NAME: intel-money
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USERNAME: root
+      DB_PASSWORD: 12345678
+      DB_NAME: intel-money
     ports:
-      - "3001:3001"
+      - "3002:3002"
     depends_on:
       - db
 
