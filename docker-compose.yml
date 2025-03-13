@@ -1,4 +1,4 @@
-version: '3.1'
+version: '3.8'
 
 services:
   db:
@@ -6,46 +6,28 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: 12345678
-      MYSQL_DATABASE: base-db
+      MYSQL_DATABASE: intel-money
     volumes:
       - db_data:/var/lib/mysql
     ports:
       - "3306:3306"
+    container_name: mysql-db
 
-  # be:
-  #   image: base-be(docker-image)
-  #   #or build: .
-  #   environment:
-  #     PORT: 3001
-  #     JWT_SECRET: thaihoangtest
-  #     DATABASE_HOST: db
-  #     DATABASE_PORT: 3306
-  #     DATABASE_USER: root
-  #     DATABASE_PASS: 12345678
-  #     DATABASE_NAME: document-management
-  #   ports:
-  #     - "3001:3001"
-  #   depends_on:
-  #     - db
-  
-  # fe:
-  #   image: base-fe(docker image)
-  #   environment:
-  #     NEXT_PUBLIC_API: http://localhost:3002/api
-  #   ports:
-  #     - "3000:3000"
-  #   depends_on:
-  #     - db
-  
-  # admin:
-  #   image: base-admin(docker-image)
-  #   environment:
-  #     NEXT_PUBLIC_API: http://localhost:3002/api
-  #     KEY: VALUE
-  #   ports:
-  #     - "3001:3000"
-  #   depends_on:
-  #     - db
+  be:
+    image: dlir2404/intel-money-backend:latest
+    restart: always
+    environment:
+      PORT: 3001
+      JWT_SECRET: intel-money-dlir
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USERNAME: root
+      DB_PASSWORD: 12345678
+      DB_NAME: intel-money
+    ports:
+      - "3002:3002"
+    depends_on:
+      - db
 
 volumes:
   db_data:
