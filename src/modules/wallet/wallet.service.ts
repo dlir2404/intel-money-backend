@@ -7,7 +7,8 @@ import { Wallet } from "src/database/models";
 export class WalletService {
     
     async create(body: CreateRequest, userId: number) {
-        return await Wallet.create({ ...body, userId });
+        const res =  await Wallet.create({ ...body, userId });
+        return res.dataValues;
     }
 
     async update(id: number, userId: number, body: CreateRequest) {
@@ -19,7 +20,8 @@ export class WalletService {
             throw new NotFoundException("Wallet not found");
         }
 
-        return await wallet.update(body);
+        const res = await wallet.update(body);
+        return res.dataValues;
     }
     
     async delete(id: number, userId: number) {
@@ -31,12 +33,15 @@ export class WalletService {
             throw new NotFoundException("Wallet not found");
         }
 
-        return await wallet.destroy();
+        await wallet.destroy();
+
+        return { result: true};
     }
 
     async findAll(userId: number) {
         return await Wallet.findAll({
-            where: { userId }
-        });
+            where: { userId },
+            raw: true
+        },);
     }
 }

@@ -1,8 +1,9 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { Exclude, Expose, Type } from "class-transformer";
 import { IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
 import { CategoryType } from "src/shared/enums/category";
 
-export class CreateRequest {
+export class CreateCategoryRequest {
     @ApiProperty()
     @IsString()
     name: string;
@@ -23,4 +24,69 @@ export class CreateRequest {
     @IsNumber()
     @IsOptional()
     parentId?: number;
+}
+
+
+@Expose()
+export class CompactCategoryResponse {
+    @ApiProperty()
+    id: number;
+
+    @ApiProperty()
+    name: string;
+
+    @ApiProperty()
+    icon: string;
+
+    @ApiProperty()
+    type: CategoryType;
+
+    @Exclude()
+    parentId: number;
+
+    @Exclude()
+    editable: boolean;
+
+    constructor(partial: Partial<CompactCategoryResponse>) {
+        Object.assign(this, partial);
+    }
+}
+
+@Expose()
+export class CategoryResponse {
+    @ApiProperty()
+    id: number;
+
+    @ApiProperty()
+    name: string;
+
+    @ApiProperty()
+    icon: string;
+
+    @ApiProperty()
+    type: CategoryType;
+
+    @ApiProperty()
+    parentId: number;
+
+    @ApiProperty({
+        type: CompactCategoryResponse,
+        required: false
+    })
+    @Type(() => CompactCategoryResponse)
+    parent?: CompactCategoryResponse;
+
+    @ApiProperty({
+        type: [CompactCategoryResponse],
+        required: false
+    })
+    @Type(() => CompactCategoryResponse)
+    children?: CompactCategoryResponse[];
+
+    @ApiProperty()
+    editable: boolean;
+
+    constructor(partial: Partial<CategoryResponse>) {
+        Object.assign(this, partial);
+    }
 }

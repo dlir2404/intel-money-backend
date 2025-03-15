@@ -19,7 +19,10 @@ export class Category extends Model {
     })
     type: CategoryType;
 
-    @Column
+    @Column({
+        type: DataType.BOOLEAN,
+        defaultValue: true
+    })
     editable: boolean;
 
     @ForeignKey(() => Category)

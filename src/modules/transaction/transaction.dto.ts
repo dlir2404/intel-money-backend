@@ -1,22 +1,17 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import { Transaction } from "sequelize";
+import { TransactionType } from "src/shared/enums/transaction";
+import { CompactCategoryResponse } from "../category/category.dto";
+import { CompactWalletResponse } from "../wallet/wallet.dto";
+import { Expose, Type } from "class-transformer";
 
-export class CreateRequest {
-  @ApiProperty()
-  @IsNotEmpty()
-  @IsString()
-  type: string;
-
+export class CreateIncomeRequest {
   @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
   amount: number;
-
-  @ApiProperty()
-  @IsNotEmpty()
-  @IsString()
-  description: string;
-
+  
   @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
@@ -24,6 +19,78 @@ export class CreateRequest {
 
   @ApiProperty()
   @IsNotEmpty()
+  @IsString()
+  description: string;
+
+  @ApiProperty({
+    required: false
+  })
+  @IsString()
+  @IsOptional()
+  transactionDate?: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
   @IsNumber()
-  walletId: number;
+  sourceWalletId: number;
+
+  @ApiProperty({
+    required: false
+  })
+  @IsBoolean()
+  @IsOptional()
+  notAddToReport?: boolean;
+
+  @ApiProperty({
+    required: false
+  })
+  @IsString({ each: true })
+  @IsOptional()
+  images?: string[];
+}
+
+@Expose()
+export class GeneralTransactionResponse {
+  @ApiProperty()
+  id: number;
+
+  @ApiProperty()
+  type: TransactionType;
+
+  @ApiProperty()
+  amount: number;
+
+  @ApiProperty()
+  categoryId: number;
+
+  @ApiProperty({
+    type: () => CompactCategoryResponse
+  })
+  @Type(() => CompactCategoryResponse)
+  category: any;
+
+  @ApiProperty()
+  description: string;
+
+  @ApiProperty()
+  transactionDate: string;
+
+  @ApiProperty()
+  sourceWalletId: number;
+
+  @ApiProperty({
+    type: CompactWalletResponse
+  })
+  @Type(() => CompactWalletResponse)
+  sourceWallet: any;
+
+  @ApiProperty()
+  notAddToReport: boolean;
+
+  @ApiProperty()
+  images: string[];
+
+  constructor(partial: Partial<GeneralTransactionResponse>) {
+    Object.assign(this, partial);
+  }
 }

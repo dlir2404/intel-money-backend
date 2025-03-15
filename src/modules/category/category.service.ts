@@ -1,10 +1,10 @@
-import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
-import { CreateRequest } from "./category.dto";
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { CreateCategoryRequest } from "./category.dto";
 import { Category } from "src/database/models";
 
 @Injectable()
 export class CategoryService {
-    async create(userId: number, body: CreateRequest) {
+    async create(userId: number, body: CreateCategoryRequest) {
         if (body.parentId) {
             const parentCategory = await Category.findOne({
                 where: { id: body.parentId, userId }
@@ -15,13 +15,15 @@ export class CategoryService {
             }
         }
 
-        return await Category.create({
+        const res = await Category.create({
             ...body,
             userId: userId,
         });
+
+        return res.dataValues;
     }
 
-    async update(id: number, userId: number, body: CreateRequest) {
+    async update(id: number, userId: number, body: CreateCategoryRequest) {
         const category = await Category.findOne({
             where: { id, userId }
         })
@@ -60,12 +62,15 @@ export class CategoryService {
                 userId,
                 parentId: null
             },
-            include: [
-                {
-                    model: Category,
-                    as: 'children',
-                }
-            ]
+            // include: [
+            //     {
+            //         model: Category,
+            //         as: 'children',
+            //         required: false,
+            //     }
+            // ],
+            raw: true,
+            nest: true
         });
     }
 }

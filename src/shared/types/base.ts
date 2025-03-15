@@ -79,4 +79,8 @@ export class DateAndPaginationType {
 export class BaseResponse {
     @ApiProperty()
     result: boolean
+
+    constructor(partial: Partial<BaseResponse>) {
+        Object.assign(this, partial);
+    }
 }

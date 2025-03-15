@@ -2,7 +2,6 @@ import { BelongsTo, Column, DataType, ForeignKey, Model, Table } from "sequelize
 import { Wallet } from "./wallet";
 import { Category } from "./category";
 import { TransactionType } from "src/shared/enums/transaction";
-import { RelatedUser } from "./related.user";
 
 @Table({ timestamps: false })
 export class GeneralTransaction extends Model{
@@ -10,7 +9,7 @@ export class GeneralTransaction extends Model{
         type: DataType.ENUM(...Object.values(TransactionType)),
         allowNull: false
     })
-    type: string;
+    type: TransactionType;
 
     @Column({
         type: DataType.DECIMAL(19, 4),
@@ -33,7 +32,7 @@ export class GeneralTransaction extends Model{
         allowNull: false,
         defaultValue: DataType.NOW
     })
-    transactionDate: Date;
+    transactionDate: string;
 
     @ForeignKey(() => Wallet)
     @Column
