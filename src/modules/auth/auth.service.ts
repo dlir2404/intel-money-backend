@@ -14,10 +14,22 @@ export class AuthService {
     ) {};
 
     async register(body: RegisterRequest) {
-        return this.userService.createUser({
+        const user = await this.userService.createUser({
             ...body, 
             role: UserRole.NORMAL_USER
         });
+
+        const payload = { 
+            sub: user.id, 
+            role: user.role,
+            iat: Date.now(),
+            iss: 'Intel Money'
+        };
+
+        return { 
+            accessToken: await this.jwtService.signAsync(payload, { expiresIn: '1d' }),
+            refreshToken: await this.jwtService.signAsync(payload, { expiresIn: '60d' })
+        }
     }
 
     async login({email, password}: LoginRequest) {

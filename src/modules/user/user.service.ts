@@ -17,11 +17,11 @@ export class UserService {
         const {password, ...rest} = body
         const hashPassword = await bcrypt.hash(password, SALT_OR_ROUNDS)
 
-        await User.create({
+        const user = await User.create({
             ...rest,
             password: hashPassword,
         })
 
-        return { result: true }
+        return user;
     }
 }

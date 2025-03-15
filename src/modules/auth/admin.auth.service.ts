@@ -14,7 +14,8 @@ export class AdminAuthService {
     ) {};
 
     async register(body: RegisterRequest) {
-        return this.userService.createUser({...body, role: UserRole.ADMIN});
+        await this.userService.createUser({...body, role: UserRole.ADMIN});
+        return { result: true }
     }
 
     async login({email, password}: LoginRequest) {

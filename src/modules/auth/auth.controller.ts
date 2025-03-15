@@ -12,7 +12,7 @@ export class AuthController {
     constructor(private readonly authService: AuthService) {};
     @Post('register')
     @ApiResponse({
-        type: BaseResponse
+        type: LoginResponse
     })
     async register(@Body() body: RegisterRequest) {
         return this.authService.register(body);
