@@ -56,21 +56,10 @@ export class CategoryService {
         return await category.destroy();
     }
 
-    async getRecursively(userId: number) {
+    async getAll(userId: number) {
         return await Category.findAll({
-            where: { 
-                userId,
-                parentId: null
-            },
-            // include: [
-            //     {
-            //         model: Category,
-            //         as: 'children',
-            //         required: false,
-            //     }
-            // ],
+            where: { userId },
             raw: true,
-            nest: true
         });
     }
 }

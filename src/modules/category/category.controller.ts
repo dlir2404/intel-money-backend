@@ -49,8 +49,7 @@ export class CategoryController {
     })
     @UserAuth()
     async getRecursively(@CurrentUserId() userId: number) {
-        const response = await this.categoryService.getRecursively(userId);
-        console.log(response);
+        const response = await this.categoryService.getAll(userId);
         return response;
     }
 }

@@ -26,32 +26,6 @@ export class CreateCategoryRequest {
     parentId?: number;
 }
 
-
-@Expose()
-export class CompactCategoryResponse {
-    @ApiProperty()
-    id: number;
-
-    @ApiProperty()
-    name: string;
-
-    @ApiProperty()
-    icon: string;
-
-    @ApiProperty()
-    type: CategoryType;
-
-    @Exclude()
-    parentId: number;
-
-    @Exclude()
-    editable: boolean;
-
-    constructor(partial: Partial<CompactCategoryResponse>) {
-        Object.assign(this, partial);
-    }
-}
-
 @Expose()
 export class CategoryResponse {
     @ApiProperty()
@@ -68,20 +42,6 @@ export class CategoryResponse {
 
     @ApiProperty()
     parentId: number;
-
-    @ApiProperty({
-        type: CompactCategoryResponse,
-        required: false
-    })
-    @Type(() => CompactCategoryResponse)
-    parent?: CompactCategoryResponse;
-
-    @ApiProperty({
-        type: [CompactCategoryResponse],
-        required: false
-    })
-    @Type(() => CompactCategoryResponse)
-    children?: CompactCategoryResponse[];
 
     @ApiProperty()
     editable: boolean;

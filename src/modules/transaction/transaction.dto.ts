@@ -1,8 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
-import { Transaction } from "sequelize";
 import { TransactionType } from "src/shared/enums/transaction";
-import { CompactCategoryResponse } from "../category/category.dto";
+import { CategoryResponse } from "../category/category.dto";
 import { CompactWalletResponse } from "../wallet/wallet.dto";
 import { Expose, Type } from "class-transformer";
 
@@ -64,9 +63,9 @@ export class GeneralTransactionResponse {
   categoryId: number;
 
   @ApiProperty({
-    type: () => CompactCategoryResponse
+    type: () => CategoryResponse
   })
-  @Type(() => CompactCategoryResponse)
+  @Type(() => CategoryResponse)
   category: any;
 
   @ApiProperty()
