@@ -1,5 +1,6 @@
 import { Column, Model, Table, ForeignKey, BelongsTo } from "sequelize-typescript";
 import { User } from "./user";
+import { Col } from "sequelize/types/utils";
 
 @Table({
     timestamps: false
@@ -18,6 +19,9 @@ export class RelatedUser extends Model {
     @Column
     userId: number;
 
-    @BelongsTo(() => User)
-    user: User;
+    @Column
+    totalLoan: number;
+
+    @Column
+    totalBorrow: number;
 }
