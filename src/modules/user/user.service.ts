@@ -3,6 +3,7 @@ import { User } from 'src/database/models';
 import { CreateUserRequest } from './user.dto';
 import * as bcrypt from 'bcrypt';
 import { SALT_OR_ROUNDS } from 'src/shared/constants';
+import { Transaction } from 'sequelize';
 
 @Injectable()
 export class UserService {
@@ -23,5 +24,13 @@ export class UserService {
         })
 
         return user;
+    }
+
+    async increaseTotalBalance(userId: number, amount: number, t: Transaction) {
+        await User.increment({ totalBalance: amount }, { where: { id: userId }, transaction: t });
+    }
+
+    async decreaseTotalBalance(userId: number, amount: number, t: Transaction) {
+        await User.decrement({ totalBalance: amount }, { where: { id: userId }, transaction: t });
     }
 }

@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 import { TransactionType } from "src/shared/enums/transaction";
-import { CategoryResponse } from "../category/category.dto";
+import { CategoryResponse, CompactCategoryResponse } from "../category/category.dto";
 import { CompactWalletResponse } from "../wallet/wallet.dto";
 import { Expose, Type } from "class-transformer";
 
@@ -63,9 +63,9 @@ export class GeneralTransactionResponse {
   categoryId: number;
 
   @ApiProperty({
-    type: () => CategoryResponse
+    type: CompactCategoryResponse
   })
-  @Type(() => CategoryResponse)
+  @Type(() => CompactCategoryResponse)
   category: any;
 
   @ApiProperty()

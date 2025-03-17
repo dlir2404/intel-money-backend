@@ -17,6 +17,6 @@ export class TransactionController {
     @UserAuth()
     async createIncome(@Body() body: CreateIncomeRequest, @CurrentUserId() userId: number) {
         const transaction = await this.transactionService.createIncome(body, userId);
-        return new GeneralTransactionResponse(transaction.dataValues);
+        return new GeneralTransactionResponse(transaction);
     }
 }

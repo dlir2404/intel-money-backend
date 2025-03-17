@@ -50,3 +50,31 @@ export class CategoryResponse {
         Object.assign(this, partial);
     }
 }
+
+@Expose()
+export class CompactCategoryResponse {
+    @ApiProperty()
+    id: number;
+
+    @ApiProperty()
+    name: string;
+
+    @ApiProperty()
+    icon: string;
+
+    @Exclude()
+    type: CategoryType;
+
+    @Exclude()
+    parentId: number;
+
+    @Exclude()
+    editable: boolean;
+
+    @Exclude()
+    userId: number;
+
+    constructor(partial: Partial<CompactCategoryResponse>) {
+        Object.assign(this, partial);
+    }
+}

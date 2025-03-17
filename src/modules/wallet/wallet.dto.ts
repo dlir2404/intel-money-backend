@@ -67,6 +67,9 @@ export class CompactWalletResponse {
     @Exclude()
     balance: number;
 
+    @Exclude()
+    userId: number;
+
     constructor(partial: Partial<CompactWalletResponse>) {
         Object.assign(this, partial);
     }

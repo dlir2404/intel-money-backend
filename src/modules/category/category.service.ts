@@ -4,6 +4,19 @@ import { Category } from "src/database/models";
 
 @Injectable()
 export class CategoryService {
+    async findById(id: number, userId: number) {
+        const category = await Category.findOne({
+            where: { id, userId },
+            raw: true
+        });
+
+        if (!category) {
+            throw new NotFoundException("Category not found");
+        }
+
+        return category;
+    }
+
     async create(userId: number, body: CreateCategoryRequest) {
         if (body.parentId) {
             const parentCategory = await Category.findOne({
