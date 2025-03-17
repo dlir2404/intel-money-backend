@@ -1,7 +1,7 @@
 import { Body, Controller, Post } from "@nestjs/common";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
 import { TransactionService } from "./transaction.service";
-import { CreateIncomeRequest, GeneralTransactionResponse } from "./transaction.dto";
+import { CreateGeneralTransactionRequest, GeneralTransactionResponse } from "./transaction.dto";
 import { CurrentUserId, UserAuth } from "src/shared/decorators/auth";
 
 @Controller("transaction")
@@ -15,8 +15,19 @@ export class TransactionController {
         type: GeneralTransactionResponse
     })
     @UserAuth()
-    async createIncome(@Body() body: CreateIncomeRequest, @CurrentUserId() userId: number) {
+    async createIncome(@Body() body: CreateGeneralTransactionRequest, @CurrentUserId() userId: number) {
         const transaction = await this.transactionService.createIncome(body, userId);
+        return new GeneralTransactionResponse(transaction);
+    }
+
+    @Post("expense/create")
+    @ApiResponse({
+        status: 201,
+        type: GeneralTransactionResponse
+    })
+    @UserAuth()
+    async createExpense(@Body() body: CreateGeneralTransactionRequest, @CurrentUserId() userId: number) {
+        const transaction = await this.transactionService.createExpense(body, userId);
         return new GeneralTransactionResponse(transaction);
     }
 }

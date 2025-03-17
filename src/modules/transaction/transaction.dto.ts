@@ -1,11 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 import { TransactionType } from "src/shared/enums/transaction";
-import { CategoryResponse, CompactCategoryResponse } from "../category/category.dto";
+import { CompactCategoryResponse } from "../category/category.dto";
 import { CompactWalletResponse } from "../wallet/wallet.dto";
 import { Expose, Type } from "class-transformer";
 
-export class CreateIncomeRequest {
+export class CreateGeneralTransactionRequest {
   @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
