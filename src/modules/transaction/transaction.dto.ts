@@ -93,3 +93,62 @@ export class GeneralTransactionResponse {
     Object.assign(this, partial);
   }
 }
+
+export class CreateTransferTransactionRequest {
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  amount: number;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  description: string;
+
+  @ApiProperty({
+    required: false
+  })
+  @IsString()
+  @IsOptional()
+  transactionDate?: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  sourceWalletId: number;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  destinationWalletId: number;
+
+  @ApiProperty({
+    required: false
+  })
+  @IsBoolean()
+  @IsOptional()
+  notAddToReport?: boolean;
+
+  @ApiProperty({
+    required: false
+  })
+  @IsString({ each: true })
+  @IsOptional()
+  images?: string[];
+}
+
+@Expose()
+export class TransferTransactionResponse extends GeneralTransactionResponse {
+  @ApiProperty()
+  destinationWalletId: number;
+
+  @ApiProperty({
+    type: CompactWalletResponse
+  })
+  @Type(() => CompactWalletResponse)
+  destinationWallet: any;
+
+  constructor(partial: Partial<TransferTransactionResponse>) {
+    super(partial);
+  }
+}
