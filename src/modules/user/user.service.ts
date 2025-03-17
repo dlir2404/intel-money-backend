@@ -33,4 +33,20 @@ export class UserService {
     async decreaseTotalBalance(userId: number, amount: number, t: Transaction) {
         await User.decrement({ totalBalance: amount }, { where: { id: userId }, transaction: t });
     }
+
+    async increaseTotalLoan(userId: number, amount: number, t: Transaction) {
+        await User.increment({ totalLoan: amount }, { where: { id: userId }, transaction: t });
+    }
+
+    async decreaseTotalLoan(userId: number, amount: number, t: Transaction) {
+        await User.decrement({ totalLoan: amount }, { where: { id: userId }, transaction: t });
+    }
+
+    async increaseTotalDebt(userId: number, amount: number, t: Transaction) {
+        await User.increment({ totalDebt: amount }, { where: { id: userId }, transaction: t });
+    }
+
+    async decreaseTotalDebt(userId: number, amount: number, t: Transaction) {
+        await User.decrement({ totalDebt: amount }, { where: { id: userId }, transaction: t });
+    }
 }

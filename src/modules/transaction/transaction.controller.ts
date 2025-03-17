@@ -1,7 +1,7 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, InternalServerErrorException, Post } from "@nestjs/common";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
 import { TransactionService } from "./transaction.service";
-import { CreateGeneralTransactionRequest, CreateTransferTransactionRequest, GeneralTransactionResponse, TransferTransactionResponse } from "./transaction.dto";
+import { BorrowTransactionResponse, CreateBorrowTransactionRequest, CreateGeneralTransactionRequest, CreateLendTransactionRequest, CreateTransferTransactionRequest, GeneralTransactionResponse, LendTransactionResponse, TransferTransactionResponse } from "./transaction.dto";
 import { CurrentUserId, UserAuth } from "src/shared/decorators/auth";
 
 @Controller("transaction")
@@ -18,6 +18,18 @@ export class TransactionController {
     async createIncome(@Body() body: CreateGeneralTransactionRequest, @CurrentUserId() userId: number) {
         const transaction = await this.transactionService.createIncome(body, userId);
         return new GeneralTransactionResponse(transaction);
+    }
+
+    @Post("income/bulk/create")
+    @ApiResponse({
+        status: 201,
+        type: GeneralTransactionResponse
+    })
+    @UserAuth()
+    async createBulkIncome(@Body() body: CreateGeneralTransactionRequest[], @CurrentUserId() userId: number) {
+        // const transactions = await this.transactionService.createBulkIncome(body, userId);
+        // return transactions.map(transaction => new GeneralTransactionResponse(transaction));
+        throw new InternalServerErrorException("Not implemented yet");
     }
 
     @Post("expense/create")
@@ -40,5 +52,27 @@ export class TransactionController {
     async createTransfer(@Body() body: CreateTransferTransactionRequest, @CurrentUserId() userId: number) {
         const transaction = await this.transactionService.createTransfer(body, userId);
         return new TransferTransactionResponse(transaction);
+    }
+
+    @Post("lend/create")
+    @ApiResponse({
+        status: 201,
+        type: LendTransactionResponse
+    })
+    @UserAuth()
+    async createLend(@Body() body: CreateLendTransactionRequest, @CurrentUserId() userId: number) {
+        const transaction = await this.transactionService.createLend(body, userId);
+        return new LendTransactionResponse(transaction);
+    }
+
+    @Post("borrow/create")
+    @ApiResponse({
+        status: 201,
+        type: BorrowTransactionResponse
+    })
+    @UserAuth()
+    async createBorrow(@Body() body: CreateBorrowTransactionRequest, @CurrentUserId() userId: number) {
+        const transaction = await this.transactionService.createBorrow(body, userId);
+        return new BorrowTransactionResponse(transaction);
     }
 }

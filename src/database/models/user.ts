@@ -31,7 +31,7 @@ export class User extends Model {
     @Column({
         defaultValue: 0
     })
-    totalBorrowed: number
+    totalDebt: number
 
     @Column({
         type: DataType.ENUM(...Object.values(UserRole)),

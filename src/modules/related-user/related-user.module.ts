@@ -4,6 +4,7 @@ import { RelatedUserService } from "./related-user.service";
 
 @Module({
     controllers: [RelatedUserController],
-    providers: [RelatedUserService]
+    providers: [RelatedUserService],
+    exports: [RelatedUserService]
 })
 export class RelatedUserModule {}
