@@ -22,10 +22,12 @@ export class RelatedUserService {
     }
 
     async create(body: CreateRequest, userId: number) {
-        return await RelatedUser.create({
+        const rUser = await RelatedUser.create({
             ...body,
             userId
         });
+
+        return rUser.dataValues;
     }
 
     async update(id: number, body: CreateRequest, ownerId: number) {
@@ -62,7 +64,8 @@ export class RelatedUserService {
         return await RelatedUser.findAll({
             where: {
                 userId
-            }
+            },
+            raw: true
         });
     }
 

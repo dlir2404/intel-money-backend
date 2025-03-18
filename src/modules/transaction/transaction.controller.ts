@@ -1,8 +1,9 @@
 import { Body, Controller, InternalServerErrorException, Post } from "@nestjs/common";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
 import { TransactionService } from "./transaction.service";
-import { BorrowTransactionResponse, CreateBorrowTransactionRequest, CreateGeneralTransactionRequest, CreateLendTransactionRequest, CreateTransferTransactionRequest, GeneralTransactionResponse, LendTransactionResponse, TransferTransactionResponse } from "./transaction.dto";
+import { BorrowTransactionResponse, CreateBorrowTransactionRequest, CreateBulkIncomeTransactionRequest, CreateGeneralTransactionRequest, CreateLendTransactionRequest, CreateTransferTransactionRequest, GeneralTransactionResponse, LendTransactionResponse, TransferTransactionResponse } from "./transaction.dto";
 import { CurrentUserId, UserAuth } from "src/shared/decorators/auth";
+import { BaseResponse } from "src/shared/types/base";
 
 @Controller("transaction")
 @ApiTags("Transaction")
@@ -23,13 +24,12 @@ export class TransactionController {
     @Post("income/bulk/create")
     @ApiResponse({
         status: 201,
-        type: GeneralTransactionResponse
+        type: BaseResponse
     })
     @UserAuth()
-    async createBulkIncome(@Body() body: CreateGeneralTransactionRequest[], @CurrentUserId() userId: number) {
-        // const transactions = await this.transactionService.createBulkIncome(body, userId);
-        // return transactions.map(transaction => new GeneralTransactionResponse(transaction));
-        throw new InternalServerErrorException("Not implemented yet");
+    async createBulkIncome(@Body() body: CreateBulkIncomeTransactionRequest, @CurrentUserId() userId: number) {
+        const transactions = await this.transactionService.createBulkIncome(body.transactions, userId);
+        return new BaseResponse({ result: true});
     }
 
     @Post("expense/create")

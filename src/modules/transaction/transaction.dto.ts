@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 import { TransactionType } from "src/shared/enums/transaction";
 import { CompactCategoryResponse } from "../category/category.dto";
 import { CompactWalletResponse } from "../wallet/wallet.dto";
@@ -47,6 +47,16 @@ export class CreateGeneralTransactionRequest {
   @IsString({ each: true })
   @IsOptional()
   images?: string[];
+}
+
+export class CreateBulkIncomeTransactionRequest {
+  @ApiProperty({
+    type: [CreateGeneralTransactionRequest]
+  })
+  @Type(() => CreateGeneralTransactionRequest)
+  @IsNotEmpty()
+  @IsArray()
+  transactions: CreateGeneralTransactionRequest[];
 }
 
 @Expose()

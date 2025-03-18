@@ -19,9 +19,13 @@ export class RelatedUser extends Model {
     @Column
     userId: number;
 
-    @Column
+    @Column({
+        defaultValue: 0
+    })
     totalLoan: number;
 
-    @Column
+    @Column({
+        defaultValue: 0
+    })
     totalBorrow: number;
 }

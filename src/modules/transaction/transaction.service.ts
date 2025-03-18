@@ -9,7 +9,7 @@ import { WalletService } from "../wallet/wallet.service";
 import { CategoryService } from "../category/category.service";
 import { CategoryType } from "src/shared/enums/category";
 import { RelatedUserService } from "../related-user/related-user.service";
-import { col } from "sequelize";
+import { col, Transaction } from "sequelize";
 
 @Injectable()
 export class TransactionService {
@@ -64,6 +64,47 @@ export class TransactionService {
             };
         } catch (error) {
             throw new BadRequestException(`Failed to create income transaction: ${error.message}`);
+        }
+    }
+
+    async createIncomeWithTransaction(body: CreateGeneralTransactionRequest, userId: number, t: Transaction) {
+        if (body.amount <= 0) {
+            throw new BadRequestException('Transaction amount must be positive');
+        }
+
+        const wallet = await this.walletService.findById(body.sourceWalletId, userId);
+        //TODO: valid wallet type later
+        const category = await this.categoryService.findById(body.categoryId, userId);
+        if (category.type !== CategoryType.INCOME) {
+            throw new BadRequestException('Invalid category type for income transaction');
+        }
+
+        // Create the transaction record
+        const transaction = await this.createGeneralTransaction({
+            type: TransactionType.INCOME,
+            ...body,
+            userId
+        }, t);
+
+        // Update user's total balance
+        await this.userService.increaseTotalBalance(userId, body.amount, t);
+        
+        // Update wallet balance
+        await this.walletService.increaseBalance(body.sourceWalletId, body.amount, t);
+
+        return transaction;
+    }
+
+
+    async createBulkIncome(transactions: CreateGeneralTransactionRequest[], userId: number) {
+        try {
+            await this.sequelize.transaction(async (t) => {
+                for (const transaction of transactions) {
+                    await this.createIncomeWithTransaction(transaction, userId, t);
+                }
+            });
+        } catch (error) {
+            throw new BadRequestException(`Failed to create bulk income transactions: ${error.message}`);
         }
     }
 
