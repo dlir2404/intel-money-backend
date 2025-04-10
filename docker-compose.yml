@@ -17,7 +17,6 @@ services:
     image: dlir2404/intel-money-backend:latest
     restart: always
     environment:
-      PORT: 3001
       JWT_SECRET: intel-money-dlir
       DB_HOST: db
       DB_PORT: 3306

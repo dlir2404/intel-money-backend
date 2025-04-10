@@ -6,6 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AdminAuthController } from './admin.auth.controller';
 import { AdminAuthService } from './admin.auth.service';
+import { GoogleAuthService } from './auth.google.service';
 
 @Module({
   imports: [
@@ -21,6 +22,6 @@ import { AdminAuthService } from './admin.auth.service';
     }),
   ],
   controllers: [AuthController, AdminAuthController],
-  providers: [AuthService, AdminAuthService]
+  providers: [AuthService, AdminAuthService, GoogleAuthService]
 })
 export class AuthModule {}

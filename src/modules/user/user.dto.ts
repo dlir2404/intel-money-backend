@@ -55,6 +55,9 @@ export class UserResponse {
     password: string;
 
     @ApiProperty()
+    picture?: string;
+
+    @ApiProperty()
     phone: string;
 
     @ApiProperty()

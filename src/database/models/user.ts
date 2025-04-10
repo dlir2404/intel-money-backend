@@ -18,6 +18,9 @@ export class User extends Model {
     @Column({ allowNull: true })
     phone: string
 
+    @Column({ allowNull: true })
+    picture: string
+
     @Column({
         defaultValue: 0
     })
