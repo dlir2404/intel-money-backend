@@ -6,6 +6,23 @@ import { Transaction } from "sequelize";
 
 @Injectable()
 export class WalletService {
+    async createDefaultWallets(userId: number, t?: Transaction) {
+        const defaultWallet = {
+            name: "Default Wallet",
+            description: "Default wallet created for the user",
+            icon: "default-icon.png",
+            balance: 0,
+            userId: userId,
+        }
+
+        await Wallet.findOrCreate({
+            where: { name: defaultWallet.name, userId: defaultWallet.userId },
+            defaults: defaultWallet,
+            transaction: t,
+        });
+    }
+
+
     async findById(id: number, userId: number) {
         const wallet = await Wallet.findOne({
             where: { id, userId },
@@ -18,9 +35,9 @@ export class WalletService {
 
         return wallet;
     }
-    
+
     async create(body: CreateRequest, userId: number) {
-        const res =  await Wallet.create({ ...body, userId });
+        const res = await Wallet.create({ ...body, userId });
         return res.dataValues;
     }
 
@@ -28,7 +45,7 @@ export class WalletService {
         const wallet = await Wallet.findOne({
             where: { id, userId }
         })
-        
+
         if (!wallet) {
             throw new NotFoundException("Wallet not found");
         }
@@ -36,19 +53,19 @@ export class WalletService {
         const res = await wallet.update(body);
         return res.dataValues;
     }
-    
+
     async delete(id: number, userId: number) {
         const wallet = await Wallet.findOne({
             where: { id, userId }
         })
-        
+
         if (!wallet) {
             throw new NotFoundException("Wallet not found");
         }
 
         await wallet.destroy();
 
-        return { result: true};
+        return { result: true };
     }
 
     async findAll(userId: number) {
@@ -56,6 +73,16 @@ export class WalletService {
             where: { userId },
             raw: true
         },);
+    }
+
+    async getAllToJson(userId: number) {
+        const wallets = await this.findAll(userId);
+        return JSON.stringify(wallets.map((wallet) => {
+            return {
+                id: wallet.id,
+                name: wallet.name,
+            };
+        }));
     }
 
     async increaseBalance(walletId: number, amount: number, t: Transaction) {

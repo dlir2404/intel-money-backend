@@ -7,10 +7,14 @@ import { ConfigService } from '@nestjs/config';
 import { AdminAuthController } from './admin.auth.controller';
 import { AdminAuthService } from './admin.auth.service';
 import { GoogleAuthService } from './auth.google.service';
+import { WalletModule } from '../wallet/wallet.module';
+import { CategoryModule } from '../category/category.module';
 
 @Module({
   imports: [
-    UserModule, 
+    UserModule,
+    WalletModule,
+    CategoryModule, 
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({

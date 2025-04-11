@@ -7,7 +7,7 @@ import { Transaction } from 'sequelize';
 
 @Injectable()
 export class UserService {
-    async createUser(body : CreateUserRequest) {
+    async createUser(body : CreateUserRequest, t?: Transaction) {
         const existUser = await User.findOne({ where: { email: body.email}});
 
         if (existUser) {
@@ -21,7 +21,7 @@ export class UserService {
         const user = await User.create({
             ...rest,
             password: hashPassword,
-        })
+        }, { transaction: t });
 
         return user;
     }

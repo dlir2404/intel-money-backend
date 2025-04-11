@@ -1,58 +1,77 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { LoginRequest, RegisterRequest } from './auth.dto';
 import { User } from 'src/database/models';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { UserRole } from 'src/shared/enums/user';
 import { UserService } from '../user/user.service';
+import { CategoryService } from '../category/category.service';
+import { WalletService } from '../wallet/wallet.service';
+import { Sequelize } from 'sequelize-typescript';
 
 @Injectable()
 export class AuthService {
     constructor(
         private readonly jwtService: JwtService,
-        private readonly userService: UserService
-    ) {};
+        private readonly userService: UserService,
+        private readonly categoryService: CategoryService,
+        private readonly walletService: WalletService,
+        private readonly sequelize: Sequelize,
+    ) { };
 
     async register(body: RegisterRequest) {
-        const user = await this.userService.createUser({
-            ...body, 
-            role: UserRole.NORMAL_USER
-        });
+        try {
+            const result = await this.sequelize.transaction(async (t) => {
+                const user = await this.userService.createUser({
+                    ...body,
+                    role: UserRole.NORMAL_USER
+                }, t);
 
-        const payload = { 
-            sub: user.id, 
-            role: user.role,
-            iat: Date.now(),
-            iss: 'Intel Money'
-        };
 
-        return { 
-            accessToken: await this.jwtService.signAsync(payload, { expiresIn: '1d' }),
-            refreshToken: await this.jwtService.signAsync(payload, { expiresIn: '60d' })
+                await this.categoryService.createDefaultCategories(user.id, t);
+                await this.walletService.createDefaultWallets(user.id, t);
+
+                return user;
+            });
+
+            const payload = {
+                sub: result.dataValues.id,
+                role: result.dataValues.role,
+                iat: Date.now(),
+                iss: 'Intel Money'
+            };
+
+            return {
+                accessToken: await this.jwtService.signAsync(payload, { expiresIn: '1d' }),
+                refreshToken: await this.jwtService.signAsync(payload, { expiresIn: '60d' })
+            }
+
+        } catch (error) {
+            throw new BadRequestException(`Failed to create income transaction: ${error.message}`);
         }
     }
 
-    async login({email, password}: LoginRequest) {
-        const user = await User.findOne({ where: { email: email, role: UserRole.NORMAL_USER }});
+    async login({ email, password }: LoginRequest) {
+        const user = await User.findOne({ where: { email: email, role: UserRole.NORMAL_USER } });
 
-        if (!user){
+        if (!user) {
             throw new NotFoundException('User not found')
         }
 
         const isMatch = await bcrypt.compare(password, user.password)
 
-        if (!isMatch){
+        if (!isMatch) {
             throw new ForbiddenException('Email or password not match')
         }
 
-        const payload = { 
-            sub: user.id, 
+        const payload = {
+            sub: user.id,
             role: user.role,
             iat: Date.now(),
             iss: 'Intel Money'
         };
 
-        return { 
+        return {
             accessToken: await this.jwtService.signAsync(payload, { expiresIn: '1d' }),
             refreshToken: await this.jwtService.signAsync(payload, { expiresIn: '60d' })
         }
@@ -68,13 +87,13 @@ export class AuthService {
             iss: 'Intel Money'
         };
 
-        return { 
+        return {
             accessToken: await this.jwtService.signAsync(payload, { expiresIn: '1d' }),
             refreshToken: await this.jwtService.signAsync(payload, { expiresIn: '60d' })
         }
     }
 
     async getMe(userId: number) {
-        return User.findOne({ where: { id: userId, role: UserRole.NORMAL_USER }, raw: true})
+        return User.findOne({ where: { id: userId, role: UserRole.NORMAL_USER }, raw: true })
     }
 }

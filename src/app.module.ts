@@ -8,6 +8,7 @@ import { RelatedUserModule } from './modules/related-user/related-user.module';
 import { CategoryModule } from './modules/category/category.module';
 import { WalletModule } from './modules/wallet/wallet.module';
 import { TransactionModule } from './modules/transaction/transaction.module';
+import { OpenAiModule } from './modules/openai/openai.module';
 
 @Module({
   imports: [
@@ -34,7 +35,8 @@ import { TransactionModule } from './modules/transaction/transaction.module';
     RelatedUserModule,
     CategoryModule,
     WalletModule,
-    TransactionModule
+    TransactionModule,
+    OpenAiModule,
   ],
 })
 export class AppModule {}
