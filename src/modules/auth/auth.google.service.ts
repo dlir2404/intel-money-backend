@@ -6,6 +6,10 @@ import { User } from 'src/database/models';
 import { UserService } from '../user/user.service';
 import { UserRole } from 'src/shared/enums/user';
 import { RegisterRequest } from './auth.dto';
+import { Sequelize } from 'sequelize-typescript';
+import { CategoryService } from '../category/category.service';
+import { WalletService } from '../wallet/wallet.service';
+
 
 @Injectable()
 export class GoogleAuthService {
@@ -15,7 +19,10 @@ export class GoogleAuthService {
     constructor(
         private readonly configService: ConfigService,
         private readonly jwtService: JwtService,
-        private readonly userService: UserService
+        private readonly userService: UserService,
+        private readonly sequelize: Sequelize,
+        private readonly categoryService: CategoryService,
+        private readonly walletService: WalletService,
     ) {
         this.googleClientId = this.configService.get<string>('GOOGLE_CLIENT_ID')
         this.client = new OAuth2Client(this.googleClientId);
@@ -50,10 +57,25 @@ export class GoogleAuthService {
     }
 
     async register(body: RegisterRequest) {
-        return await this.userService.createUser({
-            ...body,
-            role: UserRole.NORMAL_USER
-        })
+        try {
+            const result = await this.sequelize.transaction(async (t) => {
+                const user = await this.userService.createUser({
+                    ...body,
+                    role: UserRole.NORMAL_USER
+                }, t);
+
+
+                await this.categoryService.createDefaultCategories(user.id, t);
+                await this.walletService.createDefaultWallets(user.id, t);
+
+                return user;
+            });
+
+            return result;
+
+        } catch (error) {
+            throw new BadRequestException(`Failed to create income transaction: ${error.message}`);
+        }
     }
 
 

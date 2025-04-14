@@ -11,31 +11,31 @@ interface CategoryData {
 export const categories: CategoryData[] = [
     {
         name: "Food & Drinks",
-        icon: "🍽️",
+        icon: "food",
         type: CategoryType.EXPENSE,
         editable: false,
         children: [
             {
                 name: "Restaurant",
-                icon: "🍲",
+                icon: "bills",
                 type: CategoryType.EXPENSE,
                 editable: true
             },
             {
                 name: "Groceries",
-                icon: "🛒",
+                icon: "shopping",
                 type: CategoryType.EXPENSE,
                 editable: true
             },
             {
                 name: "Snacks",
-                icon: "🍿",
+                icon: "food",
                 type: CategoryType.EXPENSE,
                 editable: true
             },
             {
                 name: "Beverages",
-                icon: "🍹",
+                icon: "category",
                 type: CategoryType.EXPENSE,
                 editable: true
             }
@@ -43,19 +43,19 @@ export const categories: CategoryData[] = [
     },
     {
         name: "Transportation",
-        icon: "🚗",
+        icon: "transport",
         type: CategoryType.EXPENSE,
         editable: false,
         children: [
             {
                 name: "Public Transport",
-                icon: "🚌",
+                icon: "transport",
                 type: CategoryType.EXPENSE,
                 editable: true
             },
             {
                 name: "Fuel",
-                icon: "⛽",
+                icon: "transport",
                 type: CategoryType.EXPENSE,
                 editable: true
             }
@@ -63,13 +63,13 @@ export const categories: CategoryData[] = [
     },
     {
         name: "Salary",
-        icon: "💵",
+        icon: "salary",
         type: CategoryType.INCOME,
         editable: false
     },
     {
         name: "Investments",
-        icon: "📈",
+        icon: "investment",
         type: CategoryType.INCOME,
         editable: false
     }

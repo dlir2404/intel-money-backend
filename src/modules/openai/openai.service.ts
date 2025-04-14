@@ -88,9 +88,17 @@ export class OpenAiService {
                     type: "number",
                     description: "Id of the wallet, set to 0 if not regcognized",
                 },
+                date: {
+                    type: "string",
+                    description: "Transaction date in ISO format, set to null if not recognized",
+                },
+                description: {
+                    type: "string",
+                    description: "Transaction description, set to null if not recognized",
+                },
             },
             additionalProperties: false,
-            required: ["amount", "category", "wallet"],
+            required: ["amount", "category", "wallet", "description"],
         }
 
         const response = await this.createCompletion({
