@@ -18,7 +18,6 @@ export class CreateGeneralTransactionRequest {
   categoryId: number;
 
   @ApiProperty()
-  @IsNotEmpty()
   @IsString()
   description: string;
 
@@ -112,7 +111,6 @@ export class CreateTransferTransactionRequest {
   amount: number;
 
   @ApiProperty()
-  @IsNotEmpty()
   @IsString()
   description: string;
 
