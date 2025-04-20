@@ -31,6 +31,7 @@ export class TransactionService {
         const transactions = await GeneralTransaction.findAll({
             where,
             raw: true,
+            order: [['transactionDate', 'DESC']],
         });
 
         return transactions;
@@ -44,12 +45,13 @@ export class TransactionService {
             userId: userId,
             transactionDate: {
                 [Op.between]: [from, to]
-            }
+            },
         };
 
 
         const transactions = await GeneralTransaction.findAll({
             where,
+            order: [['transactionDate', 'DESC']],
             raw: true,
         });
 
