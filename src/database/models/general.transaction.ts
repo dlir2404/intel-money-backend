@@ -2,6 +2,7 @@ import { BelongsTo, Column, DataType, ForeignKey, Model, Table } from "sequelize
 import { Wallet } from "./wallet";
 import { Category } from "./category";
 import { TransactionType } from "src/shared/enums/transaction";
+import { User } from "./user";
 
 @Table({ timestamps: false })
 export class GeneralTransaction extends Model{
@@ -40,6 +41,13 @@ export class GeneralTransaction extends Model{
 
     @BelongsTo(() => Wallet)
     sourceWallet: Wallet;
+
+    @ForeignKey(() => User)
+    @Column
+    userId: number;
+
+    @BelongsTo(() => User)
+    user: User;
 
     @Column({ defaultValue: false })
     notAddToReport: boolean;

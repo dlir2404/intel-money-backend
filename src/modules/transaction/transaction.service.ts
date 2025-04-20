@@ -3,13 +3,14 @@ import { Sequelize } from "sequelize-typescript";
 import { BorrowTransaction, GeneralTransaction, LendTransaction, TransferTransaction } from "src/database/models";
 import { TransactionType } from "src/shared/enums/transaction";
 import { CreateGeneralTrans } from "src/shared/types/transactions/general";
-import { CreateGeneralTransactionRequest, CreateTransferTransactionRequest } from "./transaction.dto";
+import { CreateGeneralTransactionRequest, CreateTransferTransactionRequest, GetAllTransactionsRequest } from "./transaction.dto";
 import { UserService } from "../user/user.service";
 import { WalletService } from "../wallet/wallet.service";
 import { CategoryService } from "../category/category.service";
 import { CategoryType } from "src/shared/enums/category";
 import { RelatedUserService } from "../related-user/related-user.service";
-import { col, Transaction } from "sequelize";
+import { col, Transaction, WhereOptions } from "sequelize";
+import { Op } from "sequelize";
 
 @Injectable()
 export class TransactionService {
@@ -20,6 +21,42 @@ export class TransactionService {
         private readonly relatedUserService: RelatedUserService,
         private readonly sequelize: Sequelize
     ) {}
+
+    async getAllTransactionsTestOnly(userId: number) {
+        const where: WhereOptions<GeneralTransaction> = {
+            userId: userId,
+        };
+
+
+        const transactions = await GeneralTransaction.findAll({
+            where,
+            raw: true,
+        });
+
+        return transactions;
+    }
+
+
+    async getAllTransactions(userId: number, query: GetAllTransactionsRequest) {
+        const { from, to } = query;
+
+        const where: WhereOptions<GeneralTransaction> = {
+            userId: userId,
+            transactionDate: {
+                [Op.between]: [from, to]
+            }
+        };
+
+
+        const transactions = await GeneralTransaction.findAll({
+            where,
+            raw: true,
+        });
+
+        return transactions;
+    }
+        
+
 
     async createGeneralTransaction(params: CreateGeneralTrans, t?: any): Promise<GeneralTransaction> {
         return await GeneralTransaction.create({

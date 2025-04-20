@@ -1,7 +1,7 @@
-import { Body, Controller, InternalServerErrorException, Post } from "@nestjs/common";
-import { ApiResponse, ApiTags } from "@nestjs/swagger";
+import { Body, Controller, Get, InternalServerErrorException, Post, Query } from "@nestjs/common";
+import { ApiOperation, ApiProperty, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { TransactionService } from "./transaction.service";
-import { BorrowTransactionResponse, CreateBorrowTransactionRequest, CreateBulkIncomeTransactionRequest, CreateGeneralTransactionRequest, CreateLendTransactionRequest, CreateTransferTransactionRequest, GeneralTransactionResponse, LendTransactionResponse, TransferTransactionResponse } from "./transaction.dto";
+import { BorrowTransactionResponse, CreateBorrowTransactionRequest, CreateBulkIncomeTransactionRequest, CreateGeneralTransactionRequest, CreateLendTransactionRequest, CreateTransferTransactionRequest, GeneralTransactionResponse, GetAllTransactionsRequest, LendTransactionResponse, TransferTransactionResponse } from "./transaction.dto";
 import { CurrentUserId, UserAuth } from "src/shared/decorators/auth";
 import { BaseResponse } from "src/shared/types/base";
 
@@ -9,6 +9,36 @@ import { BaseResponse } from "src/shared/types/base";
 @ApiTags("Transaction")
 export class TransactionController {
     constructor(private readonly transactionService: TransactionService) {}
+
+    @Get("all")
+    @UserAuth()
+    @ApiResponse({
+        status: 200,
+        type: GeneralTransactionResponse,
+        isArray: true
+    })
+    @ApiOperation({
+        summary: "Get all transactions, in the compact format, not include extra info",
+    })
+    async getAllTransactions(@CurrentUserId() userId: number, @Query() query: GetAllTransactionsRequest) {
+        const transactions = await this.transactionService.getAllTransactions(userId, query);
+        return transactions;
+    }
+
+    @Get("all/test-only")
+    @UserAuth()
+    @ApiResponse({
+        status: 200,
+        type: GeneralTransactionResponse,
+        isArray: true
+    })
+    @ApiOperation({
+        summary: "Get all transactions in all time, just for test only",
+    })
+    async getAllTransactionsTestOnly(@CurrentUserId() userId: number) {
+        const transactions = await this.transactionService.getAllTransactionsTestOnly(userId);
+        return transactions;
+    }
 
     @Post("income/create")
     @ApiResponse({

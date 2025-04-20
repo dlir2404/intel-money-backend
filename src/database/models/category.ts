@@ -1,7 +1,6 @@
 import { BelongsTo, Column, DataType, ForeignKey, HasMany, Model, Table } from "sequelize-typescript";
 import { User } from "./user";
 import { CategoryType } from "src/shared/enums/category";
-import { Col } from "sequelize/types/utils";
 
 @Table({
     timestamps: false

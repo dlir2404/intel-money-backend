@@ -1,10 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import { IsArray, IsBoolean, IsISO8601, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 import { TransactionType } from "src/shared/enums/transaction";
 import { CompactCategoryResponse } from "../category/category.dto";
 import { CompactWalletResponse } from "../wallet/wallet.dto";
 import { Expose, Type } from "class-transformer";
 import { CompactRelatedUserResponse } from "../related-user/related-user.dto";
+import { DateType } from "src/shared/types/base";
 
 export class CreateGeneralTransactionRequest {
   @ApiProperty()
@@ -311,4 +312,24 @@ export class BorrowTransactionResponse extends GeneralTransactionResponse {
   constructor(partial: Partial<TransferTransactionResponse>) {
     super(partial);
   }
+}
+
+export class GetAllTransactionsRequest {
+  @ApiProperty({
+    required: true,
+    example: '2024-11-02T16:01:16.425Z'
+  })
+  @IsString()
+  @IsISO8601({strict: true})
+  @IsNotEmpty()
+  from: string;
+
+  @ApiProperty({
+      required: true,
+      example: '2024-11-02T16:01:16.425Z'
+  })
+  @IsNotEmpty()
+  @IsISO8601({strict: true})
+  @IsString()
+  to: string;
 }
