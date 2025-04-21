@@ -13,7 +13,7 @@ export const categories: CategoryData[] = [
         name: "Food & Drinks",
         icon: "fastfood",
         type: CategoryType.EXPENSE,
-        editable: false,
+        editable: true,
         children: [
             {
                 name: "Restaurant",
@@ -51,7 +51,7 @@ export const categories: CategoryData[] = [
         name: "Children",
         icon: 'groups',
         type: CategoryType.EXPENSE,
-        editable: false,
+        editable: true,
         children: [
             {
                 name: "Study",
@@ -89,7 +89,7 @@ export const categories: CategoryData[] = [
         name: "Daily Needs",
         icon: "check_room",
         type: CategoryType.EXPENSE,
-        editable: false,
+        editable: true,
         children: [
             {
                 name: "Elictricity",
@@ -139,7 +139,7 @@ export const categories: CategoryData[] = [
         name: "Transportation",
         icon: "directions_bike",
         type: CategoryType.EXPENSE,
-        editable: false,
+        editable: true,
         children: [
             {
                 name: "Public Transport",
@@ -177,7 +177,7 @@ export const categories: CategoryData[] = [
         name: "Health",
         icon: "hospital-building",
         type: CategoryType.EXPENSE,
-        editable: false,
+        editable: true,
         children: [
             {
                 name: "Medicine",
@@ -203,7 +203,7 @@ export const categories: CategoryData[] = [
         name: "Clothes",
         icon: "tshirt-crew",
         type: CategoryType.EXPENSE,
-        editable: false,
+        editable: true,
         children: [
             {
                 name: "Shoes",
@@ -229,7 +229,7 @@ export const categories: CategoryData[] = [
         name: "Social & Gifts",
         icon: "flower",
         type: CategoryType.EXPENSE,
-        editable: false,
+        editable: true,
         children: [
             {
                 name: "Gift",
@@ -271,13 +271,13 @@ export const categories: CategoryData[] = [
     },
     {
         name: "Salary",
-        icon: "salary",
+        icon: "cashMultiple",
         type: CategoryType.INCOME,
         editable: false
     },
     {
         name: "Investments",
-        icon: "investment",
+        icon: "trending_up",
         type: CategoryType.INCOME,
         editable: false
     }

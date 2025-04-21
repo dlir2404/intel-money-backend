@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { CreateCategoryRequest } from "./category.dto";
+import { CreateCategoryRequest, EditCategoryRequest } from "./category.dto";
 import { Category } from "src/database/models";
 import { Transaction } from "sequelize";
 import { categories } from "./default.categories";
@@ -74,7 +74,7 @@ export class CategoryService {
         return res.dataValues;
     }
 
-    async update(id: number, userId: number, body: CreateCategoryRequest) {
+    async update(id: number, userId: number, body: EditCategoryRequest) {
         const category = await Category.findOne({
             where: { id, userId }
         })

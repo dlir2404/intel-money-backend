@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put } from "@nestjs/common"
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
 import { CategoryService } from "./category.service";
 import { CurrentUserId, UserAuth } from "src/shared/decorators/auth";
-import { CategoryResponse, CreateCategoryRequest } from "./category.dto";
+import { CategoryResponse, CreateCategoryRequest, EditCategoryRequest } from "./category.dto";
 import { BaseResponse } from "src/shared/types/base";
 
 @Controller("category")
@@ -26,7 +26,7 @@ export class CategoryController {
         status: 200,
         type: CategoryResponse
     })
-    async update(@CurrentUserId() userId: number, @Body() body: CreateCategoryRequest, @Param("id") id: number) {
+    async update(@CurrentUserId() userId: number, @Body() body: EditCategoryRequest, @Param("id") id: number) {
         const response = await this.categoryService.update(id, userId, body);
         return new CategoryResponse(response.dataValues);
     }

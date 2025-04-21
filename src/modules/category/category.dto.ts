@@ -26,6 +26,22 @@ export class CreateCategoryRequest {
     parentId?: number;
 }
 
+export class EditCategoryRequest {
+    @ApiProperty()
+    @IsString()
+    name: string;
+
+    @ApiProperty({ required: false })
+    @IsString()
+    @IsOptional()
+    icon?: string;
+
+    @ApiProperty({ required: false })
+    @IsNumber()
+    @IsOptional()
+    parentId?: number;
+}
+
 @Expose()
 export class CategoryResponse {
     @ApiProperty()
