@@ -266,7 +266,7 @@ export const categories: CategoryData[] = [
     {
         name: "Borrow",
         icon: "cash-plus",
-        type: CategoryType.LEND,
+        type: CategoryType.BORROW,
         editable: false,
     },
     {

@@ -9,6 +9,8 @@ import { CategoryModule } from './modules/category/category.module';
 import { WalletModule } from './modules/wallet/wallet.module';
 import { TransactionModule } from './modules/transaction/transaction.module';
 import { OpenAiModule } from './modules/openai/openai.module';
+import { StatisticModule } from './modules/statistic/statistic.module';
+import { AppCacheModule } from './modules/cache/cache.module';
 
 @Module({
   imports: [
@@ -37,6 +39,8 @@ import { OpenAiModule } from './modules/openai/openai.module';
     WalletModule,
     TransactionModule,
     OpenAiModule,
+    AppCacheModule,
+    StatisticModule
   ],
 })
 export class AppModule {}
