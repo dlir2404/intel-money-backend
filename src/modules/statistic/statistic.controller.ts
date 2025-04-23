@@ -17,4 +17,48 @@ export class StatisticController {
     async getTodayStatistic(@CurrentUserId() userId: number) {
         return await this.statisticService.getTodayStatistic(userId);
     }
+
+
+    @Get("this-week")
+    @ApiResponse({
+        status: 200,
+        type: StatisticData,
+    })
+    @UserAuth()
+    async getThisWeekStatistic(@CurrentUserId() userId: number) {
+        return await this.statisticService.getThisWeekStatistic(userId);
+    }
+
+
+    @Get("this-month")
+    @ApiResponse({
+        status: 200,
+        type: StatisticData,
+    })
+    @UserAuth()
+    async getThisMonthStatistic(@CurrentUserId() userId: number) {
+        return await this.statisticService.getThisMonthStatistic(userId);
+    }
+
+
+    @Get("this-quarter")
+    @ApiResponse({
+        status: 200,
+        type: StatisticData,
+    })
+    @UserAuth()
+    async getThisQuarterStatistic(@CurrentUserId() userId: number) {
+        return await this.statisticService.getThisQuarterStatistic(userId);
+    }
+
+
+    @Get("this-year")
+    @ApiResponse({
+        status: 200,
+        type: StatisticData,
+    })
+    @UserAuth()
+    async getThisYearStatistic(@CurrentUserId() userId: number) {
+        return await this.statisticService.getThisYearStatistic(userId);
+    }
 }
