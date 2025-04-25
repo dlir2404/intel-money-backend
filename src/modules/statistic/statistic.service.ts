@@ -5,6 +5,8 @@ import { AppCacheService } from "../cache/cache.service";
 import { Category, GeneralTransaction, User } from "src/database/models";
 import { Op } from "sequelize";
 import { TransactionType } from "src/shared/enums/transaction";
+import { StatisticData } from "./statistic.dto";
+import { StatisticTypeTtl } from "./type/enum";
 
 
 
@@ -69,7 +71,7 @@ export class StatisticService {
         statisticData.totalBalance = user.totalBalance;
 
         console.log(">>>>> bat dau cache");
-        await this.cacheService.set(cacheKey, statisticData, 24 * 60 * 60); // Cache for 24 hours
+        await this.cacheService.set(cacheKey, statisticData, StatisticTypeTtl.daily); // Cache for 24 hours
 
         return statisticData;
     }
@@ -115,7 +117,7 @@ export class StatisticService {
         statisticData.totalBalance = user.totalBalance;
 
         console.log(">>>>> bat dau cache");
-        await this.cacheService.set(cacheKey, statisticData, 7 * 24 * 60 * 60); // Cache for 1 week
+        await this.cacheService.set(cacheKey, statisticData, StatisticTypeTtl.weekly); // Cache for 1 week
 
         return statisticData;
     }
@@ -161,7 +163,7 @@ export class StatisticService {
 
 
         console.log(">>>>> bat dau cache");
-        await this.cacheService.set(cacheKey, statisticData, 30 * 24 * 60 * 60); // Cache for 1 month
+        await this.cacheService.set(cacheKey, statisticData, StatisticTypeTtl.monthly); // Cache for 1 month
 
         return statisticData;
     }
@@ -215,7 +217,7 @@ export class StatisticService {
         statisticData.totalBalance = user.totalBalance;
 
         console.log(">>>>> bat dau cache");
-        await this.cacheService.set(cacheKey, statisticData, 3 * 30 * 24 * 60 * 60); // Cache for 3 months
+        await this.cacheService.set(cacheKey, statisticData, StatisticTypeTtl.quarterly); // Cache for 3 months
 
         return statisticData;
 
@@ -262,7 +264,7 @@ export class StatisticService {
 
 
         console.log(">>>>> bat dau cache");
-        await this.cacheService.set(cacheKey, statisticData, 365 * 24 * 60 * 60); // Cache for 1 year
+        await this.cacheService.set(cacheKey, statisticData, StatisticTypeTtl.yearly); // Cache for 1 year
 
         return statisticData;
     }
@@ -325,5 +327,99 @@ export class StatisticService {
         })
 
         return statisticData;
+    }
+
+
+    getCachedKeyTtl(key: string) {
+        const statisticType = key.split(':')[2];
+
+        const ttl = StatisticTypeTtl[statisticType as keyof typeof StatisticTypeTtl];
+        return ttl;
+    }
+
+
+    /**
+     * 
+     * @param userId transactionDate is a string in format ISO 8601
+     * @param transactionDate 
+     */
+    async getAffectedCacheKeys(userId: number, transactionDate: string) {
+        const today = dayjs(transactionDate).format('YYYY-MM-DD');
+        const startOfWeek = dayjs(transactionDate).startOf('week').format('YYYY-MM-DD');
+        const endOfWeek = dayjs(transactionDate).endOf('week').format('YYYY-MM-DD');
+        const month = dayjs(transactionDate).startOf('month').format('YYYY-MM');
+        const year = dayjs(transactionDate).year();
+        const quarter = Math.ceil((dayjs(transactionDate).month() + 1) / 3);
+
+        return [
+            this.generateKey(userId, 'daily', today),
+            this.generateKey(userId, 'weekly', `${startOfWeek}-${endOfWeek}`),
+            this.generateKey(userId, 'monthly', `${month}`),
+            this.generateKey(userId, 'quarterly', `${year}-Q${quarter}`),
+            this.generateKey(userId, 'yearly', `${year}`),
+        ];
+    }
+
+
+    async updatateCache(userId: number, transaction: GeneralTransaction) {
+        const affectedCacheKeys = await this.getAffectedCacheKeys(userId, transaction.transactionDate);
+        for (const key of affectedCacheKeys) {
+            const cachedData = await this.cacheService.get(key);
+
+            if (!cachedData) {
+                //just return, data will be updated when user call get statistic again
+                return;
+            }
+
+            const newData = await this.getNewData(transaction, cachedData as StatisticData);
+            
+            await this.cacheService.set(key, newData, this.getCachedKeyTtl(key));
+
+            console.log("updated cache: ", key);
+        }
+    }
+
+    async getNewData(transaction: GeneralTransaction, oldData: StatisticData){
+        const newData = {...oldData}
+
+        const category = await Category.findOne({ where: { id: transaction.categoryId } });
+
+        if (transaction.type === TransactionType.INCOME) {
+            newData.totalIncome += +transaction.amount;
+            newData.totalBalance += +transaction.amount;
+
+            const categoryId = category.parentId || category.id;
+
+            if (newData.byCategoryIncome.findIndex((category) => category.id === categoryId) === -1) {
+                //if categoryId is not in the list, add it
+                newData.byCategoryIncome.push({
+                    id: categoryId,
+                    amount: +transaction.amount,
+                });
+            } else {
+                //if categoryId is already in the list, update the amount
+                const categoryIndex = newData.byCategoryIncome.findIndex((category) => category.id === categoryId);
+                newData.byCategoryIncome[categoryIndex].amount += +transaction.amount;
+            }
+        } else if (transaction.type === TransactionType.EXPENSE) {
+            newData.totalExpense += +transaction.amount;
+            newData.totalBalance -= +transaction.amount;
+
+            const categoryId = category.parentId || category.id;
+
+            if (newData.byCategoryExpense.findIndex((category) => category.id === categoryId) === -1) {
+                //if categoryId is not in the list, add it
+                newData.byCategoryExpense.push({
+                    id: categoryId,
+                    amount: +transaction.amount,
+                });
+            } else {
+                //if categoryId is already in the list, update the amount
+                const categoryIndex = newData.byCategoryExpense.findIndex((category) => category.id === categoryId);
+                newData.byCategoryExpense[categoryIndex].amount += +transaction.amount;
+            }
+        }
+
+        return newData;
     }
 }

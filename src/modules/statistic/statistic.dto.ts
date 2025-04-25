@@ -5,7 +5,7 @@ export class ByCategoryData {
     id: number;
 
     @ApiProperty()
-    amount: string;
+    amount: number;
 }
 
 export class StatisticData {

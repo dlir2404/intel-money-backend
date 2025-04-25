@@ -11,6 +11,7 @@ import { CategoryType } from "src/shared/enums/category";
 import { RelatedUserService } from "../related-user/related-user.service";
 import { col, Transaction, WhereOptions } from "sequelize";
 import { Op } from "sequelize";
+import { StatisticService } from "../statistic/statistic.service";
 
 @Injectable()
 export class TransactionService {
@@ -19,7 +20,8 @@ export class TransactionService {
         private readonly categoryService: CategoryService,
         private readonly walletService: WalletService,
         private readonly relatedUserService: RelatedUserService,
-        private readonly sequelize: Sequelize
+        private readonly sequelize: Sequelize,
+        private readonly statisticService: StatisticService,
     ) {}
 
     async getAllTransactionsTestOnly(userId: number) {
@@ -61,9 +63,14 @@ export class TransactionService {
 
 
     async createGeneralTransaction(params: CreateGeneralTrans, t?: any): Promise<GeneralTransaction> {
-        return await GeneralTransaction.create({
+        const transaction = await GeneralTransaction.create({
             ...params
         }, { transaction: t });
+
+
+        await this.statisticService.updatateCache(params.userId, transaction);
+
+        return transaction;
     }
 
     async createIncome(body: CreateGeneralTransactionRequest, userId: number): Promise<GeneralTransaction> {

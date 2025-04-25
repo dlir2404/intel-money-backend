@@ -7,5 +7,6 @@ import { AppCacheModule } from "../cache/cache.module";
     imports: [AppCacheModule],
     controllers: [StatisticController],
     providers: [StatisticService],
+    exports: [StatisticService]
 })
 export class StatisticModule {}

@@ -29,7 +29,8 @@ import { AppCacheModule } from './modules/cache/cache.module';
         models: [User, RelatedUser, Category, Wallet, GeneralTransaction, BorrowTransaction, TransferTransaction, LendTransaction],
         synchronize: true,
         // sync: { force: true },
-        logging: console.log,
+        // logging: console.log,
+        logging: false,
       })
     }),
     AuthModule, 
