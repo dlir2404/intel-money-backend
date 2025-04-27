@@ -41,4 +41,9 @@ export class User extends Model {
         defaultValue: UserRole.NORMAL_USER,
     })
     role: UserRole
+
+    @Column({
+        type: DataType.JSON
+    })
+    preferences: object
 }
