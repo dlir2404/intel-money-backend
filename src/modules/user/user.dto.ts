@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Exclude, Expose, Type } from "class-transformer";
-import { IsEmail, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsEmail, IsNotEmpty, IsOptional, IsString, IsUrl } from "class-validator";
 import { UserRole } from "src/shared/enums/user";
 import { DateAndPaginationType } from "src/shared/types/base";
 
@@ -104,4 +104,14 @@ export class ListUserResponse {
     })
     @Type(() => UserResponse)
     rows: UserResponse[]
+}
+
+
+export class ChangeAvatarRequest {
+    @ApiProperty({
+        type: String
+    })
+    @IsNotEmpty()
+    @IsUrl()
+    url: string;
 }

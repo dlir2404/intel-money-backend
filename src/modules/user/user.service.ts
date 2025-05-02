@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { User } from 'src/database/models';
 import { CreateUserRequest } from './user.dto';
 import * as bcrypt from 'bcrypt';
@@ -48,5 +48,15 @@ export class UserService {
 
     async decreaseTotalDebt(userId: number, amount: number, t: Transaction) {
         await User.decrement({ totalDebt: amount }, { where: { id: userId }, transaction: t });
+    }
+    
+    async changeAvatar(url: string, userId: number) {
+        const user = await User.findByPk(userId);
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+        user.picture = url;
+        await user.save();
+        return user;
     }
 }
