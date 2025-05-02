@@ -129,9 +129,22 @@ export class StatisticService {
             throw new UnauthorizedException('User not found');
         }
 
-        const month = dayjs().startOf('month').format('YYYY-MM');
-        const cacheKey = this.generateKey(userId, 'monthly', `${month}`);
 
+        const month: number = dayjs().month(); // 0-11
+        const year: number = dayjs().year();
+
+        return await this.getMonthlyStatistic(userId, month, year);
+    }
+
+
+    //month is from 0 to 11
+    //user must already exist in this step
+    async getMonthlyStatistic(userId: number, month: number, year: number) {
+        let timeRange = `${year}-${month + 1}`;
+        if (month < 9) {
+            timeRange = `${year}-0${month + 1}`;
+        }
+        const cacheKey = this.generateKey(userId, 'monthly', timeRange);
         const cachedData = await this.cacheService.get(cacheKey);
         if (cachedData) {
             console.log(">>>> lay duoc cache roi ne. key: ", cacheKey);
@@ -143,8 +156,8 @@ export class StatisticService {
                 where: {
                     userId,
                     transactionDate: {
-                        [Op.gte]: dayjs().startOf('month').toDate(),
-                        [Op.lte]: dayjs().endOf('month').toDate(),
+                        [Op.gte]: dayjs().year(year).month(month).startOf('month').toDate(),
+                        [Op.lte]: dayjs().year(year).month(month).endOf('month').toDate(),
                     },
                 },
                 include: [
@@ -159,12 +172,11 @@ export class StatisticService {
         )
 
         const statisticData = this.calulateStatistic(transactions);
-        statisticData.totalBalance = user.totalBalance;
-
+        //TODO: fix this later
+        statisticData.totalBalance = 0;
 
         console.log(">>>>> bat dau cache");
         await this.cacheService.set(cacheKey, statisticData, StatisticTypeTtl.monthly); // Cache for 1 month
-
         return statisticData;
     }
 
@@ -180,18 +192,25 @@ export class StatisticService {
         const quarter = Math.ceil((currentMonth + 1) / 3);
         const year = now.year();
 
-        // Tính thủ công ngày bắt đầu và kết thúc của quý
-        const startMonth = (quarter - 1) * 3; // 0, 3, 6, 9
-        const startDate = dayjs().year(year).month(startMonth).startOf('month');
-        const endDate = dayjs().year(year).month(startMonth + 2).endOf('month');
+        return await this.getQuarterlyStatistic(userId, quarter, year);
+    }
 
-        const cacheKey = this.generateKey(userId, 'quarterly', `${year}-Q${quarter}`);
 
+    //month is from 0 to 11
+    //user must already exist in this step
+    async getQuarterlyStatistic(userId: number, quarter: number, year: number) {
+        let timeRange = `${year}-Q${quarter}`;
+        const cacheKey = this.generateKey(userId, 'quarterly', timeRange);
         const cachedData = await this.cacheService.get(cacheKey);
         if (cachedData) {
             console.log(">>>> lay duoc cache roi ne. key: ", cacheKey);
             return cachedData;
         }
+
+        // Tính thủ công ngày bắt đầu và kết thúc của quý
+        const startMonth = (quarter - 1) * 3; // 0, 3, 6, 9
+        const startDate = dayjs().year(year).month(startMonth).startOf('month');
+        const endDate = dayjs().year(year).month(startMonth + 2).endOf('month');
 
         const transactions = await GeneralTransaction.findAll(
             {
@@ -214,13 +233,11 @@ export class StatisticService {
         )
 
         const statisticData = this.calulateStatistic(transactions);
-        statisticData.totalBalance = user.totalBalance;
+        statisticData.totalBalance = 0; //TODO: fix this later
 
         console.log(">>>>> bat dau cache");
         await this.cacheService.set(cacheKey, statisticData, StatisticTypeTtl.quarterly); // Cache for 3 months
-
         return statisticData;
-
     }
 
 
@@ -259,12 +276,27 @@ export class StatisticService {
             }
         )
 
+        //this is only general statistics
         const statisticData = this.calulateStatistic(transactions);
         statisticData.totalBalance = user.totalBalance;
 
-
         console.log(">>>>> bat dau cache");
         await this.cacheService.set(cacheKey, statisticData, StatisticTypeTtl.yearly); // Cache for 1 year
+
+        //these extra statistics are cached in those own cache keys so do not need to cache them again
+        let byMonthStatistic = [];
+        for (let month = 0; month < 12; month++) {
+            let data = await this.getMonthlyStatistic(userId, month, year);
+            byMonthStatistic.push(data);
+        }
+        statisticData.byMonthStatistic = byMonthStatistic;
+
+        let byQuarterStatistic = [];
+        for (let quarter = 1; quarter <= 4; quarter++) {
+            let data = await this.getQuarterlyStatistic(userId, quarter, year);
+            byQuarterStatistic.push(data);
+        }
+        statisticData.byQuarterStatistic = byQuarterStatistic;
 
         return statisticData;
     }
