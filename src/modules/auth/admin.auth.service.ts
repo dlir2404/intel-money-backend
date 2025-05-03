@@ -33,7 +33,10 @@ export class AdminAuthService {
 
         const payload = { sub: user.id, role: user.role };
 
-        return { token: await this.jwtService.signAsync(payload) }
+        return {
+            accessToken: await this.jwtService.signAsync(payload, { expiresIn: '1d' }),
+            refreshToken: await this.jwtService.signAsync(payload, { expiresIn: '60d' })
+        }
     }
 
     async getMe(userId: number) {
