@@ -175,14 +175,14 @@ export class CreateLendTransactionRequest {
   categoryId: number;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   description: string;
 
   @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
-  borowerId: number;
+  borrowerId: number;
 
   @ApiProperty({
     required: false
