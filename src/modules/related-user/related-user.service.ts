@@ -63,7 +63,7 @@ export class RelatedUserService {
     async getAll(userId: number) {
         return await RelatedUser.findAll({
             where: {
-                userId
+                userId: userId
             },
             raw: true
         });

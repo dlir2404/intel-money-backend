@@ -67,7 +67,7 @@ export class UserResponse {
     totalLoan: number;
 
     @ApiProperty()
-    totalBorrowed: number; 
+    totalDebt: number; 
 
     @Exclude()
     role: UserRole;

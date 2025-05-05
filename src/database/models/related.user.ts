@@ -18,6 +18,9 @@ export class RelatedUser extends Model {
     @Column
     userId: number;
 
+    @BelongsTo(() => User)
+    user: User;
+
     @Column({
         defaultValue: 0
     })

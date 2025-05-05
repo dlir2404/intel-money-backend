@@ -251,7 +251,7 @@ export class CreateBorrowTransactionRequest {
   categoryId: number;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   description: string;
 
