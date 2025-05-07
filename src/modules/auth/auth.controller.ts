@@ -1,10 +1,9 @@
-import { Body, Controller, Get, Post, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { LoginRequest, LoginResponse, RefreshTokenRequest, RegisterRequest } from './auth.dto';
 import { AuthService } from './auth.service';
 import { CurrentUserId, UserAuth } from 'src/shared/decorators/auth';
 import { UserResponse } from '../user/user.dto';
-import { BaseResponse } from 'src/shared/types/base';
 import { GoogleAuthService } from './auth.google.service';
 
 @ApiTags('Auth')

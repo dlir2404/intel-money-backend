@@ -27,13 +27,20 @@ import { AppCacheModule } from './modules/cache/cache.module';
         password: configService.get<string>("DB_PASSWORD"),
         database: configService.get<string>("DB_NAME"),
         models: [User, RelatedUser, Category, Wallet, GeneralTransaction, BorrowTransaction, TransferTransaction, LendTransaction],
+        autoLoadModels: true,
         synchronize: true,
+        timezone: '+00:00', // UTC
+        dialectOptions: {
+          // Đảm bảo DB trả về giá trị DATE/DATETIME/TIMESTAMP là UTC
+          // Cho MySQL/MariaDB
+          timezone: '+00:00',
+        },
         // sync: { force: true },
         // logging: console.log,
         logging: false,
       })
     }),
-    AuthModule, 
+    AuthModule,
     UserModule,
     RelatedUserModule,
     CategoryModule,
@@ -44,4 +51,4 @@ import { AppCacheModule } from './modules/cache/cache.module';
     StatisticModule
   ],
 })
-export class AppModule {}
+export class AppModule { }
