@@ -374,6 +374,23 @@ export class StatisticService {
         return statisticData;
     }
 
+    calulateCompactStatistic(transactions: GeneralTransaction[]): any {
+        const statisticData = {
+            totalIncome: 0,
+            totalExpense: 0,
+        };
+
+        transactions.forEach((transaction) => {
+            if (transaction.type === TransactionType.INCOME) {
+                statisticData.totalIncome += +transaction.amount;
+            } else if (transaction.type === TransactionType.EXPENSE) {
+                statisticData.totalExpense += +transaction.amount;
+            }
+        })
+
+        return statisticData;
+    }
+
 
     getCachedKeyTtl(key: string) {
         const statisticType = key.split(':')[2];
@@ -466,5 +483,71 @@ export class StatisticService {
         }
 
         return newData;
+    }
+
+
+    /**
+     * Nhận xét: phần xem analysis này user khá là ít dùng, có thể cached theo from & to trong vòng 1 h
+     * @param userId 
+     * @param query 
+     * @returns 
+     */
+    async getByDayStatistic(userId: number, query: { from: string, to: string }) {
+        const user = await User.findOne({ where: { id: userId } });
+        if (!user) {
+            throw new UnauthorizedException('User not found');
+        }
+
+        const cacheKey = this.generateKey(userId, 'byday', `${dayjs(query.from).format('YYYY-MM-DD')}-${dayjs(query.to).format('YYYY-MM-DD')}`);
+
+        const cachedData: any = await this.cacheService.get(cacheKey);
+        if (cachedData) {
+            console.log(">>>> lay duoc cache roi ne. key: ", cacheKey);
+            return cachedData;
+        }
+
+        const transactions = await GeneralTransaction.findAll(
+            {
+                where: {
+                    userId,
+                    transactionDate: {
+                        [Op.gte]: dayjs(query.from).startOf('day').toDate(),
+                        [Op.lte]: dayjs(query.to).endOf('day').toDate(),
+                    },
+                },
+                include: [
+                    {
+                        model: Category,
+                        attributes: ['id', 'name', 'parentId'],
+                    }
+                ],
+                nest: true,
+                raw: true,
+            }
+        )
+
+        const transactionsByDay = {};
+
+        transactions.forEach((transaction) => {
+            const dateKey = dayjs(transaction.transactionDate).format('DD/MM/YYYY');
+            
+            if (!transactionsByDay[dateKey]) {
+                transactionsByDay[dateKey] = [];
+            }
+
+            transactionsByDay[dateKey].push(transaction);
+        });
+
+        const dataByDay = Object.keys(transactionsByDay).map((date) => {
+            return {
+                date: date,
+                statisticData: this.calulateCompactStatistic(transactionsByDay[date]),
+            }
+        })
+
+        console.log(">>>>> bat dau cache");
+        await this.cacheService.set(cacheKey, dataByDay, StatisticTypeTtl.oneHour);
+
+        return dataByDay;
     }
 }

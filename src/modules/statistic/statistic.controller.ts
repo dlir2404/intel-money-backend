@@ -1,8 +1,9 @@
-import { Controller, Get } from "@nestjs/common";
+import { Controller, Get, Query } from "@nestjs/common";
 import { StatisticService } from "./statistic.service";
 import { ApiResponse } from "@nestjs/swagger";
-import { StatisticData } from "./statistic.dto";
+import { CompactStatisticData, StatisticData, StatisticDataByDayRequest } from "./statistic.dto";
 import { CurrentUserId, UserAuth } from "src/shared/decorators/auth";
+import { query } from "express";
 
 @Controller("statistic")
 export class StatisticController {
@@ -60,5 +61,15 @@ export class StatisticController {
     @UserAuth()
     async getThisYearStatistic(@CurrentUserId() userId: number) {
         return await this.statisticService.getThisYearStatistic(userId);
+    }
+    
+    @Get("by-day")
+    @ApiResponse({
+        status: 200,
+        type: CompactStatisticData,
+    })
+    @UserAuth()
+    async getByDayStatistic(@CurrentUserId() userId: number, @Query() query: StatisticDataByDayRequest) {
+        return await this.statisticService.getByDayStatistic(userId, query);
     }
 }
