@@ -4,6 +4,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { Sequelize } from 'sequelize-typescript';  // Thay đổi import
 import { getConnectionToken } from '@nestjs/sequelize';
+import { Logger } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -34,6 +35,9 @@ async function bootstrap() {
 
   const sequelize = app.get<Sequelize>(getConnectionToken());
   await sequelize.sync();
+
+  const timezoneOffset = -new Date().getTimezoneOffset() / 60;
+  Logger.log(`Server timezone offset (UTC): ${timezoneOffset >= 0 ? '+' : '-'}${timezoneOffset}:00`, 'Timezone');
   
   await app.listen(3002);
 }
