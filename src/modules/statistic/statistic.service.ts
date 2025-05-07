@@ -250,9 +250,22 @@ export class StatisticService {
         const year = dayjs().year();
         const cacheKey = this.generateKey(userId, 'yearly', `${year}`);
 
-        const cachedData = await this.cacheService.get(cacheKey);
+        const cachedData: any = await this.cacheService.get(cacheKey);
         if (cachedData) {
             console.log(">>>> lay duoc cache roi ne. key: ", cacheKey);
+            let byMonthStatistic = [];
+            for (let month = 0; month < 12; month++) {
+                let data = await this.getMonthlyStatistic(userId, month, year);
+                byMonthStatistic.push(data);
+            }
+            cachedData.byMonthStatistic = byMonthStatistic;
+
+            let byQuarterStatistic = [];
+            for (let quarter = 1; quarter <= 4; quarter++) {
+                let data = await this.getQuarterlyStatistic(userId, quarter, year);
+                byQuarterStatistic.push(data);
+            }
+            cachedData.byQuarterStatistic = byQuarterStatistic;
             return cachedData;
         }
 
@@ -404,15 +417,15 @@ export class StatisticService {
             }
 
             const newData = await this.getNewData(transaction, cachedData as StatisticData);
-            
+
             await this.cacheService.set(key, newData, this.getCachedKeyTtl(key));
 
             console.log("updated cache: ", key);
         }
     }
 
-    async getNewData(transaction: GeneralTransaction, oldData: StatisticData){
-        const newData = {...oldData}
+    async getNewData(transaction: GeneralTransaction, oldData: StatisticData) {
+        const newData = { ...oldData }
 
         const category = await Category.findOne({ where: { id: transaction.categoryId } });
 
