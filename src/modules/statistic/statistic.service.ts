@@ -529,7 +529,7 @@ export class StatisticService {
         const transactionsByDay = {};
 
         transactions.forEach((transaction) => {
-            const dateKey = dayjs(transaction.transactionDate).format('DD/MM/YYYY');
+            const dateKey = dayjs(transaction.transactionDate).format('YYYY-MM-DD');
             
             if (!transactionsByDay[dateKey]) {
                 transactionsByDay[dateKey] = [];
@@ -540,10 +540,10 @@ export class StatisticService {
 
         const dataByDay = Object.keys(transactionsByDay).map((date) => {
             return {
-                date: date,
+                date: dayjs(date).toISOString(),
                 statisticData: this.calulateCompactStatistic(transactionsByDay[date]),
             }
-        })
+        });
 
         console.log(">>>>> bat dau cache");
         await this.cacheService.set(cacheKey, dataByDay, StatisticTypeTtl.oneHour);
