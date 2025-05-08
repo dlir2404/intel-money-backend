@@ -320,6 +320,80 @@ export class StatisticService {
     }
 
 
+    async getYearlyStatistic(userId: number, year: number) {
+        const user = await User.findOne({ where: { id: userId } });
+        if (!user) {
+            throw new UnauthorizedException('User not found');
+        }
+        const timezone = user.preferences.timezone || 'UTC';
+
+        const cacheKey = this.generateKey(userId, 'yearly', `${year}`);
+
+        const cachedData: any = await this.cacheService.get(cacheKey);
+        if (cachedData) {
+            console.log(">>>> lay duoc cache roi ne. key: ", cacheKey);
+            let byMonthStatistic = [];
+            for (let month = 0; month < 12; month++) {
+                let data = await this.getMonthlyStatistic(userId, month, year, timezone);
+                byMonthStatistic.push(data);
+            }
+            cachedData.byMonthStatistic = byMonthStatistic;
+
+            let byQuarterStatistic = [];
+            for (let quarter = 1; quarter <= 4; quarter++) {
+                let data = await this.getQuarterlyStatistic(userId, quarter, year, timezone);
+                byQuarterStatistic.push(data);
+            }
+            cachedData.byQuarterStatistic = byQuarterStatistic;
+            return cachedData;
+        }
+
+        const transactions = await GeneralTransaction.findAll(
+            {
+                where: {
+                    userId,
+                    transactionDate: {
+                        [Op.gte]: Time.nowWithUserTimeZone(timezone).year(year).startOf('year').toDate(),
+                        [Op.lte]: Time.nowWithUserTimeZone(timezone).year(year).endOf('year').toDate(),
+                    },
+                },
+                include: [
+                    {
+                        model: Category,
+                        attributes: ['id', 'name', 'parentId'],
+                    }
+                ],
+                nest: true,
+                raw: true,
+            }
+        )
+
+        //this is only general statistics
+        const statisticData = this.calulateStatistic(transactions);
+        statisticData.totalBalance = user.totalBalance;
+
+        console.log(">>>>> bat dau cache");
+        await this.cacheService.set(cacheKey, statisticData, StatisticTypeTtl.yearly); // Cache for 1 year
+
+        //these extra statistics are cached in those own cache keys so do not need to cache them again
+        let byMonthStatistic = [];
+        for (let month = 0; month < 12; month++) {
+            let data = await this.getMonthlyStatistic(userId, month, year, timezone);
+            byMonthStatistic.push(data);
+        }
+        statisticData.byMonthStatistic = byMonthStatistic;
+
+        let byQuarterStatistic = [];
+        for (let quarter = 1; quarter <= 4; quarter++) {
+            let data = await this.getQuarterlyStatistic(userId, quarter, year, timezone);
+            byQuarterStatistic.push(data);
+        }
+        statisticData.byQuarterStatistic = byQuarterStatistic;
+
+        return statisticData;
+    }
+
+
     calulateStatistic(transactions: GeneralTransaction[]): any {
         const statisticData = {
             totalIncome: 0,
@@ -589,5 +663,31 @@ export class StatisticService {
         }
 
         return byMonthStatistic;
+    }
+
+
+    //todo: can be optimized later
+    async getByYearStatistic(userId: number, query: { from: string, to: string }) {
+        const user = await User.findOne({ where: { id: userId } });
+        if (!user) {
+            throw new UnauthorizedException('User not found');
+        }
+        const timezone = user.preferences.timezone || 'UTC';
+
+        const startDay = dayjs(query.from).tz(timezone).startOf('year');
+        const endDay = dayjs(query.to).tz(timezone).endOf('year');
+        const yearRange = Time.getYearsRange(startDay, endDay);
+
+        console.log("year range: ", yearRange.map((year) => year.year()))
+
+        let byYearStatistic = [];
+        for (let year of yearRange) {
+            let data = await this.getYearlyStatistic(userId, year.year());
+            byYearStatistic.push({
+                date: year.toISOString(),
+                statisticData: data
+            });
+        }
+        return byYearStatistic;
     }
 }

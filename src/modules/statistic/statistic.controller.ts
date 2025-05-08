@@ -82,4 +82,14 @@ export class StatisticController {
     async getByMonthStatistic(@CurrentUserId() userId: number, @Query() query: StatisticDataByDayRequest) {
         return await this.statisticService.getByMonthStatistic(userId, query);
     }
+
+    @Get("by-year")
+    @ApiResponse({
+        status: 200,
+        type: CompactStatisticData,
+    })
+    @UserAuth()
+    async getByYearStatistic(@CurrentUserId() userId: number, @Query() query: StatisticDataByDayRequest) {
+        return await this.statisticService.getByYearStatistic(userId, query);
+    }
 }
