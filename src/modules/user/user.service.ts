@@ -59,4 +59,18 @@ export class UserService {
         await user.save();
         return user;
     }
+
+    async changeTimeZone(timezone: string, userId: number) {
+        const user = await User.findByPk(userId);
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+
+        user.preferences = {
+            ...user.preferences,
+            timezone: timezone
+        };
+        await user.save();
+    }
+
 }

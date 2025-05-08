@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Exclude, Expose, Type } from "class-transformer";
-import { IsEmail, IsNotEmpty, IsOptional, IsString, IsUrl } from "class-validator";
+import { IsEmail, IsNotEmpty, IsOptional, IsString, IsTimeZone, IsUrl } from "class-validator";
 import { UserRole } from "src/shared/enums/user";
 import { DateAndPaginationType } from "src/shared/types/base";
 
@@ -114,4 +114,13 @@ export class ChangeAvatarRequest {
     @IsNotEmpty()
     @IsUrl()
     url: string;
+}
+
+export class ChangeTimezoneRequest {
+    @ApiProperty({
+        type: String
+    })
+    @IsNotEmpty()
+    @IsTimeZone()
+    timezone: string;
 }
