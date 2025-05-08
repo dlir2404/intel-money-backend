@@ -5,7 +5,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { User } from 'src/database/models';
 import { UserService } from '../user/user.service';
 import { UserRole } from 'src/shared/enums/user';
-import { RegisterRequest } from './auth.dto';
+import { GoogleLoginRequest, RegisterRequest } from './auth.dto';
 import { Sequelize } from 'sequelize-typescript';
 import { CategoryService } from '../category/category.service';
 import { WalletService } from '../wallet/wallet.service';
@@ -28,7 +28,7 @@ export class GoogleAuthService {
         this.client = new OAuth2Client(this.googleClientId);
     }
 
-    async login(idToken: string) {
+    async login({idToken, timezone}: GoogleLoginRequest) {
         const credentials = await this.validateIdToken(idToken);
 
         let user = await User.findOne({ where: { email: credentials.email } });
@@ -38,7 +38,10 @@ export class GoogleAuthService {
 
             let body = {
                 ...credentials,
-                password: randomPassword
+                password: randomPassword,
+                preferences: {
+                    timezone: timezone || 'UTC',
+                }
             }
             user = await this.register(body);
         }

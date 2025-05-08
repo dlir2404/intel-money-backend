@@ -7,6 +7,7 @@ import { Op } from "sequelize";
 import { TransactionType } from "src/shared/enums/transaction";
 import { StatisticData } from "./statistic.dto";
 import { StatisticTypeTtl } from "./type/enum";
+import { Time } from "src/shared/ultils/time";
 
 
 
@@ -38,7 +39,9 @@ export class StatisticService {
             throw new UnauthorizedException('User not found');
         }
 
-        const today = dayjs().format('YYYY-MM-DD');
+        const timezone = user.preferences.timezone || 'UTC';
+
+        const today = dayjs().tz(timezone).format('YYYY-MM-DD');
         const cacheKey = this.generateKey(userId, 'daily', today);
 
         const cachedData = await this.cacheService.get(cacheKey);
@@ -52,8 +55,8 @@ export class StatisticService {
                 where: {
                     userId,
                     transactionDate: {
-                        [Op.gte]: dayjs().startOf('day').toDate(),
-                        [Op.lte]: dayjs().endOf('day').toDate(),
+                        [Op.gte]: Time.startOfDayWithUserTimeZone(timezone).toDate(),
+                        [Op.lte]: Time.endOfDayWithUserTimeZone(timezone).toDate(),
                     },
                 },
                 include: [
@@ -82,9 +85,10 @@ export class StatisticService {
         if (!user) {
             throw new UnauthorizedException('User not found');
         }
+        const timezone = user.preferences.timezone || 'UTC';
 
-        const startOfWeek = dayjs().startOf('week').format('YYYY-MM-DD');
-        const endOfWeek = dayjs().endOf('week').format('YYYY-MM-DD');
+        const startOfWeek = Time.startOfWeekWithUserTimeZone(timezone).format('YYYY-MM-DD');
+        const endOfWeek = Time.endOfWeekWithUserTimeZone(timezone).format('YYYY-MM-DD');
         const cacheKey = this.generateKey(userId, 'weekly', `${startOfWeek}-${endOfWeek}`);
 
         const cachedData = await this.cacheService.get(cacheKey);
@@ -98,8 +102,8 @@ export class StatisticService {
                 where: {
                     userId,
                     transactionDate: {
-                        [Op.gte]: dayjs().startOf('week').toDate(),
-                        [Op.lte]: dayjs().endOf('week').toDate(),
+                        [Op.gte]: Time.startOfWeekWithUserTimeZone(timezone).toDate(),
+                        [Op.lte]: Time.endOfWeekWithUserTimeZone(timezone).toDate(),
                     },
                 },
                 include: [
@@ -128,18 +132,19 @@ export class StatisticService {
         if (!user) {
             throw new UnauthorizedException('User not found');
         }
+        const timezone = user.preferences.timezone || 'UTC';
 
 
-        const month: number = dayjs().month(); // 0-11
-        const year: number = dayjs().year();
+        const month: number = dayjs().tz(timezone).month(); // 0-11
+        const year: number = dayjs().tz(timezone).year();
 
-        return await this.getMonthlyStatistic(userId, month, year);
+        return await this.getMonthlyStatistic(userId, month, year, timezone);
     }
 
 
-    //month is from 0 to 11
+    //month is from 0 to 11 already in user timezone
     //user must already exist in this step
-    async getMonthlyStatistic(userId: number, month: number, year: number) {
+    async getMonthlyStatistic(userId: number, month: number, year: number, timezone: string) {
         let timeRange = `${year}-${month + 1}`;
         if (month < 9) {
             timeRange = `${year}-0${month + 1}`;
@@ -156,8 +161,8 @@ export class StatisticService {
                 where: {
                     userId,
                     transactionDate: {
-                        [Op.gte]: dayjs().year(year).month(month).startOf('month').toDate(),
-                        [Op.lte]: dayjs().year(year).month(month).endOf('month').toDate(),
+                        [Op.gte]: dayjs().year(year).month(month).tz(timezone).startOf('month').toDate(),
+                        [Op.lte]: dayjs().year(year).month(month).tz(timezone).endOf('month').toDate(),
                     },
                 },
                 include: [
@@ -186,19 +191,19 @@ export class StatisticService {
         if (!user) {
             throw new UnauthorizedException('User not found');
         }
+        const timezone = user.preferences.timezone || 'UTC';
 
-        const now = dayjs();
-        const currentMonth = now.month(); // 0-11
-        const quarter = Math.ceil((currentMonth + 1) / 3);
+        const now = Time.nowWithUserTimeZone(timezone);
+        const quarter = now.quarter(); // 1-4
         const year = now.year();
 
-        return await this.getQuarterlyStatistic(userId, quarter, year);
+        return await this.getQuarterlyStatistic(userId, quarter, year, timezone);
     }
 
 
-    //month is from 0 to 11
+    //month is from 0 to 11 already in user timezone
     //user must already exist in this step
-    async getQuarterlyStatistic(userId: number, quarter: number, year: number) {
+    async getQuarterlyStatistic(userId: number, quarter: number, year: number, timezone: string) {
         let timeRange = `${year}-Q${quarter}`;
         const cacheKey = this.generateKey(userId, 'quarterly', timeRange);
         const cachedData = await this.cacheService.get(cacheKey);
@@ -208,9 +213,8 @@ export class StatisticService {
         }
 
         // Tính thủ công ngày bắt đầu và kết thúc của quý
-        const startMonth = (quarter - 1) * 3; // 0, 3, 6, 9
-        const startDate = dayjs().year(year).month(startMonth).startOf('month');
-        const endDate = dayjs().year(year).month(startMonth + 2).endOf('month');
+        const startDate = dayjs().year(year).quarter(quarter).tz(timezone).startOf('quarter');
+        const endDate = dayjs().year(year).quarter(quarter).tz(timezone).endOf('quarter');
 
         const transactions = await GeneralTransaction.findAll(
             {
@@ -246,8 +250,9 @@ export class StatisticService {
         if (!user) {
             throw new UnauthorizedException('User not found');
         }
+        const timezone = user.preferences.timezone || 'UTC';
 
-        const year = dayjs().year();
+        const year = Time.nowWithUserTimeZone(timezone).year();
         const cacheKey = this.generateKey(userId, 'yearly', `${year}`);
 
         const cachedData: any = await this.cacheService.get(cacheKey);
@@ -255,14 +260,14 @@ export class StatisticService {
             console.log(">>>> lay duoc cache roi ne. key: ", cacheKey);
             let byMonthStatistic = [];
             for (let month = 0; month < 12; month++) {
-                let data = await this.getMonthlyStatistic(userId, month, year);
+                let data = await this.getMonthlyStatistic(userId, month, year, timezone);
                 byMonthStatistic.push(data);
             }
             cachedData.byMonthStatistic = byMonthStatistic;
 
             let byQuarterStatistic = [];
             for (let quarter = 1; quarter <= 4; quarter++) {
-                let data = await this.getQuarterlyStatistic(userId, quarter, year);
+                let data = await this.getQuarterlyStatistic(userId, quarter, year, timezone);
                 byQuarterStatistic.push(data);
             }
             cachedData.byQuarterStatistic = byQuarterStatistic;
@@ -274,8 +279,8 @@ export class StatisticService {
                 where: {
                     userId,
                     transactionDate: {
-                        [Op.gte]: dayjs().startOf('year').toDate(),
-                        [Op.lte]: dayjs().endOf('year').toDate(),
+                        [Op.gte]: Time.nowWithUserTimeZone(timezone).startOf('year').toDate(),
+                        [Op.lte]: Time.nowWithUserTimeZone(timezone).endOf('year').toDate(),
                     },
                 },
                 include: [
@@ -299,14 +304,14 @@ export class StatisticService {
         //these extra statistics are cached in those own cache keys so do not need to cache them again
         let byMonthStatistic = [];
         for (let month = 0; month < 12; month++) {
-            let data = await this.getMonthlyStatistic(userId, month, year);
+            let data = await this.getMonthlyStatistic(userId, month, year, timezone);
             byMonthStatistic.push(data);
         }
         statisticData.byMonthStatistic = byMonthStatistic;
 
         let byQuarterStatistic = [];
         for (let quarter = 1; quarter <= 4; quarter++) {
-            let data = await this.getQuarterlyStatistic(userId, quarter, year);
+            let data = await this.getQuarterlyStatistic(userId, quarter, year, timezone);
             byQuarterStatistic.push(data);
         }
         statisticData.byQuarterStatistic = byQuarterStatistic;
@@ -406,12 +411,15 @@ export class StatisticService {
      * @param transactionDate 
      */
     async getAffectedCacheKeys(userId: number, transactionDate: string) {
-        const today = dayjs(transactionDate).format('YYYY-MM-DD');
-        const startOfWeek = dayjs(transactionDate).startOf('week').format('YYYY-MM-DD');
-        const endOfWeek = dayjs(transactionDate).endOf('week').format('YYYY-MM-DD');
-        const month = dayjs(transactionDate).startOf('month').format('YYYY-MM');
-        const year = dayjs(transactionDate).year();
-        const quarter = Math.ceil((dayjs(transactionDate).month() + 1) / 3);
+        const user = await User.findOne({ where: { id: userId } });
+        const timezone = user.preferences.timezone || 'UTC';
+
+        const today = dayjs(transactionDate).tz(timezone).format('YYYY-MM-DD');
+        const startOfWeek = dayjs(transactionDate).tz(timezone).startOf('week').format('YYYY-MM-DD');
+        const endOfWeek = dayjs(transactionDate).tz(timezone).endOf('week').format('YYYY-MM-DD');
+        const month = dayjs(transactionDate).tz(timezone).startOf('month').format('YYYY-MM');
+        const year = dayjs(transactionDate).tz(timezone).year();
+        const quarter = dayjs(transactionDate).tz(timezone).quarter();
 
         return [
             this.generateKey(userId, 'daily', today),
@@ -429,8 +437,8 @@ export class StatisticService {
             const cachedData = await this.cacheService.get(key);
 
             if (!cachedData) {
-                //just return, data will be updated when user call get statistic again
-                return;
+                //just continue, data will be updated when user call get statistic again
+                continue;
             }
 
             const newData = await this.getNewData(transaction, cachedData as StatisticData);

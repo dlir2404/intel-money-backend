@@ -22,12 +22,10 @@ export class AuthService {
     async register(body: RegisterRequest) {
         try {
             const result = await this.sequelize.transaction(async (t) => {
-                const {timezone, ...rest}: any = body;
+                const { timezone, ...rest }: any = body;
 
-                if (timezone){
-                    rest.preferences = {
-                        timezone
-                    }
+                rest.preferences = {
+                    timezone: timezone || 'UTC',
                 }
 
                 const user = await this.userService.createUser({

@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
-import { LoginRequest, LoginResponse, RefreshTokenRequest, RegisterRequest } from './auth.dto';
+import { GoogleLoginRequest, LoginRequest, LoginResponse, RefreshTokenRequest, RegisterRequest } from './auth.dto';
 import { AuthService } from './auth.service';
 import { CurrentUserId, UserAuth } from 'src/shared/decorators/auth';
 import { UserResponse } from '../user/user.dto';
@@ -31,8 +31,8 @@ export class AuthController {
     }
 
     @Post('google')
-    async googleLogin(@Body() body: { idToken: string }) {
-        return this.googleAuthService.login(body.idToken);
+    async googleLogin(@Body() body: GoogleLoginRequest) {
+        return this.googleAuthService.login(body);
     }
 
     @Post('refresh-token')

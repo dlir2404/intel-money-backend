@@ -45,5 +45,5 @@ export class User extends Model {
     @Column({
         type: DataType.JSON
     })
-    preferences: object
+    preferences: any
 }

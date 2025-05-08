@@ -20,6 +20,25 @@ export class LoginRequest {
     password: string;
 }
 
+export class GoogleLoginRequest {
+    @ApiProperty({
+        type: String,
+        example: 'aaaaaaaaaa'
+    })
+    @IsString()
+    @IsNotEmpty()
+    idToken: string
+
+    @ApiProperty({
+        type: String,
+        required: false,
+        example: 'Asia/Saigon'
+    })
+    @IsString()
+    @IsTimeZone()
+    timezone?: string;
+}
+
 export class LoginResponse {
     @ApiProperty()
     accessToken: string;

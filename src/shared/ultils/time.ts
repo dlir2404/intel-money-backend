@@ -43,6 +43,10 @@ export class Time {
         return dayjs(date).tz(timezone).toDate();
     }
 
+    static nowWithUserTimeZone(timezone: string) : dayjs.Dayjs {
+        return dayjs().tz(timezone);
+    }
+
     static startOfDayWithUserTimeZone(timezone: string) : dayjs.Dayjs {
         return dayjs().tz(timezone).startOf('day');
     }
