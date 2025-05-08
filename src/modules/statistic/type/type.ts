@@ -1,4 +1,4 @@
-export type StatisticType = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly' | 'byday';
+export type StatisticType = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly' | 'byday' | 'bymonth';
 
 export type StatisticThisTime = 'today' | 'thisWeek' | 'thisMonth' | 'thisQuarter' | 'thisYear';
 

@@ -85,4 +85,14 @@ export class Time {
 
         return days;
     }
+
+    static getMonthsRange(start: dayjs.Dayjs, end: dayjs.Dayjs): dayjs.Dayjs[] {
+        let months: dayjs.Dayjs[] = [];
+
+        for (let i = start; i.month() <= end.month(); i = i.add(1, 'month')) {
+            months.push(i);
+        }
+
+        return months;
+    }
 }

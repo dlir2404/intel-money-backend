@@ -567,4 +567,27 @@ export class StatisticService {
 
         return dataByDay;
     }
+
+    async getByMonthStatistic(userId: number, query: { from: string, to: string }) {
+        const user = await User.findOne({ where: { id: userId } });
+        if (!user) {
+            throw new UnauthorizedException('User not found');
+        }
+        const timezone = user.preferences.timezone || 'UTC';
+
+        const startDay = dayjs(query.from).tz(timezone).startOf('month');
+        const endDay = dayjs(query.to).tz(timezone).endOf('month');
+        const monthRange = Time.getMonthsRange(startDay, endDay);
+
+        let byMonthStatistic = [];
+        for (let month of monthRange) {
+            let data = await this.getMonthlyStatistic(userId, month.month(), month.year(), timezone);
+            byMonthStatistic.push({
+                date: month.toISOString(),
+                statisticData: data
+            });
+        }
+
+        return byMonthStatistic;
+    }
 }
