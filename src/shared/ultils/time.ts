@@ -10,19 +10,7 @@ dayjs.extend(quarterOfYear);
 
 export class Time {
     static test() {
-        let month = 4;
-        let year = 2025;
-        let tz = 'America/Toronto';
-
-        // let date = new Date(year, month - 1);
-        // let day = dayjs(date);
-        // console.log(day.startOf('month').toDate())
-
-        // let day2 = day.tz(tz);
-        // console.log(day2.startOf('month').toDate())
-
-        let day3 = dayjs().quarter(2).year(2025).tz(tz, true);
-        console.log(day3)
+        
     }
 
     static getUserTimeZone(req: Request){
@@ -85,5 +73,16 @@ export class Time {
 
     static endOfYearWithUserTimeZone(timezone: string) : dayjs.Dayjs {
         return dayjs().tz(timezone).endOf('year');
+    }
+
+    //get days between two dates, not include start and end date
+    static daysBetween(start: dayjs.Dayjs, end: dayjs.Dayjs): dayjs.Dayjs[] {
+        let days: dayjs.Dayjs[] = [];
+
+        for (let i = start.add(1, 'day'); i.isBefore(end); i = i.add(1, 'day')) {
+            days.push(i);
+        }
+
+        return days;
     }
 }

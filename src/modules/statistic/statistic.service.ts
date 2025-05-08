@@ -496,6 +496,7 @@ export class StatisticService {
 
     /**
      * Nhận xét: phần xem analysis này user khá là ít dùng, có thể cached theo from & to trong vòng 1 h
+     * from & to is a string in format ISO 8601 UTC
      * @param userId 
      * @param query 
      * @returns 
@@ -505,8 +506,12 @@ export class StatisticService {
         if (!user) {
             throw new UnauthorizedException('User not found');
         }
+        const timezone = user.preferences.timezone || 'UTC';
 
-        const cacheKey = this.generateKey(userId, 'byday', `${dayjs(query.from).format('YYYY-MM-DD')}-${dayjs(query.to).format('YYYY-MM-DD')}`);
+        const startDay = dayjs(query.from).tz(timezone);
+        const endDay = dayjs(query.to).tz(timezone);
+
+        const cacheKey = this.generateKey(userId, 'byday', `${startDay.format('YYYY-MM-DD')}-${endDay.format('YYYY-MM-DD')}`);
 
         const cachedData: any = await this.cacheService.get(cacheKey);
         if (cachedData) {
@@ -519,8 +524,8 @@ export class StatisticService {
                 where: {
                     userId,
                     transactionDate: {
-                        [Op.gte]: dayjs(query.from).startOf('day').toDate(),
-                        [Op.lte]: dayjs(query.to).endOf('day').toDate(),
+                        [Op.gte]: startDay.startOf('day').toDate(),
+                        [Op.lte]: endDay.endOf('day').toDate(),
                     },
                 },
                 include: [
@@ -535,6 +540,10 @@ export class StatisticService {
         )
 
         const transactionsByDay = {};
+        let dateRanges = [startDay, ...Time.daysBetween(startDay, endDay), endDay];
+        dateRanges.forEach((day) => {
+            transactionsByDay[day.format('YYYY-MM-DD')] = [];
+        })
 
         transactions.forEach((transaction) => {
             const dateKey = dayjs(transaction.transactionDate).format('YYYY-MM-DD');
