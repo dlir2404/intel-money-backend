@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsNotEmpty, IsString } from "class-validator";
+import { IsEmail, IsNotEmpty, IsString, IsTimeZone } from "class-validator";
 
 export class LoginRequest {
     @ApiProperty({
@@ -54,6 +54,15 @@ export class RegisterRequest {
     @IsString()
     @IsNotEmpty()
     password: string;
+
+    @ApiProperty({
+        type: String,
+        required: false,
+        example: 'Asia/Saigon'
+    })
+    @IsString()
+    @IsTimeZone()
+    timezone?: string;
 }
 
 export class RefreshTokenRequest {

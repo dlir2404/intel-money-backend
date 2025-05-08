@@ -22,8 +22,16 @@ export class AuthService {
     async register(body: RegisterRequest) {
         try {
             const result = await this.sequelize.transaction(async (t) => {
+                const {timezone, ...rest}: any = body;
+
+                if (timezone){
+                    rest.preferences = {
+                        timezone
+                    }
+                }
+
                 const user = await this.userService.createUser({
-                    ...body,
+                    ...rest,
                     role: UserRole.NORMAL_USER
                 }, t);
 
