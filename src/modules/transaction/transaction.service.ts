@@ -259,6 +259,9 @@ export class TransactionService {
                     userId
                 }, t);
 
+                //Update user's total balance
+                await this.userService.decreaseTotalBalance(userId, body.amount, t);
+
                 // Update source wallet balance
                 await this.walletService.decreaseBalance(body.sourceWalletId, body.amount, t);
 
