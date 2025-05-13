@@ -83,16 +83,6 @@ export class CategoryService {
             throw new NotFoundException("Category not found");
         }
 
-        if (body.parentId) {
-            const parentCategory = await Category.findOne({
-                where: { id: body.parentId, userId }
-            });
-
-            if (!parentCategory) {
-                throw new NotFoundException("Parent category not found");
-            }
-        }
-
         return await category.update(body);
     }
 

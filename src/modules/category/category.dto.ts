@@ -35,11 +35,6 @@ export class EditCategoryRequest {
     @IsString()
     @IsOptional()
     icon?: string;
-
-    @ApiProperty({ required: false })
-    @IsNumber()
-    @IsOptional()
-    parentId?: number;
 }
 
 @Expose()
