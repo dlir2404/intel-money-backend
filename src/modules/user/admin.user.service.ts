@@ -42,7 +42,12 @@ export class AdminUserService {
     }
 
     async setVip(id: number, vipExpirationDate: string) {
-        const user = await User.findByPk(id);
+        const user = await User.findOne({
+            where: {
+                id
+            },
+            raw: true
+        });
 
         if (!user) {
             throw new NotFoundException("User not found");
