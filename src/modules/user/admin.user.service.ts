@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { GetListUsersRequest } from "./user.dto";
 import { User } from "src/database/models";
 import { Op, WhereOptions } from "sequelize";
@@ -39,5 +39,20 @@ export class AdminUserService {
             count,
             rows
         }
+    }
+
+    async setVip(id: number, vipExpirationDate: string) {
+        const user = await User.findByPk(id);
+
+        if (!user) {
+            throw new NotFoundException("User not found");
+        }
+
+        user.isVip = true;
+        user.vipExpirationDate = vipExpirationDate;
+
+        await user.save();
+
+        return user;
     }
 }

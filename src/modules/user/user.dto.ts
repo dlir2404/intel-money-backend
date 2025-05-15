@@ -61,6 +61,12 @@ export class UserResponse {
     phone: string;
 
     @ApiProperty()
+    isVip: boolean;
+
+    @ApiProperty()
+    vipExpirationDate: string;
+
+    @ApiProperty()
     totalBalance: number;
 
     @ApiProperty()
@@ -123,4 +129,13 @@ export class ChangeTimezoneRequest {
     @IsNotEmpty()
     @IsTimeZone()
     timezone: string;
+}
+
+export class SetVipRequest {
+    @ApiProperty({
+        type: String
+    })
+    @IsNotEmpty()
+    @IsString()
+    vipExpirationDate: string;
 }
