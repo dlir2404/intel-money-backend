@@ -21,6 +21,13 @@ export class User extends Model {
     @Column({ allowNull: true })
     picture: string
 
+    @Column({ allowNull: false, defaultValue: false })
+    isVip: boolean
+
+    //this can be a UTC ISO 8601 string or "lifetime"
+    @Column({ allowNull: true })
+    vipExpirationDate: string
+
     @Column({
         defaultValue: 0
     })

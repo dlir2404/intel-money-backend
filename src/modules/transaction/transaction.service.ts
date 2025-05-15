@@ -265,7 +265,7 @@ export class TransactionService {
                 // Update source wallet balance
                 await this.walletService.decreaseBalance(body.sourceWalletId, body.amount, t);
 
-                // Update borrower's total loan
+                // Update user's total loan
                 await this.userService.increaseTotalLoan(userId, body.amount, t);
 
                 // Update borrower's total debt
