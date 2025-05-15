@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Exclude, Expose, Type } from "class-transformer";
-import { IsEmail, IsNotEmpty, IsOptional, IsString, IsTimeZone, IsUrl } from "class-validator";
+import { IsDefined, IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString, IsTimeZone, IsUrl } from "class-validator";
 import { UserRole } from "src/shared/enums/user";
 import { DateAndPaginationType } from "src/shared/types/base";
 
@@ -144,7 +144,7 @@ export class DisableVipRequest {
     @ApiProperty({
         type: Number
     })
-    @IsNotEmpty()
-    @IsString()
+    @IsDefined()
+    @IsNumber()
     userId: number;
 }
