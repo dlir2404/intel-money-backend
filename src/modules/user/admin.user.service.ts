@@ -42,12 +42,7 @@ export class AdminUserService {
     }
 
     async setVip(id: number, vipExpirationDate: string) {
-        const user = await User.findOne({
-            where: {
-                id
-            },
-            raw: true
-        });
+        const user = await User.findByPk(id);
 
         if (!user) {
             throw new NotFoundException("User not found");
@@ -58,6 +53,6 @@ export class AdminUserService {
 
         await user.save();
 
-        return user;
+        return user.dataValues;
     }
 }
