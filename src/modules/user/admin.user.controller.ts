@@ -40,6 +40,6 @@ export class AdminUserController {
     async disableVip(@Body() body: DisableVipRequest) {
         const results = await this.adminUserService.disableVip(body.userId);
 
-        return plainToInstance(UserResponse, results);
+        return { result: true };
     }
 }
