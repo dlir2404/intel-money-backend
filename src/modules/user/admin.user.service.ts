@@ -55,4 +55,17 @@ export class AdminUserService {
 
         return user.dataValues;
     }
+
+    async disableVip(userId: number) {
+        const user = await User.findByPk(userId);
+
+        if (!user) {
+            throw new NotFoundException("User not found");
+        }
+
+        user.isVip = false;
+        user.vipExpirationDate = null;
+
+        await user.save();
+    }
 }

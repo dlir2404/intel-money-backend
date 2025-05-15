@@ -139,3 +139,12 @@ export class SetVipRequest {
     @IsString()
     vipExpirationDate: string;
 }
+
+export class DisableVipRequest {
+    @ApiProperty({
+        type: Number
+    })
+    @IsNotEmpty()
+    @IsString()
+    userId: number;
+}
