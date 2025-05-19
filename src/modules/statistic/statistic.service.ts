@@ -3,7 +3,7 @@ import { StatisticType } from "./type/type";
 import * as dayjs from 'dayjs';
 import { AppCacheService } from "../cache/cache.service";
 import { Category, GeneralTransaction, User } from "src/database/models";
-import { Op } from "sequelize";
+import { Op, WhereOptions } from "sequelize";
 import { TransactionType } from "src/shared/enums/transaction";
 import { StatisticData } from "./statistic.dto";
 import { StatisticTypeTtl } from "./type/enum";
@@ -575,7 +575,7 @@ export class StatisticService {
      * @param query 
      * @returns 
      */
-    async getByDayStatistic(userId: number, query: { from: string, to: string }) {
+    async getByDayStatistic(userId: number, query: { from: string, to: string, categories?: number[], sourceWallets?: number[] }) {
         const user = await User.findOne({ where: { id: userId } });
         if (!user) {
             throw new UnauthorizedException('User not found');
@@ -587,21 +587,40 @@ export class StatisticService {
 
         const cacheKey = this.generateKey(userId, 'byday', `${startDay.format('YYYY-MM-DD')}-${endDay.format('YYYY-MM-DD')}`);
 
-        const cachedData: any = await this.cacheService.get(cacheKey);
-        if (cachedData) {
-            console.log(">>>> lay duoc cache roi ne. key: ", cacheKey);
-            return cachedData;
+        //neu khong co them filters ve account hoac la category thi moi co data cached
+        if (!((query.categories && query.categories.length > 0) || (query.sourceWallets && query.sourceWallets.length > 0))) {
+            const cachedData: any = await this.cacheService.get(cacheKey);
+            if (cachedData) {
+                console.log(">>>> lay duoc cache roi ne. key: ", cacheKey);
+                return cachedData;
+            }
+        }
+
+        let where: WhereOptions<GeneralTransaction> = {
+            userId,
+            transactionDate: {
+                [Op.gte]: startDay.startOf('day').toDate(),
+                [Op.lte]: endDay.endOf('day').toDate(),
+            },
+        }
+
+        if (query.categories && query.categories.length > 0) {
+            //TODO: need to check existing
+            where['categoryId'] = {
+                [Op.in]: query.categories,
+            }
+        }
+
+        if (query.sourceWallets && query.sourceWallets.length > 0) {
+            //TODO: need to check existing
+            where['sourceWalletId'] = {
+                [Op.in]: query.sourceWallets,
+            }
         }
 
         const transactions = await GeneralTransaction.findAll(
             {
-                where: {
-                    userId,
-                    transactionDate: {
-                        [Op.gte]: startDay.startOf('day').toDate(),
-                        [Op.lte]: endDay.endOf('day').toDate(),
-                    },
-                },
+                where,
                 include: [
                     {
                         model: Category,
@@ -636,8 +655,10 @@ export class StatisticService {
             }
         });
 
-        console.log(">>>>> bat dau cache");
-        await this.cacheService.set(cacheKey, dataByDay, StatisticTypeTtl.oneHour);
+        // neu khong co them filters ve account hoac la category thi moi cached data
+        if (!((query.categories && query.categories.length > 0) || (query.sourceWallets && query.sourceWallets.length > 0))) {
+            await this.cacheService.set(cacheKey, dataByDay, StatisticTypeTtl.oneHour);
+        }
 
         return dataByDay;
     }

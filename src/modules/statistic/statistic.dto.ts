@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsString } from "class-validator";
+import { IsNotEmpty, IsString, IsOptional, IsNumber } from "class-validator";
 
 export class ByCategoryData {
     @ApiProperty()
@@ -60,6 +60,22 @@ export class StatisticDataByDayRequest {
     @IsString()
     @IsNotEmpty()
     to: string;
+
+    @ApiProperty({
+        required: false,
+        example: [1, 2, 3],
+    })
+    @IsOptional()
+    @IsNumber({ each: true })
+    categories?: number[];
+
+    @ApiProperty({
+        required: false,
+        example: [1, 2, 3],
+    })
+    @IsOptional()
+    @IsNumber({ each: true })
+    sourceWallets?: number[];
 }
 
 export class CustomRangeStatisticRequest {
