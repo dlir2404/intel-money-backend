@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsString, IsOptional, IsNumber } from "class-validator";
+import { IsNotEmpty, IsString, IsOptional, IsNumber, IsArray } from "class-validator";
 
 export class ByCategoryData {
     @ApiProperty()
@@ -66,7 +66,8 @@ export class StatisticDataByDayRequest {
         example: [1, 2, 3],
     })
     @IsOptional()
-    @IsNumber({ each: true })
+    @IsArray()
+    @IsNumber({}, { each: true })
     categories?: number[];
 
     @ApiProperty({
@@ -74,7 +75,8 @@ export class StatisticDataByDayRequest {
         example: [1, 2, 3],
     })
     @IsOptional()
-    @IsNumber({ each: true })
+    @IsArray()
+    @IsNumber({}, { each: true })
     sourceWallets?: number[];
 }
 
