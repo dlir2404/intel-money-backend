@@ -3,7 +3,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { User, RelatedUser, Category, Wallet, GeneralTransaction, BorrowTransaction, TransferTransaction, LendTransaction } from './database/models';
+import { User, RelatedUser, Category, Wallet, GeneralTransaction, BorrowTransaction, TransferTransaction, LendTransaction, SystemConfig } from './database/models';
 import { RelatedUserModule } from './modules/related-user/related-user.module';
 import { CategoryModule } from './modules/category/category.module';
 import { WalletModule } from './modules/wallet/wallet.module';
@@ -26,7 +26,7 @@ import { AppCacheModule } from './modules/cache/cache.module';
         username: configService.get<string>("DB_USERNAME"),
         password: configService.get<string>("DB_PASSWORD"),
         database: configService.get<string>("DB_NAME"),
-        models: [User, RelatedUser, Category, Wallet, GeneralTransaction, BorrowTransaction, TransferTransaction, LendTransaction],
+        models: [User, RelatedUser, Category, Wallet, GeneralTransaction, BorrowTransaction, TransferTransaction, LendTransaction, SystemConfig],
         autoLoadModels: true,
         synchronize: true,
         timezone: '+00:00', // UTC
