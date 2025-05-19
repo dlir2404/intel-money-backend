@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsNotEmpty, IsString, IsOptional, IsNumber, IsArray } from "class-validator";
-import { Type } from "class-transformer";
+import { Transform } from "class-transformer";
 
 export class ByCategoryData {
     @ApiProperty()
@@ -64,21 +64,31 @@ export class StatisticDataByDayRequest {
 
     @ApiProperty({
         required: false,
-        example: [1, 2, 3],
+        example: "1,2,3",
+        type: String,
+        description: "List of category IDs to filter by. If not provided, all categories will be included."
     })
     @IsOptional()
+    @Transform(({ value }) =>
+        // Nếu không có value thì trả về mảng rỗng
+        (value || '').split(',').map(v => parseInt(v, 10))
+    )
     @IsArray()
-    @Type(() => Number)
     @IsNumber({}, { each: true })
     categories?: number[];
 
     @ApiProperty({
         required: false,
-        example: [1, 2, 3],
+        example: "1,2,3",
+        type: String,
+        description: "List of source wallet IDs to filter by. If not provided, all wallets will be included."
     })
     @IsOptional()
+    @Transform(({ value }) =>
+        // Nếu không có value thì trả về mảng rỗng
+        (value || '').split(',').map(v => parseInt(v, 10))
+    )
     @IsArray()
-    @Type(() => Number)
     @IsNumber({}, { each: true })
     sourceWallets?: number[];
 }
