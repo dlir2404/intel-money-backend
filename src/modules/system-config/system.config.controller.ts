@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Put } from "@nestjs/common";
 import { SystemConfigService } from "./system.config.service";
 import { CreateSystemConfigDto, SystemConfigResponse, UpdateSystemConfigDto } from "./dto";
 import { ApiResponse } from "@nestjs/swagger";
@@ -34,7 +34,7 @@ export class SystemConfigController {
         return new BaseResponse({ result: true });
     }
 
-    @Post(':id/update')
+    @Put(':id')
     @ApiResponse({
         status: 200,
         type: BaseResponse,
