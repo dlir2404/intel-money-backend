@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsString } from "class-validator";
+import { Transform } from "class-transformer";
+import { IsDefined, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from "class-validator";
 
 export class CreateSystemConfigDto {
     @ApiProperty({
@@ -19,15 +20,53 @@ export class CreateSystemConfigDto {
     value: string;
 }
 
-export class UpdateSystemConfigDto {
+export class UpdateAdsConfigDto {
     @ApiProperty({
         required: true,
-        example: 'config_value'
+        example: 0.5
     })
-    @IsString()
-    @IsNotEmpty()
-    value: string;
+    @IsDefined()
+    @IsNumber()
+    @Min(0)
+    @Max(1)
+    adProbability: number;
+
+    @ApiProperty({
+        required: true,
+        example: 30,
+        description: 'in seconds'
+    })
+    @IsDefined()
+    @IsNumber()
+    @Min(0)
+    @Max(3600)
+    minTimeBetweenAds: number;
 }
+
+export class UpdateSystemConfigDto {
+    @ApiProperty({
+        required: false,
+        type: UpdateAdsConfigDto,
+    })
+    @IsOptional()
+    adsConfig?: UpdateAdsConfigDto;
+}
+
+export class AdsConfigResponse {
+    @ApiProperty({
+        required: true,
+        example: 0.5
+    })
+    adProbability: number;
+
+    @ApiProperty({
+        required: true,
+        example: 30,
+        description: 'in seconds'
+    })
+    minTimeBetweenAds: number;
+}
+
 
 export class SystemConfigResponse {
     @ApiProperty()
@@ -35,15 +74,13 @@ export class SystemConfigResponse {
 
     @ApiProperty({
         required: true,
-        example: 'config_key'
+        type: AdsConfigResponse,
+        example: {
+            adProbability: 0.5,
+            minTimeBetweenAds: 30
+        }
     })
-    key: string;
-
-    @ApiProperty({
-        required: true,
-        example: 'config_value'
-    })
-    value: string;
+    adsConfig: AdsConfigResponse;
 
     @ApiProperty({
         required: true,
