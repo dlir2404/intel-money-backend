@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsNotEmpty, IsString, IsOptional, IsNumber, IsArray } from "class-validator";
-import { TransformType } from "class-transformer";
+import { Transform } from "class-transformer";
 
 export class ByCategoryData {
     @ApiProperty()
@@ -68,7 +68,7 @@ export class StatisticDataByDayRequest {
     })
     @IsOptional()
     @IsArray()
-    @TransformType(() => Number)
+    @Transform(() => Number)
     @IsNumber({}, { each: true })
     categories?: number[];
 
@@ -78,7 +78,7 @@ export class StatisticDataByDayRequest {
     })
     @IsOptional()
     @IsArray()
-    @TransformType(() => Number)
+    @Transform(() => Number)
     @IsNumber({}, { each: true })
     sourceWallets?: number[];
 }
