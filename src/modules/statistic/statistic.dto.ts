@@ -61,3 +61,21 @@ export class StatisticDataByDayRequest {
     @IsNotEmpty()
     to: string;
 }
+
+export class CustomRangeStatisticRequest {
+    @ApiProperty({
+        required: true,
+        example: '2024-11-02T16:01:16.425Z'
+    })
+    @IsString()
+    @IsNotEmpty()
+    from: string;
+
+    @ApiProperty({
+        required: true,
+        example: '2024-11-02T16:01:16.425Z'
+    })
+    @IsString()
+    @IsNotEmpty()
+    to: string;
+}

@@ -690,4 +690,29 @@ export class StatisticService {
         }
         return byYearStatistic;
     }
+
+    // from & to in format ISO 8601 UTC
+    async getCustomRangeStatistic(userId: number, query: { from: string, to: string }) {
+        const user = await User.findOne({where: {id: userId}});
+        if (!user) {
+            throw new UnauthorizedException('User not found');
+        }
+
+        const transactions = await GeneralTransaction.findAll(
+            {
+                where: {
+                    userId,
+                    transactionDate: {
+                        [Op.gte]: dayjs(query.from).toDate(),
+                        [Op.lte]: dayjs(query.to).toDate(),
+                    },
+                },
+                nest: true,
+                raw: true,
+            }
+        );
+        const statisticData = this.calulateCompactStatistic(transactions);
+
+        return statisticData;
+    }
 }

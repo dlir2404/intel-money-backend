@@ -1,7 +1,12 @@
 import { Controller, Get, Query } from "@nestjs/common";
 import { StatisticService } from "./statistic.service";
 import { ApiResponse } from "@nestjs/swagger";
-import { CompactStatisticData, StatisticData, StatisticDataByDayRequest } from "./statistic.dto";
+import {
+    CompactStatisticData,
+    CustomRangeStatisticRequest,
+    StatisticData,
+    StatisticDataByDayRequest
+} from "./statistic.dto";
 import { CurrentUserId, UserAuth } from "src/shared/decorators/auth";
 import { query } from "express";
 
@@ -91,5 +96,14 @@ export class StatisticController {
     @UserAuth()
     async getByYearStatistic(@CurrentUserId() userId: number, @Query() query: StatisticDataByDayRequest) {
         return await this.statisticService.getByYearStatistic(userId, query);
+    }
+
+    @Get("custom-range")
+    @ApiResponse({
+        status: 200,
+        type: CompactStatisticData,
+    })
+    async getCustomRangeStatistic(@CurrentUserId() userId: number, @Query() query: CustomRangeStatisticRequest) {
+        return await this.statisticService.getCustomRangeStatistic(userId, query);
     }
 }
