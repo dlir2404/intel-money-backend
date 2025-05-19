@@ -11,6 +11,7 @@ import { TransactionModule } from './modules/transaction/transaction.module';
 import { OpenAiModule } from './modules/openai/openai.module';
 import { StatisticModule } from './modules/statistic/statistic.module';
 import { AppCacheModule } from './modules/cache/cache.module';
+import { SystemConfigModule } from './modules/system-config/system.config.module';
 
 @Module({
   imports: [
@@ -48,7 +49,8 @@ import { AppCacheModule } from './modules/cache/cache.module';
     TransactionModule,
     OpenAiModule,
     AppCacheModule,
-    StatisticModule
+    StatisticModule,
+    SystemConfigModule,
   ],
 })
 export class AppModule { }
