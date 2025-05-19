@@ -103,6 +103,7 @@ export class StatisticController {
         status: 200,
         type: CompactStatisticData,
     })
+    @UserAuth()
     async getCustomRangeStatistic(@CurrentUserId() userId: number, @Query() query: CustomRangeStatisticRequest) {
         return await this.statisticService.getCustomRangeStatistic(userId, query);
     }
