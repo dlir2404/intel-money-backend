@@ -138,33 +138,50 @@ export class StatisticService {
         const month: number = dayjs().tz(timezone).month(); // 0-11
         const year: number = dayjs().tz(timezone).year();
 
-        return await this.getMonthlyStatistic(userId, month, year, timezone);
+        return await this.getMonthlyStatistic({userId, month, year, timezone});
     }
 
 
     //month is from 0 to 11 already in user timezone
     //user must already exist in this step
-    async getMonthlyStatistic(userId: number, month: number, year: number, timezone: string) {
+    async getMonthlyStatistic({userId, month, year, timezone, categories, sourceWallets}:{userId: number, month: number, year: number, timezone: string, categories?: number[], sourceWallets?: number[]}) {
         let timeRange = `${year}-${month + 1}`;
         if (month < 9) {
             timeRange = `${year}-0${month + 1}`;
         }
         const cacheKey = this.generateKey(userId, 'monthly', timeRange);
-        const cachedData = await this.cacheService.get(cacheKey);
-        if (cachedData) {
-            console.log(">>>> lay duoc cache roi ne. key: ", cacheKey);
-            return cachedData;
+
+        //neu khong co them filters ve account hoac la category thi moi co data cached
+        if (!((categories && categories.length > 0) || (sourceWallets && sourceWallets.length > 0))) {
+            const cachedData = await this.cacheService.get(cacheKey);
+            if (cachedData) {
+                return cachedData;
+            }
+        }
+
+        let where: WhereOptions<GeneralTransaction> = {
+            userId,
+            transactionDate: {
+                [Op.gte]: dayjs().year(year).month(month).tz(timezone).startOf('month').toDate(),
+                [Op.lte]: dayjs().year(year).month(month).tz(timezone).endOf('month').toDate(),
+            },
+        }
+
+        if (categories && categories.length > 0) {
+            where['categoryId'] = {
+                [Op.in]: categories,
+            }
+        }
+
+        if (sourceWallets && sourceWallets.length > 0) {
+            where['sourceWalletId'] = {
+                [Op.in]: sourceWallets,
+            }
         }
 
         const transactions = await GeneralTransaction.findAll(
             {
-                where: {
-                    userId,
-                    transactionDate: {
-                        [Op.gte]: dayjs().year(year).month(month).tz(timezone).startOf('month').toDate(),
-                        [Op.lte]: dayjs().year(year).month(month).tz(timezone).endOf('month').toDate(),
-                    },
-                },
+                where,
                 include: [
                     {
                         model: Category,
@@ -180,8 +197,11 @@ export class StatisticService {
         //TODO: fix this later
         statisticData.totalBalance = 0;
 
-        console.log(">>>>> bat dau cache");
-        await this.cacheService.set(cacheKey, statisticData, StatisticTypeTtl.monthly); // Cache for 1 month
+        // neu khong co them filters ve account hoac la category thi moi cached data
+        if (!((categories && categories.length > 0) || (sourceWallets && sourceWallets.length > 0))) {
+            await this.cacheService.set(cacheKey, statisticData, StatisticTypeTtl.monthly); // Cache for 1 month
+        }
+
         return statisticData;
     }
 
@@ -260,7 +280,7 @@ export class StatisticService {
             console.log(">>>> lay duoc cache roi ne. key: ", cacheKey);
             let byMonthStatistic = [];
             for (let month = 0; month < 12; month++) {
-                let data = await this.getMonthlyStatistic(userId, month, year, timezone);
+                let data = await this.getMonthlyStatistic({userId, month, year, timezone});
                 byMonthStatistic.push(data);
             }
             cachedData.byMonthStatistic = byMonthStatistic;
@@ -304,7 +324,7 @@ export class StatisticService {
         //these extra statistics are cached in those own cache keys so do not need to cache them again
         let byMonthStatistic = [];
         for (let month = 0; month < 12; month++) {
-            let data = await this.getMonthlyStatistic(userId, month, year, timezone);
+            let data = await this.getMonthlyStatistic({userId, month, year, timezone});
             byMonthStatistic.push(data);
         }
         statisticData.byMonthStatistic = byMonthStatistic;
@@ -334,7 +354,7 @@ export class StatisticService {
             console.log(">>>> lay duoc cache roi ne. key: ", cacheKey);
             let byMonthStatistic = [];
             for (let month = 0; month < 12; month++) {
-                let data = await this.getMonthlyStatistic(userId, month, year, timezone);
+                let data = await this.getMonthlyStatistic({userId, month, year, timezone});
                 byMonthStatistic.push(data);
             }
             cachedData.byMonthStatistic = byMonthStatistic;
@@ -378,7 +398,7 @@ export class StatisticService {
         //these extra statistics are cached in those own cache keys so do not need to cache them again
         let byMonthStatistic = [];
         for (let month = 0; month < 12; month++) {
-            let data = await this.getMonthlyStatistic(userId, month, year, timezone);
+            let data = await this.getMonthlyStatistic({userId, month, year, timezone});
             byMonthStatistic.push(data);
         }
         statisticData.byMonthStatistic = byMonthStatistic;
@@ -663,7 +683,7 @@ export class StatisticService {
         return dataByDay;
     }
 
-    async getByMonthStatistic(userId: number, query: { from: string, to: string }) {
+    async getByMonthStatistic(userId: number, query: { from: string, to: string, categories?: number[], sourceWallets?: number[]  }) {
         const user = await User.findOne({ where: { id: userId } });
         if (!user) {
             throw new UnauthorizedException('User not found');
@@ -676,7 +696,7 @@ export class StatisticService {
 
         let byMonthStatistic = [];
         for (let month of monthRange) {
-            let data = await this.getMonthlyStatistic(userId, month.month(), month.year(), timezone);
+            let data = await this.getMonthlyStatistic({userId, month: month.month(), year: month.year(), timezone, categories: query.categories, sourceWallets: query.sourceWallets});
             byMonthStatistic.push({
                 date: month.toISOString(),
                 statisticData: data
