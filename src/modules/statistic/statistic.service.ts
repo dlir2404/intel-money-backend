@@ -71,7 +71,7 @@ export class StatisticService {
         )
 
         const statisticData = this.calulateStatistic(transactions);
-        statisticData.totalBalance = user.totalBalance;
+        statisticData.totalBalance = 0;
 
         console.log(">>>>> bat dau cache");
         await this.cacheService.set(cacheKey, statisticData, StatisticTypeTtl.daily); // Cache for 24 hours
@@ -118,7 +118,7 @@ export class StatisticService {
         )
 
         const statisticData = this.calulateStatistic(transactions);
-        statisticData.totalBalance = user.totalBalance;
+        statisticData.totalBalance = 0;
 
         console.log(">>>>> bat dau cache");
         await this.cacheService.set(cacheKey, statisticData, StatisticTypeTtl.weekly); // Cache for 1 week
