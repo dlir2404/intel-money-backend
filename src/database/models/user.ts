@@ -29,17 +29,23 @@ export class User extends Model {
     vipExpirationDate: string
 
     @Column({
+        type: DataType.DECIMAL(17, 2),
+        allowNull: false,
         defaultValue: 0
     })
     totalBalance: number
 
     @Column({
-        defaultValue: 0
+        type: DataType.DECIMAL(17, 2),
+        defaultValue: 0,
+        allowNull: false
     })
     totalLoan: number
 
     @Column({
-        defaultValue: 0
+        type: DataType.DECIMAL(17, 2),
+        defaultValue: 0,
+        allowNull: false
     })
     totalDebt: number
 

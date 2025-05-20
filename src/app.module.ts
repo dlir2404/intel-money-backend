@@ -35,6 +35,7 @@ import { SystemConfigModule } from './modules/system-config/system.config.module
           // Đảm bảo DB trả về giá trị DATE/DATETIME/TIMESTAMP là UTC
           // Cho MySQL/MariaDB
           timezone: '+00:00',
+          decimalNumbers: true,
         },
         // sync: { force: true },
         // logging: console.log,

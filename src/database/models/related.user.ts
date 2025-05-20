@@ -22,25 +22,33 @@ export class RelatedUser extends Model {
     user: User;
 
     @Column({
-        defaultValue: 0
+        type: DataType.DECIMAL(17, 2),
+        defaultValue: 0,
+        allowNull: false
     })
     // total amount that user has borrow from this person
     totalLoan: number;
 
     @Column({
-        defaultValue: 0
+        type: DataType.DECIMAL(17, 2),
+        defaultValue: 0,
+        allowNull: false
     })
     // total amount that user has paid to this person
     totalPaid: number;
 
     @Column({
-        defaultValue: 0
+        type: DataType.DECIMAL(17, 2),
+        defaultValue: 0,
+        allowNull: false
     })
     // total amount that user has lent to this person
     totalDebt: number;
 
     @Column({
-        defaultValue: 0
+        type: DataType.DECIMAL(17, 2),
+        defaultValue: 0,
+        allowNull: false
     })
     //total amount that user has collected from this person
     totalCollected: number;

@@ -13,7 +13,8 @@ export class GeneralTransaction extends Model{
     type: TransactionType;
 
     @Column({
-        type: DataType.DECIMAL(19, 4),
+        type: DataType.DECIMAL(17, 2),
+        defaultValue: 0,
         allowNull: false
     })
     amount: number;

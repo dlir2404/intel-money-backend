@@ -1,4 +1,4 @@
-import { BelongsTo, Column, ForeignKey, Model, Table } from "sequelize-typescript";
+import { BelongsTo, Column, DataType, ForeignKey, Model, Table } from "sequelize-typescript";
 import { User } from "./user";
 
 @Table({
@@ -17,7 +17,9 @@ export class Wallet extends Model {
     icon: string;
 
     @Column({
-        defaultValue: 0
+        type: DataType.DECIMAL(17, 2),
+        defaultValue: 0,
+        allowNull: false
     })
     balance: number;
     
