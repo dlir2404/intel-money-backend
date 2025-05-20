@@ -1,4 +1,4 @@
-import { Column, Model, Table, ForeignKey, BelongsTo } from "sequelize-typescript";
+import { Column, Model, Table, ForeignKey, BelongsTo, DataType } from "sequelize-typescript";
 import { User } from "./user";
 
 @Table({
@@ -24,10 +24,24 @@ export class RelatedUser extends Model {
     @Column({
         defaultValue: 0
     })
+    // total amount that user has borrow from this person
     totalLoan: number;
 
     @Column({
         defaultValue: 0
     })
+    // total amount that user has paid to this person
+    totalPaid: number;
+
+    @Column({
+        defaultValue: 0
+    })
+    // total amount that user has lent to this person
     totalDebt: number;
+
+    @Column({
+        defaultValue: 0
+    })
+    //total amount that user has collected from this person
+    totalCollected: number;
 }
