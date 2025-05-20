@@ -1,6 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsNotEmpty, IsString } from "class-validator";
 import OpenAI from "openai";
+import {GeneralTransactionResponse} from "../transaction/transaction.dto";
 
 export class CompletionRequestDto {
     messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
@@ -28,4 +29,21 @@ export class ExtractTransactionInfoRequest {
     @IsNotEmpty()
     @IsString()
     text: string;
+}
+
+export class RegisterTransactionFromChatRequest {
+    @ApiProperty()
+    @IsNotEmpty()
+    @IsString()
+    text: string;
+}
+
+export class RegisterTransactionFromChatResponse {
+    @ApiProperty({
+        type: [GeneralTransactionResponse]
+    })
+    transactions: GeneralTransactionResponse[];
+
+    @ApiProperty()
+    advice: string;
 }

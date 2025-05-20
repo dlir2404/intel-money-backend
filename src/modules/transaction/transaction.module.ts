@@ -16,6 +16,7 @@ import { StatisticModule } from "../statistic/statistic.module";
         StatisticModule
     ],
     controllers: [TransactionController],
-    providers: [TransactionService]
+    providers: [TransactionService],
+    exports: [TransactionService]
 })
 export class TransactionModule {}
