@@ -164,20 +164,14 @@ export class OpenAiService {
         let messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
             {
                 role: "system",
-                content: `You are a financial assistant that processes transaction information. Follow these steps:
-
-                    1. Parse the user's text to identify transaction details (amount, category, wallet, date, description)
-                    2. Determine if it's an expense or income transaction
-                    3. Call the appropriate function ONCE per transaction
-                    4. Provide personalized financial advice based on the transaction(s)
-                    
-                    Guidelines:
-                    - Support numeric formats: k (thousands), m (millions), b (billions)
-                    - Match categories and wallets to user's existing options
-                    - If transaction details are unclear or ambiguous, don't call any function. Instead, respond with a message asking the user to provide more specific information about their transaction.
-                    
-                    Available categories: ${userCategoryList}
-                    Available wallets: ${userWalletList}`,
+                content: `You are a helpful assistant that extracts transaction information from text message of user. Your task is to extract transaction info base on the provided text.
+                        Then call the function provided to create expense or income transaction, then give user an advice for spending money.
+                        The provided text can be information of one or many transactions, and can be an income or expense transaction.
+                        Support numeric formats: k (thousands), m (millions), b (billions)
+                        NOTICE: DO NOT REPEATLY CALL THE FUNCTION, CALL IT ONLY ONCE FOR EACH TRANSACTION.
+                        
+                        These are user's categories: ${userCategoryList}.
+                        These are user's wallets: ${userWalletList}.`,
             },
             {
                 role: "user",
