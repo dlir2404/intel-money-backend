@@ -56,7 +56,11 @@ export class User extends Model {
     role: UserRole
 
     @Column({
-        type: DataType.JSON
+        type: DataType.JSON,
+        defaultValue: {
+            timezone: "Asia/Ho_Chi_Minh",
+            currency: "VND",
+        }
     })
     preferences: any
 }

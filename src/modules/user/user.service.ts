@@ -73,4 +73,16 @@ export class UserService {
         await user.save();
     }
 
+    async changeCurrency(currency: string, userId: number) {
+        const user = await User.findByPk(userId);
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+
+        user.preferences = {
+            ...user.preferences,
+            currency: currency
+        };
+        await user.save();
+    }
 }
