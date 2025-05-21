@@ -167,7 +167,7 @@ export class OpenAiService {
                 content: `You are a helpful assistant that extracts transaction information from text message of user. Your task is to extract transaction info base on the provided text.
                         Then call the function provided to create expense or income transaction, then give user an advice for spending money.
                         The provided text can be information of one or many transactions, and can be an income or expense transaction.
-                        Support numeric formats: k (thousands), m (millions), b (billions)
+                        Support numeric formats: k (thousands), m (millions), b (billions). When user use these formats, you must add enough zeros to the amount.
                         NOTICE: DO NOT REPEATLY CALL THE FUNCTION, CALL IT ONLY ONCE FOR EACH TRANSACTION.
                         
                         These are user's categories: ${userCategoryList}.
