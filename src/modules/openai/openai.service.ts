@@ -159,30 +159,43 @@ export class OpenAiService {
                     },
                 }
             }
-        ]
+        ];
 
         let messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
             {
                 role: "system",
-                content: `You are a helpful assistant that extracts transaction information from text message of user. Your task is to extract transaction info base on the provided text.
-                        Then call the function provided to create expense or income transaction, then give user an advice for spending money.
-                        The provided text can be information of one or many transactions, and can be an income or expense transaction.
-                        Support numeric formats: k (thousands), m (millions), b (billions). When user use these formats, you must add enough zeros to the amount.
-                        NOTICE: DO NOT REPEATLY CALL THE FUNCTION, CALL IT ONLY ONCE FOR EACH TRANSACTION.
-                        
-                        These are user's categories: ${userCategoryList}.
-                        These are user's wallets: ${userWalletList}.`,
+                content: `You are a helpful assistant that extracts transaction information from text messages of users. 
+
+IMPORTANT: If the text contains information about a single transaction, call the appropriate function EXACTLY ONCE.
+If the text clearly mentions multiple separate transactions, then call the appropriate function once for EACH transaction.
+DO NOT create duplicate transactions for the same information.
+
+For example:
+- "break fast 30k" is ONE transaction - call the function only ONCE
+- "I bought groceries for $50 and paid $20 for gas" describes TWO transactions - call the function TWICE
+
+Support numeric formats: 
+- k (thousands): e.g., 30k = 30000
+- m (millions): e.g., 1.5m = 1500000
+- b (billions): e.g., 2b = 2000000000
+- tr (triệu): e.g., 1tr = 1000000
+- củ (triệu  in Vietnamese): e.g., 1 củ = 1000000
+- lít / loét (trăm in Vietnamese): e.g., 1 lít / loét = 100000
+
+User's available categories: ${userCategoryList}
+User's available wallets: ${userWalletList}`,
             },
             {
                 role: "user",
                 content: `From this text: "${text}", extract the transaction information and register it.`,
             },
-        ]
+        ];
 
         const response = await this.openai.chat.completions.create({
             model: 'gpt-4o-mini',
             messages: messages,
             tools,
+            temperature: 0.1, // Add lower temperature for more consistent results
         });
 
         if (!response.choices[0].message.tool_calls || response.choices[0].message.tool_calls.length === 0) {
@@ -196,8 +209,25 @@ export class OpenAiService {
             tool_calls: response.choices[0].message.tool_calls
         });
 
-        const transactions = [];
+        // Process tool calls and deduplicate if needed
+        const seenTransactions = new Set();
+        const uniqueToolCalls = [];
+
         for (const tool_call of response.choices[0].message.tool_calls) {
+            const args = JSON.parse(tool_call.function.arguments);
+
+            // Create a unique identifier for this transaction based on key fields
+            const transactionKey = `${tool_call.function.name}:${args.description}:${args.amount}:${args.categoryId}:${args.sourceWalletId}`;
+
+            // Only process this transaction if we haven't seen it before
+            if (!seenTransactions.has(transactionKey)) {
+                seenTransactions.add(transactionKey);
+                uniqueToolCalls.push(tool_call);
+            }
+        }
+
+        const transactions = [];
+        for (const tool_call of uniqueToolCalls) {
             let toolArguments: any = JSON.parse(tool_call.function.arguments);
             if (!toolArguments.transactionDate) {
                 toolArguments.transactionDate = new Date();
@@ -220,7 +250,7 @@ export class OpenAiService {
                 role: 'tool',
                 tool_call_id: tool_call.id,
                 content: JSON.stringify(newTransaction)
-            })
+            });
         }
 
         let schema: Record<string, unknown> = {
@@ -234,7 +264,7 @@ export class OpenAiService {
             },
             additionalProperties: false,
             required: ["advice"],
-        }
+        };
 
         const advice_response = await this.openai.chat.completions.create({
             model: 'gpt-4o-mini',
