@@ -12,6 +12,8 @@ import { OpenAiModule } from './modules/openai/openai.module';
 import { StatisticModule } from './modules/statistic/statistic.module';
 import { AppCacheModule } from './modules/cache/cache.module';
 import { SystemConfigModule } from './modules/system-config/system.config.module';
+import {APP_INTERCEPTOR} from "@nestjs/core";
+import {TelegramLoggerInterceptor} from "./shared/interceptors/telegram-logger.interceptor";
 
 @Module({
   imports: [
@@ -53,5 +55,11 @@ import { SystemConfigModule } from './modules/system-config/system.config.module
     StatisticModule,
     SystemConfigModule,
   ],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TelegramLoggerInterceptor,
+    },
+  ]
 })
 export class AppModule { }
