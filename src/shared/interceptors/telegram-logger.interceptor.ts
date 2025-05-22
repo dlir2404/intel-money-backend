@@ -1,7 +1,7 @@
 import {CallHandler, ExecutionContext, Injectable, NestInterceptor} from "@nestjs/common";
 import {ConfigService} from "@nestjs/config";
 import * as dayjs from 'dayjs';
-import { Observable, catchError, throwError } from 'rxjs';
+import {Observable, catchError, throwError, from} from 'rxjs';
 
 @Injectable()
 export class TelegramLoggerInterceptor implements NestInterceptor {
@@ -42,15 +42,20 @@ export class TelegramLoggerInterceptor implements NestInterceptor {
 
                 const telegramUrl = `https://api.telegram.org/bot${this.botToken}/sendMessage`;
 
-                fetch(telegramUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: this.chatId,
-                        text,
-                        parse_mode: 'Markdown',
-                    }),
-                });
+                // Gửi log không blocking
+                from(
+                    fetch(telegramUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: this.chatId,
+                            text,
+                            parse_mode: 'Markdown',
+                        }),
+                    }).catch((e) => {
+                        console.error('Failed to send Telegram log:', e);
+                    })
+                ).subscribe(); // 🔥 fire-and-forget
 
                 return throwError(() => err);
             })
