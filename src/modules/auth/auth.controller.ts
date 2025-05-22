@@ -1,6 +1,13 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
-import { GoogleLoginRequest, LoginRequest, LoginResponse, RefreshTokenRequest, RegisterRequest } from './auth.dto';
+import {
+    ForgotPasswordRequest,
+    GoogleLoginRequest,
+    LoginRequest,
+    LoginResponse,
+    RefreshTokenRequest,
+    RegisterRequest, ResetPasswordRequest, VerifyOtpRequest
+} from './auth.dto';
 import { AuthService } from './auth.service';
 import { CurrentUserId, UserAuth } from 'src/shared/decorators/auth';
 import { UserResponse } from '../user/user.dto';
@@ -51,5 +58,23 @@ export class AuthController {
     async getMe(@CurrentUserId() userId: number): Promise<UserResponse> {
         const user = await this.authService.getMe(userId);
         return new UserResponse(user);
+    }
+
+    @Post('forgot-password')
+    @ApiResponse({
+        type: String
+    })
+    async forgotPassword(@Body() body: ForgotPasswordRequest) {
+        return this.authService.forgotPassword(body.email);
+    }
+
+    @Post('verify-otp')
+    async verifyOtp(@Body() body: VerifyOtpRequest) {
+        return this.authService.verifyOtp(body.email, body.otp);
+    }
+
+    @Post('reset-password')
+    async resetPassword(@Body() body: ResetPasswordRequest) {
+        return this.authService.resetPassword(body.email, body.resetToken, body.newPassword);
     }
 }

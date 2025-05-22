@@ -26,7 +26,7 @@ export class TelegramLoggerInterceptor implements NestInterceptor {
         const bearerToken = headers['authorization'];
 
         return next.handle().pipe(
-            catchError(async (err) => {
+            catchError((err) => {
                 const text = `
     🚨 *Intel Money Error Alert*
     🕒 Time: ${now}
@@ -42,7 +42,7 @@ export class TelegramLoggerInterceptor implements NestInterceptor {
 
                 const telegramUrl = `https://api.telegram.org/bot${this.botToken}/sendMessage`;
 
-                await fetch(telegramUrl, {
+                fetch(telegramUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
