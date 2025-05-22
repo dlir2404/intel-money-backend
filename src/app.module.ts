@@ -62,7 +62,7 @@ import {HandlebarsAdapter} from "@nestjs-modules/mailer/dist/adapters/handlebars
           from: `${configService.get<string>("MAIL_FROM_NAME") || "No Reply"} <${configService.get<string>("MAIL_FROM_EMAIL") || "<noreply@example.com>"}>`,
         },
         template: {
-          dir: process.cwd() + '/templates/',
+          dir: __dirname  + '/templates/',
           adapter: new HandlebarsAdapter(),
           options: {
             strict: true,
