@@ -10,7 +10,6 @@ export class SystemConfigController {
     constructor(private readonly sysConfigService: SystemConfigService) { }
 
     @Get()
-    @AdminAuth()
     @ApiResponse({
         status: 200,
         type: SystemConfigResponse,
