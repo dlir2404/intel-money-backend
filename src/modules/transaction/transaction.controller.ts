@@ -51,17 +51,6 @@ export class TransactionController {
         return new GeneralTransactionResponse(transaction);
     }
 
-    @Post("income/bulk/create")
-    @ApiResponse({
-        status: 201,
-        type: BaseResponse
-    })
-    @UserAuth()
-    async createBulkIncome(@Body() body: CreateBulkIncomeTransactionRequest, @CurrentUserId() userId: number) {
-        const transactions = await this.transactionService.createBulkIncome(body.transactions, userId);
-        return new BaseResponse({ result: true});
-    }
-
     @Post("expense/create")
     @ApiResponse({
         status: 201,

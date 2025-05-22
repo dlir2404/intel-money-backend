@@ -183,7 +183,9 @@ Support numeric formats:
 - lít / loét (trăm in Vietnamese): e.g., 1 lít / loét = 100000
 
 User's available categories: ${userCategoryList}
-User's available wallets: ${userWalletList}`,
+User's available wallets: ${userWalletList}
+If user does not provide time, set transactionDate to now. Now is: ${new Date().toISOString()}
+`,
             },
             {
                 role: "user",

@@ -141,19 +141,6 @@ export class TransactionService {
         return transaction;
     }
 
-
-    async createBulkIncome(transactions: CreateGeneralTransactionRequest[], userId: number) {
-        try {
-            await this.sequelize.transaction(async (t) => {
-                for (const transaction of transactions) {
-                    await this.createIncomeWithTransaction(transaction, userId, t);
-                }
-            });
-        } catch (error) {
-            throw new BadRequestException(`Failed to create bulk income transactions: ${error.message}`);
-        }
-    }
-
     async createExpense(body: CreateGeneralTransactionRequest, userId: number): Promise<GeneralTransaction> {
         if (body.amount <= 0) {
             throw new BadRequestException('Transaction amount must be positive');
