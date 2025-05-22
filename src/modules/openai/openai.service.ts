@@ -182,6 +182,7 @@ Support numeric formats:
 - củ (triệu  in Vietnamese): e.g., 1 củ = 1000000
 - lít / loét (trăm in Vietnamese): e.g., 1 lít / loét = 100000
 
+Note: only use these categorys & wallets listed below, do not create new ones.
 User's available categories: ${userCategoryList}
 User's available wallets: ${userWalletList}
 If user does not provide time, set transactionDate to now. Now is: ${new Date().toISOString()}
