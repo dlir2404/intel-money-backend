@@ -16,7 +16,7 @@ import {APP_INTERCEPTOR} from "@nestjs/core";
 import {TelegramLoggerInterceptor} from "./shared/interceptors/telegram-logger.interceptor";
 import {MailerModule} from "@nestjs-modules/mailer";
 import {HandlebarsAdapter} from "@nestjs-modules/mailer/dist/adapters/handlebars.adapter";
-
+import { join } from 'path';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -62,7 +62,7 @@ import {HandlebarsAdapter} from "@nestjs-modules/mailer/dist/adapters/handlebars
           from: `${configService.get<string>("MAIL_FROM_NAME") || "No Reply"} <${configService.get<string>("MAIL_FROM_EMAIL") || "<noreply@example.com>"}>`,
         },
         template: {
-          dir: __dirname  + '/templates/',
+          dir: join(__dirname, 'templates'),
           adapter: new HandlebarsAdapter(),
           options: {
             strict: true,
