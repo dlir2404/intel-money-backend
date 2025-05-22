@@ -151,7 +151,7 @@ export class ResetPasswordRequest {
 
     @ApiProperty({
         type: String,
-        example: '123456-abcdef'
+        example: '73f3aa242d354b682fc54a7d3bba99e622f1860bfdf4f9fedf781ce4fddd5757'
     })
     @IsString()
     @IsNotEmpty()
