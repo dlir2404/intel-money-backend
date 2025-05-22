@@ -62,7 +62,7 @@ import { join } from 'path';
           from: `${configService.get<string>("MAIL_FROM_NAME") || "No Reply"} <${configService.get<string>("MAIL_FROM_EMAIL") || "<noreply@example.com>"}>`,
         },
         template: {
-          dir: join(__dirname, 'templates'),
+          dir: join(process.cwd(), 'templates'),
           adapter: new HandlebarsAdapter(),
           options: {
             strict: true,
