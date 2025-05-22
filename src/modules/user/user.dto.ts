@@ -131,6 +131,16 @@ export class ChangeTimezoneRequest {
     timezone: string;
 }
 
+export class ChangeCurrencyRequest {
+    @ApiProperty({
+        type: String,
+        description: "Currency code"
+    })
+    @IsString()
+    @IsNotEmpty()
+    currency: string;
+}
+
 export class SetVipRequest {
     @ApiProperty({
         type: String

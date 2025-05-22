@@ -9,6 +9,7 @@ import { AdminAuthService } from './admin.auth.service';
 import { GoogleAuthService } from './auth.google.service';
 import { WalletModule } from '../wallet/wallet.module';
 import { CategoryModule } from '../category/category.module';
+import {AppCacheModule} from "../cache/cache.module";
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { CategoryModule } from '../category/category.module';
       }),
       global: true
     }),
+    AppCacheModule
   ],
   controllers: [AuthController, AdminAuthController],
   providers: [AuthService, AdminAuthService, GoogleAuthService]

@@ -3,7 +3,7 @@ import { UserService } from './user.service';
 // import { CreateUserRequest } from './user.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { AdminAuth, CurrentUserId, UserAuth } from 'src/shared/decorators/auth';
-import { ChangeAvatarRequest, ChangeTimezoneRequest } from './user.dto';
+import {ChangeAvatarRequest, ChangeCurrencyRequest, ChangeTimezoneRequest} from './user.dto';
 import { BaseResponse } from 'src/shared/types/base';
 
 @ApiTags('User')
@@ -31,6 +31,15 @@ export class UserController {
   @UserAuth()
   async changeTimeZone(@Body() body: ChangeTimezoneRequest, @CurrentUserId() userId: number) {
     await this.userService.changeTimeZone(body.timezone, userId);
+    return new BaseResponse({
+      result: true,
+    })
+  }
+
+  @Post('change-currency')
+  @UserAuth()
+  async changeCurrency(@Body() body: ChangeCurrencyRequest, @CurrentUserId() userId: number) {
+    await this.userService.changeCurrency(body.currency, userId);
     return new BaseResponse({
       result: true,
     })

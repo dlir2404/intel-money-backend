@@ -14,6 +14,7 @@ COPY --from=build /app/package*.json ./
 RUN npm install --only=production
 
 COPY --from=build /app/dist ./dist
+COPY --from=build /app/templates ./templates
 
 EXPOSE 3000
 CMD ["npm", "run", "start:prod"]

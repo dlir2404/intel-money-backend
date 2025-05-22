@@ -1,9 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { User } from 'src/database/models';
-import { CreateUserRequest } from './user.dto';
+import {BadRequestException, Injectable, NotFoundException} from '@nestjs/common';
+import {User} from 'src/database/models';
+import {CreateUserRequest} from './user.dto';
 import * as bcrypt from 'bcrypt';
-import { SALT_OR_ROUNDS } from 'src/shared/constants';
-import { Transaction } from 'sequelize';
+import {SALT_OR_ROUNDS} from 'src/shared/constants';
+import {Transaction} from 'sequelize';
 
 @Injectable()
 export class UserService {
@@ -24,6 +24,11 @@ export class UserService {
         }, { transaction: t });
 
         return user;
+    }
+
+    async setNewPassword(user: User, newPassword: string) {
+        user.password = await bcrypt.hash(newPassword, SALT_OR_ROUNDS);
+        await user.save();
     }
 
     async increaseTotalBalance(userId: number, amount: number, t: Transaction) {
@@ -73,4 +78,16 @@ export class UserService {
         await user.save();
     }
 
+    async changeCurrency(currency: string, userId: number) {
+        const user = await User.findByPk(userId);
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+
+        user.preferences = {
+            ...user.preferences,
+            currency: currency
+        };
+        await user.save();
+    }
 }

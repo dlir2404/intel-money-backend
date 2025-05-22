@@ -12,7 +12,11 @@ import { OpenAiModule } from './modules/openai/openai.module';
 import { StatisticModule } from './modules/statistic/statistic.module';
 import { AppCacheModule } from './modules/cache/cache.module';
 import { SystemConfigModule } from './modules/system-config/system.config.module';
-
+import {APP_INTERCEPTOR} from "@nestjs/core";
+import {TelegramLoggerInterceptor} from "./shared/interceptors/telegram-logger.interceptor";
+import {MailerModule} from "@nestjs-modules/mailer";
+import {HandlebarsAdapter} from "@nestjs-modules/mailer/dist/adapters/handlebars.adapter";
+import { join } from 'path';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -42,6 +46,30 @@ import { SystemConfigModule } from './modules/system-config/system.config.module
         logging: false,
       })
     }),
+    MailerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        transport: {
+          host: configService.get<string>("MAIL_HOST") || 'smtp.example.com',
+          port: +configService.get<number>("MAIL_PORT") || 587,
+          secure: false,
+          auth: {
+            user: configService.get<string>("MAIL_USER") || 'your-email@example.com',
+            pass: configService.get<string>("MAIL_PASSWORD") || 'your-password',
+          },
+        },
+        defaults: {
+          from: `${configService.get<string>("MAIL_FROM_NAME") || "No Reply"} <${configService.get<string>("MAIL_FROM_EMAIL") || "<noreply@example.com>"}>`,
+        },
+        template: {
+          dir: join(process.cwd(), 'templates'),
+          adapter: new HandlebarsAdapter(),
+          options: {
+            strict: true,
+          },
+        },
+      })
+    }),
     AuthModule,
     UserModule,
     RelatedUserModule,
@@ -53,5 +81,11 @@ import { SystemConfigModule } from './modules/system-config/system.config.module
     StatisticModule,
     SystemConfigModule,
   ],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TelegramLoggerInterceptor,
+    },
+  ]
 })
 export class AppModule { }
