@@ -63,4 +63,11 @@ export class User extends Model {
         }
     })
     preferences: any
+
+    @Column({
+        type: DataType.DATE,
+        allowNull: false,
+        defaultValue: DataType.NOW
+    })
+    last_sync_at: string;
 }

@@ -4,7 +4,7 @@ import { Category } from "./category";
 import { TransactionType } from "src/shared/enums/transaction";
 import { User } from "./user";
 
-@Table({ timestamps: false })
+@Table({})
 export class GeneralTransaction extends Model{
     @Column({
         type: DataType.ENUM(...Object.values(TransactionType)),

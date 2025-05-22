@@ -2,9 +2,7 @@ import { BelongsTo, Column, DataType, ForeignKey, HasMany, Model, Table } from "
 import { User } from "./user";
 import { CategoryType } from "src/shared/enums/category";
 
-@Table({
-    timestamps: false
-})
+@Table({})
 export class Category extends Model {
     @Column
     name: string;

@@ -2,7 +2,6 @@ import { Column, Model, Table, ForeignKey, BelongsTo, DataType } from "sequelize
 import { User } from "./user";
 
 @Table({
-    timestamps: false
 })
 export class RelatedUser extends Model {
     @Column

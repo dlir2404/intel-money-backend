@@ -17,6 +17,7 @@ import {TelegramLoggerInterceptor} from "./shared/interceptors/telegram-logger.i
 import {MailerModule} from "@nestjs-modules/mailer";
 import {HandlebarsAdapter} from "@nestjs-modules/mailer/dist/adapters/handlebars.adapter";
 import { join } from 'path';
+import {SyncModule} from "./modules/synchronization/sync.module";
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -80,6 +81,7 @@ import { join } from 'path';
     AppCacheModule,
     StatisticModule,
     SystemConfigModule,
+    SyncModule
   ],
   providers: [
     {

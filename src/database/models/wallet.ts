@@ -2,7 +2,6 @@ import { BelongsTo, Column, DataType, ForeignKey, Model, Table } from "sequelize
 import { User } from "./user";
 
 @Table({
-    timestamps: false
 })
 export class Wallet extends Model {
     @Column
