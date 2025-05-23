@@ -790,6 +790,12 @@ export class StatisticService {
                         [Op.lte]: dayjs(query.to).toDate(),
                     },
                 },
+                include: [
+                    {
+                        model: Category,
+                        attributes: ['id', 'name', 'parentId'],
+                    }
+                ],
                 nest: true,
                 raw: true,
             }
