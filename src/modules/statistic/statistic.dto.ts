@@ -8,6 +8,13 @@ export class ByCategoryData {
 
     @ApiProperty()
     amount: number;
+
+    @ApiProperty({
+        type: [Number],
+        description: "List of transaction IDs associated with this category or this category's subcategories",
+        example: [1, 2, 3]
+    })
+    transactionIds: number[];
 }
 
 export class StatisticData {

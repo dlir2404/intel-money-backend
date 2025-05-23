@@ -440,10 +440,12 @@ export class StatisticService {
                     statisticData.byCategoryIncome.push({
                         id: parentId,
                         amount: +transaction.amount,
+                        transactionIds: [transaction.id],
                     });
                 } else {
                     const categoryIndex = statisticData.byCategoryIncome.findIndex((category) => category.id === parentId);
                     statisticData.byCategoryIncome[categoryIndex].amount += +transaction.amount;
+                    statisticData.byCategoryIncome[categoryIndex].transactionIds.push(transaction.id);
                 }
 
 
@@ -461,10 +463,12 @@ export class StatisticService {
                     statisticData.byCategoryExpense.push({
                         id: parentId,
                         amount: +transaction.amount,
+                        transactionIds: [transaction.id],
                     });
                 } else {
                     const categoryIndex = statisticData.byCategoryExpense.findIndex((category) => category.id === parentId);
                     statisticData.byCategoryExpense[categoryIndex].amount += +transaction.amount;
+                    statisticData.byCategoryExpense[categoryIndex].transactionIds.push(transaction.id);
                 }
 
             }
@@ -557,11 +561,13 @@ export class StatisticService {
                 newData.byCategoryIncome.push({
                     id: categoryId,
                     amount: +transaction.amount,
+                    transactionIds: [transaction.id],
                 });
             } else {
                 //if categoryId is already in the list, update the amount
                 const categoryIndex = newData.byCategoryIncome.findIndex((category) => category.id === categoryId);
                 newData.byCategoryIncome[categoryIndex].amount += +transaction.amount;
+                newData.byCategoryIncome[categoryIndex].transactionIds.push(transaction.id);
             }
         } else if (transaction.type === TransactionType.EXPENSE) {
             newData.totalExpense += +transaction.amount;
@@ -574,11 +580,13 @@ export class StatisticService {
                 newData.byCategoryExpense.push({
                     id: categoryId,
                     amount: +transaction.amount,
+                    transactionIds: [transaction.id],
                 });
             } else {
                 //if categoryId is already in the list, update the amount
                 const categoryIndex = newData.byCategoryExpense.findIndex((category) => category.id === categoryId);
                 newData.byCategoryExpense[categoryIndex].amount += +transaction.amount;
+                newData.byCategoryExpense[categoryIndex].transactionIds.push(transaction.id);
             }
         }
 
@@ -615,7 +623,17 @@ export class StatisticService {
 
             //100% sure that this categoryId is in the list
             const categoryIndex = newData.byCategoryIncome.findIndex((category) => category.id === categoryId);
-            newData.byCategoryIncome[categoryIndex].amount += +transaction.amount;
+
+            //if only one transactionId in the list, remove it
+            if (newData.byCategoryIncome[categoryIndex].transactionIds.length === 1) {
+                newData.byCategoryIncome.splice(categoryIndex, 1);
+            } else {
+                //remove the transactionId from the list
+                const transactionIndex = newData.byCategoryIncome[categoryIndex].transactionIds.findIndex((id) => id === transaction.id);
+                newData.byCategoryIncome[categoryIndex].transactionIds.splice(transactionIndex, 1);
+                newData.byCategoryIncome[categoryIndex].amount -= +transaction.amount;
+            }
+
         } else if (transaction.type === TransactionType.EXPENSE) {
             newData.totalExpense -= +transaction.amount;
             newData.totalBalance += +transaction.amount;
@@ -623,9 +641,18 @@ export class StatisticService {
             const categoryId = category.parentId || category.id;
 
 
-            //if categoryId is already in the list, update the amount
+            //100% sure that this categoryId is in the list
             const categoryIndex = newData.byCategoryExpense.findIndex((category) => category.id === categoryId);
-            newData.byCategoryExpense[categoryIndex].amount += +transaction.amount;
+
+            //if only one transactionId in the list, remove it
+            if (newData.byCategoryExpense[categoryIndex].transactionIds.length === 1) {
+                newData.byCategoryExpense.splice(categoryIndex, 1);
+            } else {
+                //remove the transactionId from the list
+                const transactionIndex = newData.byCategoryExpense[categoryIndex].transactionIds.findIndex((id) => id === transaction.id);
+                newData.byCategoryExpense[categoryIndex].transactionIds.splice(transactionIndex, 1);
+                newData.byCategoryExpense[categoryIndex].amount += +transaction.amount;
+            }
         }
     }
 
