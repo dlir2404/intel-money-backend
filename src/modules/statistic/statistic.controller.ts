@@ -101,7 +101,7 @@ export class StatisticController {
     @Get("custom-range")
     @ApiResponse({
         status: 200,
-        type: CompactStatisticData,
+        type: StatisticData,
     })
     @UserAuth()
     async getCustomRangeStatistic(@CurrentUserId() userId: number, @Query() query: CustomRangeStatisticRequest) {

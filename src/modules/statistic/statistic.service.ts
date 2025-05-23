@@ -794,7 +794,7 @@ export class StatisticService {
                 raw: true,
             }
         );
-        const statisticData = this.calulateCompactStatistic(transactions);
+        const statisticData = this.calulateStatistic(transactions);
 
         return statisticData;
     }
