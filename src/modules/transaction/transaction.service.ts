@@ -4,9 +4,10 @@ import {BorrowTransaction, GeneralTransaction, LendTransaction, TransferTransact
 import {TransactionType} from "src/shared/enums/transaction";
 import {CreateGeneralTrans} from "src/shared/types/transactions/general";
 import {
+    CreateBorrowTransactionRequest,
     CreateGeneralTransactionRequest, CreateLendTransactionRequest,
     CreateTransferTransactionRequest,
-    GetAllTransactionsRequest, UpdateExpenseTransactionRequest,
+    GetAllTransactionsRequest, UpdateBorrowTransactionRequest, UpdateExpenseTransactionRequest,
     UpdateIncomeTransactionRequest, UpdateLendTransactionRequest
 } from "./transaction.dto";
 import {UserService} from "../user/user.service";
@@ -365,6 +366,9 @@ export class TransactionService {
                     userId
                 }, t);
 
+                // Update user's total balance
+                await this.userService.increaseTotalBalance(userId, body.amount, t);
+
                 // Update source wallet balance
                 await this.walletService.increaseBalance(body.sourceWalletId, body.amount, t);
 
@@ -393,6 +397,45 @@ export class TransactionService {
         } catch (error) {
             throw new BadRequestException(`Failed to create borrow transaction: ${error.message}`);
         }
+    }
+
+    async createBorrowWithTransaction(body: CreateBorrowTransactionRequest, userId: number, t: Transaction) {
+        if (body.amount <= 0) {
+            throw new BadRequestException('Transaction amount must be positive');
+        }
+
+        const sourceWallet = await this.walletService.findById(body.sourceWalletId, userId);
+        const lender = await this.relatedUserService.findById(body.lenderId, userId);
+
+        // Create the transaction record
+        const transaction = await this.createGeneralTransaction({
+            type: TransactionType.BORROW,
+            ...body,
+            categoryId: null,
+            userId
+        }, t);
+
+        // Update user's total balance
+        await this.userService.increaseTotalBalance(userId, body.amount, t);
+
+        // Update source wallet balance
+        await this.walletService.increaseBalance(body.sourceWalletId, body.amount, t);
+
+        // Update user's total debt
+        await this.userService.increaseTotalDebt(userId, body.amount, t);
+
+        // Update lender's total loan
+        await this.relatedUserService.increaseTotalLoan(lender.userId, body.amount, t);
+
+        //add extra info to table
+        await BorrowTransaction.create({
+            generalTransactionId: transaction.id,
+            lenderId: body.lenderId,
+            repaymentDate: body.repaymentDate,
+            repaymentAmount: 0
+        }, { transaction: t });
+
+        return transaction;
     }
 
     /**
@@ -460,6 +503,24 @@ export class TransactionService {
                 await this.removeTransactionWithSTransaction(userId, id, t);
 
                 const newTransaction = await this.createLendWithTransaction(
+                    {...body},
+                    userId,
+                    t
+                );
+
+                return newTransaction.dataValues;
+            });
+        } catch (error) {
+            throw new InternalServerErrorException("Failed to update transaction: " + error.message);
+        }
+    }
+
+    async updateBorrow(id: number, body: UpdateBorrowTransactionRequest, userId: number) {
+        try {
+            return await this.sequelize.transaction(async (t) => {
+                await this.removeTransactionWithSTransaction(userId, id, t);
+
+                const newTransaction = await this.createBorrowWithTransaction(
                     {...body},
                     userId,
                     t

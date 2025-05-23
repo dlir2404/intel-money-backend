@@ -11,7 +11,7 @@ import {
     GeneralTransactionResponse,
     GetAllTransactionsRequest,
     LendTransactionResponse,
-    TransferTransactionResponse, UpdateExpenseTransactionRequest,
+    TransferTransactionResponse, UpdateBorrowTransactionRequest, UpdateExpenseTransactionRequest,
     UpdateIncomeTransactionRequest, UpdateLendTransactionRequest
 } from "./transaction.dto";
 import { CurrentUserId, UserAuth } from "src/shared/decorators/auth";
@@ -137,6 +137,17 @@ export class TransactionController {
     @UserAuth()
     async createBorrow(@Body() body: CreateBorrowTransactionRequest, @CurrentUserId() userId: number) {
         const transaction = await this.transactionService.createBorrow(body, userId);
+        return new BorrowTransactionResponse(transaction);
+    }
+
+    @Put("borrow/update/:id")
+    @ApiResponse({
+        status: 200,
+        type: BorrowTransactionResponse
+    })
+    @UserAuth()
+    async updateBorrow(@Param("id") id: number, @Body() body: UpdateBorrowTransactionRequest, @CurrentUserId() userId: number) {
+        const transaction = await this.transactionService.updateBorrow(id, body, userId);
         return new BorrowTransactionResponse(transaction);
     }
 

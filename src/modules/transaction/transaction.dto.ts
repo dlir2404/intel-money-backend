@@ -483,3 +483,60 @@ export class UpdateLendTransactionRequest {
   @IsOptional()
   images?: string[];
 }
+
+export class UpdateBorrowTransactionRequest {
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  amount: number;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  categoryId: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  description: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  lenderId: number;
+
+  @ApiProperty({
+    required: false,
+    example: '2025-05-23T10:13:35.494Z'
+  })
+  @IsString()
+  @IsOptional()
+  transactionDate?: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  sourceWalletId: number;
+
+  @ApiProperty({
+    required: false
+  })
+  @IsString()
+  @IsOptional()
+  repaymentDate?: string;
+
+  //TODO: review this
+  @ApiProperty({
+    required: false
+  })
+  @IsBoolean()
+  @IsOptional()
+  notAddToReport?: boolean;
+
+  @ApiProperty({
+    required: false
+  })
+  @IsString({ each: true })
+  @IsOptional()
+  images?: string[];
+}
