@@ -12,7 +12,7 @@ import {
     GetAllTransactionsRequest,
     LendTransactionResponse,
     TransferTransactionResponse, UpdateExpenseTransactionRequest,
-    UpdateIncomeTransactionRequest
+    UpdateIncomeTransactionRequest, UpdateLendTransactionRequest
 } from "./transaction.dto";
 import { CurrentUserId, UserAuth } from "src/shared/decorators/auth";
 import { BaseResponse } from "src/shared/types/base";
@@ -63,6 +63,17 @@ export class TransactionController {
         return new GeneralTransactionResponse(transaction);
     }
 
+    @Put("income/update/:id")
+    @ApiResponse({
+        status: 200,
+        type: GeneralTransactionResponse
+    })
+    @UserAuth()
+    async updateIncome(@Param("id") id: number, @Body() body: UpdateIncomeTransactionRequest, @CurrentUserId() userId: number) {
+        const transaction = await this.transactionService.updateIncome(id, body, userId);
+        return new GeneralTransactionResponse(transaction);
+    }
+
     @Post("expense/create")
     @ApiResponse({
         status: 201,
@@ -71,6 +82,17 @@ export class TransactionController {
     @UserAuth()
     async createExpense(@Body() body: CreateGeneralTransactionRequest, @CurrentUserId() userId: number) {
         const transaction = await this.transactionService.createExpense(body, userId);
+        return new GeneralTransactionResponse(transaction);
+    }
+
+    @Put("expense/update/:id")
+    @ApiResponse({
+        status: 200,
+        type: GeneralTransactionResponse
+    })
+    @UserAuth()
+    async updateExpense(@Param("id") id: number, @Body() body: UpdateExpenseTransactionRequest, @CurrentUserId() userId: number) {
+        const transaction = await this.transactionService.updateExpense(id, body, userId);
         return new GeneralTransactionResponse(transaction);
     }
 
@@ -96,6 +118,17 @@ export class TransactionController {
         return new LendTransactionResponse(transaction);
     }
 
+    @Put("lend/update/:id")
+    @ApiResponse({
+        status: 200,
+        type: LendTransactionResponse
+    })
+    @UserAuth()
+    async updateLend(@Param("id") id: number, @Body() body: UpdateLendTransactionRequest, @CurrentUserId() userId: number) {
+        const transaction = await this.transactionService.updateLend(id, body, userId);
+        return new LendTransactionResponse(transaction);
+    }
+
     @Post("borrow/create")
     @ApiResponse({
         status: 201,
@@ -105,29 +138,6 @@ export class TransactionController {
     async createBorrow(@Body() body: CreateBorrowTransactionRequest, @CurrentUserId() userId: number) {
         const transaction = await this.transactionService.createBorrow(body, userId);
         return new BorrowTransactionResponse(transaction);
-    }
-
-
-    @Put("income/update/:id")
-    @ApiResponse({
-        status: 200,
-        type: GeneralTransactionResponse
-    })
-    @UserAuth()
-    async updateIncome(@Param("id") id: number, @Body() body: UpdateIncomeTransactionRequest, @CurrentUserId() userId: number) {
-        const transaction = await this.transactionService.updateIncome(id, body, userId);
-        return new GeneralTransactionResponse(transaction);
-    }
-
-    @Put("expense/update/:id")
-    @ApiResponse({
-        status: 200,
-        type: GeneralTransactionResponse
-    })
-    @UserAuth()
-    async updateExpense(@Param("id") id: number, @Body() body: UpdateExpenseTransactionRequest, @CurrentUserId() userId: number) {
-        const transaction = await this.transactionService.updateExpense(id, body, userId);
-        return new GeneralTransactionResponse(transaction);
     }
 
     @Delete(":id")

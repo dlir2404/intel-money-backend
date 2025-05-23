@@ -4,10 +4,10 @@ import {BorrowTransaction, GeneralTransaction, LendTransaction, TransferTransact
 import {TransactionType} from "src/shared/enums/transaction";
 import {CreateGeneralTrans} from "src/shared/types/transactions/general";
 import {
-    CreateGeneralTransactionRequest,
+    CreateGeneralTransactionRequest, CreateLendTransactionRequest,
     CreateTransferTransactionRequest,
     GetAllTransactionsRequest, UpdateExpenseTransactionRequest,
-    UpdateIncomeTransactionRequest
+    UpdateIncomeTransactionRequest, UpdateLendTransactionRequest
 } from "./transaction.dto";
 import {UserService} from "../user/user.service";
 import {WalletService} from "../wallet/wallet.service";
@@ -309,6 +309,44 @@ export class TransactionService {
         }
     }
 
+    async createLendWithTransaction(body: CreateLendTransactionRequest, userId: number, t: Transaction) {
+        if (body.amount <= 0) {
+            throw new BadRequestException('Transaction amount must be positive');
+        }
+
+        const sourceWallet = await this.walletService.findById(body.sourceWalletId, userId);
+        const borrower = await this.relatedUserService.findById(body.borrowerId, userId);
+
+        const transaction = await this.createGeneralTransaction({
+            type: TransactionType.LEND,
+            ...body,
+            categoryId: null,
+            userId
+        }, t);
+
+        //Update user's total balance
+        await this.userService.decreaseTotalBalance(userId, body.amount, t);
+
+        // Update source wallet balance
+        await this.walletService.decreaseBalance(body.sourceWalletId, body.amount, t);
+
+        // Update user's total loan
+        await this.userService.increaseTotalLoan(userId, body.amount, t);
+
+        // Update borrower's total debt
+        await this.relatedUserService.increaseTotalDebt(borrower.userId, body.amount, t);
+
+        //add extra info to table
+        await LendTransaction.create({
+            generalTransactionId: transaction.id,
+            borrowerId: body.borrowerId,
+            collectionDate: body.collectionDate,
+            collectedAmount: 0
+        }, { transaction: t });
+
+        return transaction;
+    }
+
     async createBorrow(body: any, userId: number) {
         if (body.amount <= 0) {
             throw new BadRequestException('Transaction amount must be positive');
@@ -404,6 +442,24 @@ export class TransactionService {
                 await this.removeTransactionWithSTransaction(userId, id, t);
 
                 const newTransaction = await this.createExpenseWithTransaction(
+                    {...body},
+                    userId,
+                    t
+                );
+
+                return newTransaction.dataValues;
+            });
+        } catch (error) {
+            throw new InternalServerErrorException("Failed to update transaction: " + error.message);
+        }
+    }
+
+    async updateLend(id: number, body: UpdateLendTransactionRequest, userId: number) {
+        try {
+            return await this.sequelize.transaction(async (t) => {
+                await this.removeTransactionWithSTransaction(userId, id, t);
+
+                const newTransaction = await this.createLendWithTransaction(
                     {...body},
                     userId,
                     t

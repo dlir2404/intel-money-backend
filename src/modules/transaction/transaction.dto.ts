@@ -423,3 +423,63 @@ export class UpdateExpenseTransactionRequest {
   @IsOptional()
   images?: string[];
 }
+
+export class UpdateLendTransactionRequest {
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  amount: number;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  categoryId: number;
+
+  @ApiProperty({
+    required: false
+  })
+  @IsOptional()
+  @IsString()
+  description: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  borrowerId: number;
+
+  @ApiProperty({
+    required: false,
+    example: '2025-05-23T10:13:35.494Z'
+  })
+  @IsString()
+  @IsOptional()
+  transactionDate?: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  sourceWalletId: number;
+
+  @ApiProperty({
+    required: false,
+    example: '2025-05-23T10:13:35.494Z'
+  })
+  @IsString()
+  @IsOptional()
+  collectionDate?: string;
+
+  //TODO: review this
+  @ApiProperty({
+    required: false
+  })
+  @IsBoolean()
+  @IsOptional()
+  notAddToReport?: boolean;
+
+  @ApiProperty({
+    required: false
+  })
+  @IsString({ each: true })
+  @IsOptional()
+  images?: string[];
+}
