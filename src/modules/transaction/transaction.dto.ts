@@ -23,7 +23,8 @@ export class CreateGeneralTransactionRequest {
   description: string;
 
   @ApiProperty({
-    required: false
+    required: false,
+    example: '2025-05-23T10:13:35.494Z'
   })
   @IsString()
   @IsOptional()
@@ -116,7 +117,8 @@ export class CreateTransferTransactionRequest {
   description: string;
 
   @ApiProperty({
-    required: false
+    required: false,
+    example: '2025-05-23T10:13:35.494Z'
   })
   @IsString()
   @IsOptional()
@@ -185,7 +187,8 @@ export class CreateLendTransactionRequest {
   borrowerId: number;
 
   @ApiProperty({
-    required: false
+    required: false,
+    example: '2025-05-23T10:13:35.494Z'
   })
   @IsString()
   @IsOptional()
@@ -261,7 +264,8 @@ export class CreateBorrowTransactionRequest {
   lenderId: number;
 
   @ApiProperty({
-    required: false
+    required: false,
+    example: '2025-05-23T10:13:35.494Z'
   })
   @IsString()
   @IsOptional()
@@ -350,7 +354,51 @@ export class UpdateIncomeTransactionRequest {
   description: string;
 
   @ApiProperty({
+    required: false,
+    example: '2025-05-23T10:13:35.494Z'
+  })
+  @IsString()
+  @IsOptional()
+  transactionDate?: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  sourceWalletId: number;
+
+  @ApiProperty({
     required: false
+  })
+  @IsBoolean()
+  @IsOptional()
+  notAddToReport?: boolean;
+
+  @ApiProperty({
+    required: false
+  })
+  @IsString({ each: true })
+  @IsOptional()
+  images?: string[];
+}
+
+export class UpdateExpenseTransactionRequest {
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  amount: number;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  categoryId: number;
+
+  @ApiProperty()
+  @IsString()
+  description: string;
+
+  @ApiProperty({
+    required: false,
+    example: '2025-05-23T10:13:35.494Z'
   })
   @IsString()
   @IsOptional()

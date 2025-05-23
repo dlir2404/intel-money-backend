@@ -6,7 +6,7 @@ import {CreateGeneralTrans} from "src/shared/types/transactions/general";
 import {
     CreateGeneralTransactionRequest,
     CreateTransferTransactionRequest,
-    GetAllTransactionsRequest,
+    GetAllTransactionsRequest, UpdateExpenseTransactionRequest,
     UpdateIncomeTransactionRequest
 } from "./transaction.dto";
 import {UserService} from "../user/user.service";
@@ -185,6 +185,32 @@ export class TransactionService {
         }
     }
 
+    async createExpenseWithTransaction(body: CreateGeneralTransactionRequest, userId: number, t: Transaction) {
+        if (body.amount <= 0) {
+            throw new BadRequestException('Transaction amount must be positive');
+        }
+
+        const wallet = await this.walletService.findById(body.sourceWalletId, userId);
+        const category = await this.categoryService.findById(body.categoryId, userId);
+        if (category.type !== CategoryType.EXPENSE) {
+            throw new BadRequestException('Invalid category type for expense transaction');
+        }
+
+        const transaction = await this.createGeneralTransaction({
+            type: TransactionType.EXPENSE,
+            ...body,
+            userId
+        }, t);
+
+        // Update user's total balance
+        await this.userService.decreaseTotalBalance(userId, body.amount, t);
+
+        // Update wallet balance
+        await this.walletService.decreaseBalance(body.sourceWalletId, body.amount, t);
+
+        return transaction;
+    }
+
     async createTransfer(body: CreateTransferTransactionRequest, userId: number) {
         if (body.amount <= 0) {
             throw new BadRequestException('Transaction amount must be positive');
@@ -347,6 +373,37 @@ export class TransactionService {
                 await this.removeTransactionWithSTransaction(userId, id, t);
 
                 const newTransaction = await this.createIncomeWithTransaction(
+                    {...body},
+                    userId,
+                    t
+                );
+
+                return newTransaction.dataValues;
+            });
+        } catch (error) {
+            throw new InternalServerErrorException("Failed to update transaction: " + error.message);
+        }
+    }
+
+    /**
+     * There are some important attrs and some not important attrs.
+     * Important attrs are: amount, sourceWalletId, categoryId, transactionDate
+     * Unimportant attrs are: description, images.
+     *
+     * Important attrs affect a lot of things, like user's total balance, wallet's balance, cache,...
+     * We will have lots of cases to handle. That will easily make the code too long and hard to read.
+     * And it also runs into errors.
+     * So just simply remove the old transaction and create a new one.
+     * @param id
+     * @param body
+     * @param userId
+     */
+    async updateExpense(id: number, body: UpdateExpenseTransactionRequest, userId: number) {
+        try {
+            return await this.sequelize.transaction(async (t) => {
+                await this.removeTransactionWithSTransaction(userId, id, t);
+
+                const newTransaction = await this.createExpenseWithTransaction(
                     {...body},
                     userId,
                     t

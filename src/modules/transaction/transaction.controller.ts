@@ -11,7 +11,7 @@ import {
     GeneralTransactionResponse,
     GetAllTransactionsRequest,
     LendTransactionResponse,
-    TransferTransactionResponse,
+    TransferTransactionResponse, UpdateExpenseTransactionRequest,
     UpdateIncomeTransactionRequest
 } from "./transaction.dto";
 import { CurrentUserId, UserAuth } from "src/shared/decorators/auth";
@@ -116,6 +116,17 @@ export class TransactionController {
     @UserAuth()
     async updateIncome(@Param("id") id: number, @Body() body: UpdateIncomeTransactionRequest, @CurrentUserId() userId: number) {
         const transaction = await this.transactionService.updateIncome(id, body, userId);
+        return new GeneralTransactionResponse(transaction);
+    }
+
+    @Put("expense/update/:id")
+    @ApiResponse({
+        status: 200,
+        type: GeneralTransactionResponse
+    })
+    @UserAuth()
+    async updateExpense(@Param("id") id: number, @Body() body: UpdateExpenseTransactionRequest, @CurrentUserId() userId: number) {
+        const transaction = await this.transactionService.updateExpense(id, body, userId);
         return new GeneralTransactionResponse(transaction);
     }
 
