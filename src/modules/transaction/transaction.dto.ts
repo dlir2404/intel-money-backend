@@ -333,3 +333,45 @@ export class GetAllTransactionsRequest {
   @IsString()
   to: string;
 }
+
+export class UpdateIncomeTransactionRequest {
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  amount: number;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  categoryId: number;
+
+  @ApiProperty()
+  @IsString()
+  description: string;
+
+  @ApiProperty({
+    required: false
+  })
+  @IsString()
+  @IsOptional()
+  transactionDate?: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  sourceWalletId: number;
+
+  @ApiProperty({
+    required: false
+  })
+  @IsBoolean()
+  @IsOptional()
+  notAddToReport?: boolean;
+
+  @ApiProperty({
+    required: false
+  })
+  @IsString({ each: true })
+  @IsOptional()
+  images?: string[];
+}

@@ -1,17 +1,21 @@
 import {BadRequestException, Injectable, InternalServerErrorException, NotFoundException} from "@nestjs/common";
-import { Sequelize } from "sequelize-typescript";
-import { BorrowTransaction, GeneralTransaction, LendTransaction, TransferTransaction } from "src/database/models";
-import { TransactionType } from "src/shared/enums/transaction";
-import { CreateGeneralTrans } from "src/shared/types/transactions/general";
-import { CreateGeneralTransactionRequest, CreateTransferTransactionRequest, GetAllTransactionsRequest } from "./transaction.dto";
-import { UserService } from "../user/user.service";
-import { WalletService } from "../wallet/wallet.service";
-import { CategoryService } from "../category/category.service";
-import { CategoryType } from "src/shared/enums/category";
-import { RelatedUserService } from "../related-user/related-user.service";
-import { col, Transaction, WhereOptions } from "sequelize";
-import { Op } from "sequelize";
-import { StatisticService } from "../statistic/statistic.service";
+import {Sequelize} from "sequelize-typescript";
+import {BorrowTransaction, GeneralTransaction, LendTransaction, TransferTransaction} from "src/database/models";
+import {TransactionType} from "src/shared/enums/transaction";
+import {CreateGeneralTrans} from "src/shared/types/transactions/general";
+import {
+    CreateGeneralTransactionRequest,
+    CreateTransferTransactionRequest,
+    GetAllTransactionsRequest,
+    UpdateIncomeTransactionRequest
+} from "./transaction.dto";
+import {UserService} from "../user/user.service";
+import {WalletService} from "../wallet/wallet.service";
+import {CategoryService} from "../category/category.service";
+import {CategoryType} from "src/shared/enums/category";
+import {RelatedUserService} from "../related-user/related-user.service";
+import {Op, Transaction, WhereOptions} from "sequelize";
+import {StatisticService} from "../statistic/statistic.service";
 
 @Injectable()
 export class TransactionService {
@@ -327,12 +331,43 @@ export class TransactionService {
         }
     }
 
+    /**
+     * There are some important attrs and some not important attrs.
+     * Important attrs are: amount, sourceWalletId, categoryId, transactionDate
+     * Unimportant attrs are: description, images.
+     *
+     * Important attrs affect a lot of things, like user's total balance, wallet's balance, cache,...
+     * We will have lots of cases to handle. That will easily make the code too long and hard to read.
+     * And it also runs into errors.
+     * So just simply remove the old transaction and create a new one.
+     */
+    async updateIncome(id: number, body: UpdateIncomeTransactionRequest, userId: number) {
+        try {
+            return await this.sequelize.transaction(async (t) => {
+                await this.removeTransactionWithSTransaction(userId, id, t);
 
-    async removeTransaction(transactionId: number){
+                const newTransaction = await this.createIncomeWithTransaction(
+                    {...body},
+                    userId,
+                    t
+                );
+
+                return newTransaction.dataValues;
+            });
+        } catch (error) {
+            throw new InternalServerErrorException("Failed to update transaction: " + error.message);
+        }
+    }
+
+    async removeTransaction(userId: number, transactionId: number){
         const transaction = await GeneralTransaction.findByPk(transactionId);
 
         if (!transaction) {
             throw new NotFoundException('Transaction not found');
+        }
+
+        if (transaction.userId !== userId) {
+            throw new BadRequestException('You are not allowed to edit this transaction');
         }
 
         try {
@@ -407,5 +442,80 @@ export class TransactionService {
         } catch (error) {
             throw new InternalServerErrorException("Failed to delete transaction: " + error.message);
         }
+    }
+
+    async removeTransactionWithSTransaction(userId: number, transactionId: number, t: Transaction){
+        const transaction = await GeneralTransaction.findByPk(transactionId);
+
+        if (!transaction) {
+            throw new NotFoundException('Transaction not found');
+        }
+
+        if (transaction.userId !== userId) {
+            throw new BadRequestException('You are not allowed to edit this transaction');
+        }
+
+        await this.statisticService.updateCacheAfterRemoveTransaction(transaction.userId, transaction);
+
+        //case 1: income
+        if (transaction.type === TransactionType.INCOME) {
+            await this.userService.decreaseTotalBalance(transaction.userId, transaction.amount, t);
+            await this.walletService.decreaseBalance(transaction.sourceWalletId, transaction.amount, t);
+        }
+
+        //case 2: expense
+        if (transaction.type === TransactionType.EXPENSE) {
+            await this.userService.increaseTotalBalance(transaction.userId, transaction.amount, t);
+            await this.walletService.increaseBalance(transaction.sourceWalletId, transaction.amount, t);
+        }
+
+        //case 3: lend
+        if (transaction.type === TransactionType.LEND) {
+            const lendTransaction = await LendTransaction.findOne({
+                where: {
+                    generalTransactionId: transaction.id
+                }
+            });
+
+            await this.userService.increaseTotalBalance(transaction.userId, transaction.amount, t);
+            await this.walletService.increaseBalance(transaction.sourceWalletId, transaction.amount, t);
+            await this.userService.decreaseTotalLoan(transaction.userId, transaction.amount, t);
+            await this.relatedUserService.decreaseTotalDebt(lendTransaction.borrowerId, transaction.amount, t);
+
+            // Delete the lend transaction record
+            await lendTransaction.destroy({ transaction: t });
+        }
+
+        //case 4: borrow
+        if (transaction.type === TransactionType.BORROW) {
+            const borrowTransaction = await BorrowTransaction.findOne({
+                where: {
+                    generalTransactionId: transaction.id
+                }
+            });
+
+            await this.userService.decreaseTotalBalance(transaction.userId, transaction.amount, t);
+            await this.walletService.decreaseBalance(transaction.sourceWalletId, transaction.amount, t);
+            await this.userService.decreaseTotalDebt(transaction.userId, transaction.amount, t);
+            await this.relatedUserService.decreaseTotalLoan(borrowTransaction.lenderId, transaction.amount, t);
+
+            // Delete the borrow transaction record
+            await borrowTransaction.destroy({ transaction: t });
+        }
+
+        //case 5: transfer
+        if (transaction.type === TransactionType.TRANSFER) {
+            const transferTransaction = await TransferTransaction.findOne({
+                where: {
+                    generalTransactionId: transaction.id
+                }
+            });
+
+            await this.walletService.increaseBalance(transaction.sourceWalletId, transaction.amount, t);
+            await this.walletService.decreaseBalance(transferTransaction.destinationWalletId, transaction.amount, t);
+        }
+
+        // Delete the transaction record
+        await transaction.destroy({ transaction: t });
     }
 }

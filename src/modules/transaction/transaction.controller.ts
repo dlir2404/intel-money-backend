@@ -1,7 +1,19 @@
-import {Body, Controller, Delete, Get, InternalServerErrorException, Param, Post, Query} from "@nestjs/common";
+import {Body, Controller, Delete, Get, InternalServerErrorException, Param, Post, Put, Query} from "@nestjs/common";
 import { ApiOperation, ApiProperty, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { TransactionService } from "./transaction.service";
-import { BorrowTransactionResponse, CreateBorrowTransactionRequest, CreateBulkIncomeTransactionRequest, CreateGeneralTransactionRequest, CreateLendTransactionRequest, CreateTransferTransactionRequest, GeneralTransactionResponse, GetAllTransactionsRequest, LendTransactionResponse, TransferTransactionResponse } from "./transaction.dto";
+import {
+    BorrowTransactionResponse,
+    CreateBorrowTransactionRequest,
+    CreateBulkIncomeTransactionRequest,
+    CreateGeneralTransactionRequest,
+    CreateLendTransactionRequest,
+    CreateTransferTransactionRequest,
+    GeneralTransactionResponse,
+    GetAllTransactionsRequest,
+    LendTransactionResponse,
+    TransferTransactionResponse,
+    UpdateIncomeTransactionRequest
+} from "./transaction.dto";
 import { CurrentUserId, UserAuth } from "src/shared/decorators/auth";
 import { BaseResponse } from "src/shared/types/base";
 
@@ -95,6 +107,18 @@ export class TransactionController {
         return new BorrowTransactionResponse(transaction);
     }
 
+
+    @Put("income/update/:id")
+    @ApiResponse({
+        status: 200,
+        type: GeneralTransactionResponse
+    })
+    @UserAuth()
+    async updateIncome(@Param("id") id: number, @Body() body: UpdateIncomeTransactionRequest, @CurrentUserId() userId: number) {
+        const transaction = await this.transactionService.updateIncome(id, body, userId);
+        return new GeneralTransactionResponse(transaction);
+    }
+
     @Delete(":id")
     @ApiResponse({
         status: 200,
@@ -104,8 +128,8 @@ export class TransactionController {
         summary: "Delete transaction",
     })
     @UserAuth()
-    async deleteTransaction(@Param("id") id: number) {
-        await this.transactionService.removeTransaction(id);
+    async deleteTransaction(@Param("id") id: number, @CurrentUserId() userId: number) {
+        await this.transactionService.removeTransaction(userId, id);
 
         return new BaseResponse({result: true});
     }
