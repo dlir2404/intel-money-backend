@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import {BadRequestException, Injectable, InternalServerErrorException, NotFoundException} from "@nestjs/common";
 import { Sequelize } from "sequelize-typescript";
 import { BorrowTransaction, GeneralTransaction, LendTransaction, TransferTransaction } from "src/database/models";
 import { TransactionType } from "src/shared/enums/transaction";
@@ -68,7 +68,7 @@ export class TransactionService {
         }, { transaction: t });
 
 
-        await this.statisticService.updatateCache(params.userId, transaction);
+        await this.statisticService.updateCacheAfterCreateTransaction(params.userId, transaction);
 
         return transaction;
     }
@@ -324,6 +324,88 @@ export class TransactionService {
             };
         } catch (error) {
             throw new BadRequestException(`Failed to create borrow transaction: ${error.message}`);
+        }
+    }
+
+
+    async removeTransaction(transactionId: number){
+        const transaction = await GeneralTransaction.findByPk(transactionId);
+
+        if (!transaction) {
+            throw new NotFoundException('Transaction not found');
+        }
+
+        try {
+            const result = await this.sequelize.transaction(async (t) => {
+                await this.statisticService.updateCacheAfterRemoveTransaction(transaction.userId, transaction);
+
+                //case 1: income
+                if (transaction.type === TransactionType.INCOME) {
+                    await this.userService.decreaseTotalBalance(transaction.userId, transaction.amount, t);
+                    await this.walletService.decreaseBalance(transaction.sourceWalletId, transaction.amount, t);
+                }
+
+                //case 2: expense
+                if (transaction.type === TransactionType.EXPENSE) {
+                    await this.userService.increaseTotalBalance(transaction.userId, transaction.amount, t);
+                    await this.walletService.increaseBalance(transaction.sourceWalletId, transaction.amount, t);
+                }
+
+                //case 3: lend
+                if (transaction.type === TransactionType.LEND) {
+                    const lendTransaction = await LendTransaction.findOne({
+                        where: {
+                            generalTransactionId: transaction.id
+                        }
+                    });
+
+                    await this.userService.increaseTotalBalance(transaction.userId, transaction.amount, t);
+                    await this.walletService.increaseBalance(transaction.sourceWalletId, transaction.amount, t);
+                    await this.userService.decreaseTotalLoan(transaction.userId, transaction.amount, t);
+                    await this.relatedUserService.decreaseTotalDebt(lendTransaction.borrowerId, transaction.amount, t);
+
+                    // Delete the lend transaction record
+                    await lendTransaction.destroy({ transaction: t });
+                }
+
+                //case 4: borrow
+                if (transaction.type === TransactionType.BORROW) {
+                    const borrowTransaction = await BorrowTransaction.findOne({
+                        where: {
+                            generalTransactionId: transaction.id
+                        }
+                    });
+
+                    await this.userService.decreaseTotalBalance(transaction.userId, transaction.amount, t);
+                    await this.walletService.decreaseBalance(transaction.sourceWalletId, transaction.amount, t);
+                    await this.userService.decreaseTotalDebt(transaction.userId, transaction.amount, t);
+                    await this.relatedUserService.decreaseTotalLoan(borrowTransaction.lenderId, transaction.amount, t);
+
+                    // Delete the borrow transaction record
+                    await borrowTransaction.destroy({ transaction: t });
+                }
+
+                //case 5: transfer
+                if (transaction.type === TransactionType.TRANSFER) {
+                    const transferTransaction = await TransferTransaction.findOne({
+                        where: {
+                            generalTransactionId: transaction.id
+                        }
+                    });
+
+                    await this.walletService.increaseBalance(transaction.sourceWalletId, transaction.amount, t);
+                    await this.walletService.decreaseBalance(transferTransaction.destinationWalletId, transaction.amount, t);
+                }
+
+                // Delete the transaction record
+                await transaction.destroy({ transaction: t });
+            });
+
+            return {
+                result: true
+            }
+        } catch (error) {
+            throw new InternalServerErrorException("Failed to delete transaction: " + error.message);
         }
     }
 }

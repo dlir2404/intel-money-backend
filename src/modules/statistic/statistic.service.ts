@@ -525,7 +525,7 @@ export class StatisticService {
     }
 
 
-    async updatateCache(userId: number, transaction: GeneralTransaction) {
+    async updateCacheAfterCreateTransaction(userId: number, transaction: GeneralTransaction) {
         const affectedCacheKeys = await this.getAffectedCacheKeys(userId, transaction.transactionDate);
         for (const key of affectedCacheKeys) {
             const cachedData = await this.cacheService.get(key);
@@ -535,15 +535,13 @@ export class StatisticService {
                 continue;
             }
 
-            const newData = await this.getNewData(transaction, cachedData as StatisticData);
+            const newData = await this.getNewDataWithNewTransaction(transaction, cachedData as StatisticData);
 
             await this.cacheService.set(key, newData, this.getCachedKeyTtl(key));
-
-            console.log("updated cache: ", key);
         }
     }
 
-    async getNewData(transaction: GeneralTransaction, oldData: StatisticData) {
+    async getNewDataWithNewTransaction(transaction: GeneralTransaction, oldData: StatisticData) {
         const newData = { ...oldData }
 
         const category = await Category.findOne({ where: { id: transaction.categoryId } });
@@ -585,6 +583,50 @@ export class StatisticService {
         }
 
         return newData;
+    }
+
+    async updateCacheAfterRemoveTransaction(userId: number, transaction: GeneralTransaction) {
+        const affectedCacheKeys = await this.getAffectedCacheKeys(userId, transaction.transactionDate);
+        for (const key of affectedCacheKeys) {
+            const cachedData = await this.cacheService.get(key);
+
+            if (!cachedData) {
+                //just continue, data will be updated when user call get statistic again
+                continue;
+            }
+
+            const newData = await this.getNewDataAfterRemoveTransaction(transaction, cachedData as StatisticData);
+
+            await this.cacheService.set(key, newData, this.getCachedKeyTtl(key));
+        }
+    }
+
+    async getNewDataAfterRemoveTransaction(transaction: GeneralTransaction, oldData: StatisticData) {
+        const newData = { ...oldData }
+
+        const category = await Category.findOne({ where: { id: transaction.categoryId } });
+
+        if (transaction.type === TransactionType.INCOME) {
+            newData.totalIncome -= +transaction.amount;
+            newData.totalBalance -= +transaction.amount;
+
+            const categoryId = category.parentId || category.id;
+
+
+            //100% sure that this categoryId is in the list
+            const categoryIndex = newData.byCategoryIncome.findIndex((category) => category.id === categoryId);
+            newData.byCategoryIncome[categoryIndex].amount += +transaction.amount;
+        } else if (transaction.type === TransactionType.EXPENSE) {
+            newData.totalExpense -= +transaction.amount;
+            newData.totalBalance += +transaction.amount;
+
+            const categoryId = category.parentId || category.id;
+
+
+            //if categoryId is already in the list, update the amount
+            const categoryIndex = newData.byCategoryExpense.findIndex((category) => category.id === categoryId);
+            newData.byCategoryExpense[categoryIndex].amount += +transaction.amount;
+        }
     }
 
 

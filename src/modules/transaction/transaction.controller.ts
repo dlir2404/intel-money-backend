@@ -1,4 +1,4 @@
-import { Body, Controller, Get, InternalServerErrorException, Post, Query } from "@nestjs/common";
+import {Body, Controller, Delete, Get, InternalServerErrorException, Param, Post, Query} from "@nestjs/common";
 import { ApiOperation, ApiProperty, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { TransactionService } from "./transaction.service";
 import { BorrowTransactionResponse, CreateBorrowTransactionRequest, CreateBulkIncomeTransactionRequest, CreateGeneralTransactionRequest, CreateLendTransactionRequest, CreateTransferTransactionRequest, GeneralTransactionResponse, GetAllTransactionsRequest, LendTransactionResponse, TransferTransactionResponse } from "./transaction.dto";
@@ -93,5 +93,20 @@ export class TransactionController {
     async createBorrow(@Body() body: CreateBorrowTransactionRequest, @CurrentUserId() userId: number) {
         const transaction = await this.transactionService.createBorrow(body, userId);
         return new BorrowTransactionResponse(transaction);
+    }
+
+    @Delete(":id")
+    @ApiResponse({
+        status: 200,
+        type: BaseResponse
+    })
+    @ApiOperation({
+        summary: "Delete transaction",
+    })
+    @UserAuth()
+    async deleteTransaction(@Param("id") id: number) {
+        await this.transactionService.removeTransaction(id);
+
+        return new BaseResponse({result: true});
     }
 }
