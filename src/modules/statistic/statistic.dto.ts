@@ -24,9 +24,6 @@ export class StatisticData {
     @ApiProperty()
     totalExpense: number;
 
-    @ApiProperty()
-    totalBalance: number;
-
     @ApiProperty({
         type: ByCategoryData,
         description: "Income by category (only for 1's level categories)",

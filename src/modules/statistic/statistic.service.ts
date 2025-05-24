@@ -71,9 +71,7 @@ export class StatisticService {
         )
 
         const statisticData = this.calulateStatistic(transactions);
-        statisticData.totalBalance = 0;
 
-        console.log(">>>>> bat dau cache");
         await this.cacheService.set(cacheKey, statisticData, StatisticTypeTtl.daily); // Cache for 24 hours
 
         return statisticData;
@@ -118,9 +116,7 @@ export class StatisticService {
         )
 
         const statisticData = this.calulateStatistic(transactions);
-        statisticData.totalBalance = 0;
 
-        console.log(">>>>> bat dau cache");
         await this.cacheService.set(cacheKey, statisticData, StatisticTypeTtl.weekly); // Cache for 1 week
 
         return statisticData;
@@ -194,8 +190,6 @@ export class StatisticService {
         )
 
         const statisticData = this.calulateStatistic(transactions);
-        //TODO: fix this later
-        statisticData.totalBalance = 0;
 
         // neu khong co them filters ve account hoac la category thi moi cached data
         if (!((categories && categories.length > 0) || (sourceWallets && sourceWallets.length > 0))) {
@@ -257,9 +251,7 @@ export class StatisticService {
         )
 
         const statisticData = this.calulateStatistic(transactions);
-        statisticData.totalBalance = 0; //TODO: fix this later
 
-        console.log(">>>>> bat dau cache");
         await this.cacheService.set(cacheKey, statisticData, StatisticTypeTtl.quarterly); // Cache for 3 months
         return statisticData;
     }
@@ -316,9 +308,7 @@ export class StatisticService {
 
         //this is only general statistics
         const statisticData = this.calulateStatistic(transactions);
-        statisticData.totalBalance = user.totalBalance;
 
-        console.log(">>>>> bat dau cache");
         await this.cacheService.set(cacheKey, statisticData, StatisticTypeTtl.yearly); // Cache for 1 year
 
         //these extra statistics are cached in those own cache keys so do not need to cache them again
@@ -390,9 +380,7 @@ export class StatisticService {
 
         //this is only general statistics
         const statisticData = this.calulateStatistic(transactions);
-        statisticData.totalBalance = user.totalBalance;
 
-        console.log(">>>>> bat dau cache");
         await this.cacheService.set(cacheKey, statisticData, StatisticTypeTtl.yearly); // Cache for 1 year
 
         //these extra statistics are cached in those own cache keys so do not need to cache them again
@@ -552,7 +540,6 @@ export class StatisticService {
 
         if (transaction.type === TransactionType.INCOME) {
             newData.totalIncome += +transaction.amount;
-            newData.totalBalance += +transaction.amount;
 
             const categoryId = category.parentId || category.id;
 
@@ -571,7 +558,6 @@ export class StatisticService {
             }
         } else if (transaction.type === TransactionType.EXPENSE) {
             newData.totalExpense += +transaction.amount;
-            newData.totalBalance -= +transaction.amount;
 
             const categoryId = category.parentId || category.id;
 
@@ -616,7 +602,6 @@ export class StatisticService {
 
         if (transaction.type === TransactionType.INCOME) {
             newData.totalIncome -= +transaction.amount;
-            newData.totalBalance -= +transaction.amount;
 
             const categoryId = category.parentId || category.id;
 
@@ -636,7 +621,6 @@ export class StatisticService {
 
         } else if (transaction.type === TransactionType.EXPENSE) {
             newData.totalExpense -= +transaction.amount;
-            newData.totalBalance += +transaction.amount;
 
             const categoryId = category.parentId || category.id;
 
