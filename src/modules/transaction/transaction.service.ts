@@ -259,7 +259,7 @@ export class TransactionService {
         }
     }
 
-    async createLend(body: any, userId: number) {
+    async createLend(body: CreateLendTransactionRequest, userId: number) {
         if (body.amount <= 0) {
             throw new BadRequestException('Transaction amount must be positive');
         }
@@ -273,7 +273,6 @@ export class TransactionService {
                 const transaction = await this.createGeneralTransaction({
                     type: TransactionType.LEND,
                     ...body,
-                    categoryId: null,
                     userId
                 }, t);
 
@@ -348,7 +347,7 @@ export class TransactionService {
         return transaction;
     }
 
-    async createBorrow(body: any, userId: number) {
+    async createBorrow(body: CreateBorrowTransactionRequest, userId: number) {
         if (body.amount <= 0) {
             throw new BadRequestException('Transaction amount must be positive');
         }
@@ -362,7 +361,6 @@ export class TransactionService {
                 const transaction = await this.createGeneralTransaction({
                     type: TransactionType.BORROW,
                     ...body,
-                    categoryId: null,
                     userId
                 }, t);
 
