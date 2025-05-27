@@ -13,10 +13,10 @@ import { StatisticModule } from './modules/statistic/statistic.module';
 import { AppCacheModule } from './modules/cache/cache.module';
 import { SystemConfigModule } from './modules/system-config/system.config.module';
 import {APP_INTERCEPTOR} from "@nestjs/core";
-import {TelegramLoggerInterceptor} from "./shared/interceptors/telegram-logger.interceptor";
 import {MailerModule} from "@nestjs-modules/mailer";
 import {HandlebarsAdapter} from "@nestjs-modules/mailer/dist/adapters/handlebars.adapter";
 import { join } from 'path';
+import { DiscordLoggerInterceptor } from './shared/interceptors/discord-logger.interceptor';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -84,7 +84,7 @@ import { join } from 'path';
   providers: [
     {
       provide: APP_INTERCEPTOR,
-      useClass: TelegramLoggerInterceptor,
+      useClass: DiscordLoggerInterceptor,
     },
   ]
 })
