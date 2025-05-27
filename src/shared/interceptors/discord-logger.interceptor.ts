@@ -33,15 +33,23 @@ export class DiscordLoggerInterceptor implements NestInterceptor {
     return next.handle().pipe(
       catchError((err) => {
         const message = [
-          '**🚨 Intel Money Error Alert**',
-          `**🕒 Time:** ${now}`,
-          `**🔗 URL:** \`${method} ${url}\``,
-          `**🧾 Params:** \`\`\`json\n${JSON.stringify(params, null, 2)}\n\`\`\``,
-          `**📦 Body:** \`\`\`json\n${JSON.stringify(body, null, 2)}\n\`\`\``,
-          `**🛡️ Authorization:** \`${bearerToken || 'N/A'}\``,
-          `**❌ Error:** \`${err.message}\``,
-          `\`\`\`ts\n${err.stack}\n\`\`\``,
-        ].join('\n');
+  '```ts',
+  '🚨 Intel Money Error Alert',
+  `🕒 Time: ${now}`,
+  `🔗 URL: ${method} ${url}`,
+  '',
+  `🧾 Params:\n${JSON.stringify(params, null, 2)}`,
+  '',
+  `📦 Body:\n${JSON.stringify(body, null, 2)}`,
+  '',
+  `🛡️ Authorization: ${bearerToken || 'N/A'}`,
+  '',
+  `❌ Error: ${err.message}`,
+  '',
+  `Stack:\n${err.stack}`,
+  '```',
+].join('\n');
+
 
         from(
           fetch(this.webhookUrl, {
