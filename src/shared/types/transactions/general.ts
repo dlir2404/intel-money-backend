@@ -8,6 +8,6 @@ export interface CreateGeneralTrans {
     transactionDate?: string;
     sourceWalletId: number;
     notAddToReport?: boolean;
-    images?: string[];
+    images?: string;
     userId: number;
 }

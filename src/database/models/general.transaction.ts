@@ -54,14 +54,7 @@ export class GeneralTransaction extends Model{
     notAddToReport: boolean;
 
     @Column({
-        type: DataType.TEXT,
-        get() {
-            const rawValue = this.getDataValue('images');
-            return rawValue ? JSON.parse(rawValue) : [];
-        },
-        set(value: string[]) {
-            this.setDataValue('images', JSON.stringify(value || []));
-        }
+        type: DataType.STRING(1024),
     })
-    images: string[];
+    image: string;
 }

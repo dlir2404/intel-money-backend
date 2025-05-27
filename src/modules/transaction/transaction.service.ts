@@ -439,7 +439,7 @@ export class TransactionService {
     /**
      * There are some important attrs and some not important attrs.
      * Important attrs are: amount, sourceWalletId, categoryId, transactionDate
-     * Unimportant attrs are: description, images.
+     * Unimportant attrs are: description, image.
      *
      * Important attrs affect a lot of things, like user's total balance, wallet's balance, cache,...
      * We will have lots of cases to handle. That will easily make the code too long and hard to read.
@@ -467,7 +467,7 @@ export class TransactionService {
     /**
      * There are some important attrs and some not important attrs.
      * Important attrs are: amount, sourceWalletId, categoryId, transactionDate
-     * Unimportant attrs are: description, images.
+     * Unimportant attrs are: description, image.
      *
      * Important attrs affect a lot of things, like user's total balance, wallet's balance, cache,...
      * We will have lots of cases to handle. That will easily make the code too long and hard to read.

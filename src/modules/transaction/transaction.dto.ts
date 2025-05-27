@@ -45,9 +45,9 @@ export class CreateGeneralTransactionRequest {
   @ApiProperty({
     required: false
   })
-  @IsString({ each: true })
+  @IsString()
   @IsOptional()
-  images?: string[];
+  image?: string;
 }
 
 export class CreateBulkIncomeTransactionRequest {
@@ -99,7 +99,7 @@ export class GeneralTransactionResponse {
   notAddToReport: boolean;
 
   @ApiProperty()
-  images: string[];
+  image?: string;
 
   constructor(partial: Partial<GeneralTransactionResponse>) {
     Object.assign(this, partial);
@@ -144,9 +144,9 @@ export class CreateTransferTransactionRequest {
   @ApiProperty({
     required: false
   })
-  @IsString({ each: true })
+  @IsString()
   @IsOptional()
-  images?: string[];
+  image?: string;
 }
 
 @Expose()
@@ -217,9 +217,9 @@ export class CreateLendTransactionRequest {
   @ApiProperty({
     required: false
   })
-  @IsString({ each: true })
+  @IsString()
   @IsOptional()
-  images?: string[];
+  image?: string;
 }
 
 
@@ -294,9 +294,9 @@ export class CreateBorrowTransactionRequest {
   @ApiProperty({
     required: false
   })
-  @IsString({ each: true })
+  @IsString()
   @IsOptional()
-  images?: string[];
+  image?: string;
 }
 
 @Expose()
@@ -376,9 +376,9 @@ export class UpdateIncomeTransactionRequest {
   @ApiProperty({
     required: false
   })
-  @IsString({ each: true })
+  @IsString()
   @IsOptional()
-  images?: string[];
+  image?: string;
 }
 
 export class UpdateExpenseTransactionRequest {
@@ -419,9 +419,9 @@ export class UpdateExpenseTransactionRequest {
   @ApiProperty({
     required: false
   })
-  @IsString({ each: true })
+  @IsString()
   @IsOptional()
-  images?: string[];
+  image?: string;
 }
 
 export class UpdateLendTransactionRequest {
@@ -479,9 +479,9 @@ export class UpdateLendTransactionRequest {
   @ApiProperty({
     required: false
   })
-  @IsString({ each: true })
+  @IsString()
   @IsOptional()
-  images?: string[];
+  image?: string;
 }
 
 export class UpdateBorrowTransactionRequest {
@@ -536,7 +536,7 @@ export class UpdateBorrowTransactionRequest {
   @ApiProperty({
     required: false
   })
-  @IsString({ each: true })
+  @IsString()
   @IsOptional()
-  images?: string[];
+  image?: string;
 }
