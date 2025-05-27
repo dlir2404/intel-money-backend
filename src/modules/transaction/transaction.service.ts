@@ -29,6 +29,50 @@ export class TransactionService {
         private readonly statisticService: StatisticService,
     ) {}
 
+    async getTransactionById(userId: number, transactionId: number) {
+        const transaction = await GeneralTransaction.findOne({
+            where: {
+                id: transactionId,
+                userId: userId
+            },
+        });
+
+        if (!transaction) {
+            throw new NotFoundException('Transaction not found');
+        }
+
+        let extraInfo = {};
+
+        if (transaction.type == TransactionType.LEND) {
+            extraInfo = await LendTransaction.findOne({
+                where: {
+                    generalTransactionId: transaction.id
+                },
+                raw: true
+            })
+        } else if (transaction.type == TransactionType.BORROW) {
+            extraInfo = await BorrowTransaction.findOne({
+                where: {
+                    generalTransactionId: transaction.id
+                },
+                raw: true
+            })
+        } else if (transaction.type == TransactionType.TRANSFER) {
+            extraInfo = await TransferTransaction.findOne({
+                where: {
+                    generalTransactionId: transaction.id
+                },
+                raw: true
+            })
+        }
+        
+
+        return {
+            ...transaction.dataValues,
+            extraInfo,
+        };
+    }
+
     async getAllTransactionsTestOnly(userId: number) {
         const where: WhereOptions<GeneralTransaction> = {
             userId: userId,

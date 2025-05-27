@@ -8,6 +8,7 @@ import {
     CreateGeneralTransactionRequest,
     CreateLendTransactionRequest,
     CreateTransferTransactionRequest,
+    FullInfoTransactionResponse,
     GeneralTransactionResponse,
     GetAllTransactionsRequest,
     LendTransactionResponse,
@@ -50,6 +51,20 @@ export class TransactionController {
     async getAllTransactionsTestOnly(@CurrentUserId() userId: number) {
         const transactions = await this.transactionService.getAllTransactionsTestOnly(userId);
         return transactions;
+    }
+
+    @Get(":id")
+    @UserAuth()
+    @ApiResponse({
+        status: 200,
+        type: FullInfoTransactionResponse
+    })
+    @ApiOperation({
+        summary: "Get full data transaction by id",
+    })
+    async getTransactionById(@Param("id") id: number, @CurrentUserId() userId: number) {
+        const transaction = await this.transactionService.getTransactionById(userId, id);
+        return transaction;
     }
 
     @Post("income/create")

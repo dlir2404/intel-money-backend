@@ -114,6 +114,7 @@ export class CreateTransferTransactionRequest {
 
   @ApiProperty()
   @IsString()
+  @IsOptional()
   description: string;
 
   @ApiProperty({
@@ -539,4 +540,98 @@ export class UpdateBorrowTransactionRequest {
   @IsString()
   @IsOptional()
   image?: string;
+}
+
+@Expose()
+export class LendExtraInfoResponse {
+  @ApiProperty()
+  borrowerId: number;
+
+  @ApiProperty()
+  collectionDate?: string;
+
+  @ApiProperty()
+  collectedAmount: number;
+
+  constructor(partial: Partial<LendExtraInfoResponse>) {
+    Object.assign(this, partial);
+  }
+}
+
+@Expose()
+export class BorrowExtraInfoResponse {
+  @ApiProperty()
+  lenderId: number;
+
+  @ApiProperty()
+  repaymentDate?: string;
+
+  @ApiProperty()
+  repaymentAmount: number;
+
+  constructor(partial: Partial<BorrowExtraInfoResponse>) {
+    Object.assign(this, partial);
+  }
+}
+
+@Expose()
+export class TransferExtraInfoResponse {
+  @ApiProperty()
+  destinationWalletId: number;
+
+  constructor(partial: Partial<TransferExtraInfoResponse>) {
+    Object.assign(this, partial);
+  }
+}
+
+@Expose()
+export class FullInfoTransactionResponse {
+  @ApiProperty()
+  id: number;
+
+  @ApiProperty()
+  type: TransactionType;
+
+  @ApiProperty()
+  amount: number;
+
+  @ApiProperty()
+  categoryId: number;
+
+  @ApiProperty({
+    type: CompactCategoryResponse
+  })
+  @Type(() => CompactCategoryResponse)
+  category: any;
+
+  @ApiProperty()
+  description: string;
+
+  @ApiProperty()
+  transactionDate: string;
+
+  @ApiProperty()
+  sourceWalletId: number;
+
+  @ApiProperty({
+    type: CompactWalletResponse
+  })
+  @Type(() => CompactWalletResponse)
+  sourceWallet: any;
+
+  @ApiProperty()
+  notAddToReport: boolean;
+
+  @ApiProperty()
+  image?: string;
+
+  @ApiProperty({
+    description: 'Extra information based on transaction type',
+    required: false
+  })
+  extraInfo?: LendExtraInfoResponse | BorrowExtraInfoResponse | TransferExtraInfoResponse;
+
+  constructor(partial: Partial<FullInfoTransactionResponse>) {
+    Object.assign(this, partial);
+  }
 }
