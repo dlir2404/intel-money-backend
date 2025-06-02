@@ -108,6 +108,7 @@ export class GetListUsersRequest extends DateAndPaginationType {
     @ApiProperty({
         required: false
     })
+    @Type(() => Boolean)
     @IsBoolean()
     @IsOptional()
     isVip: boolean
