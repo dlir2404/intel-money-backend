@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Exclude, Expose, Type } from "class-transformer";
-import { IsDefined, IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString, IsTimeZone, IsUrl } from "class-validator";
+import { IsBoolean, IsDefined, IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString, IsTimeZone, IsUrl } from "class-validator";
 import { UserRole } from "src/shared/enums/user";
 import { DateAndPaginationType } from "src/shared/types/base";
 
@@ -50,7 +50,7 @@ export class UserResponse {
 
     @ApiProperty()
     email: string;
-    
+
     @Exclude()
     password: string;
 
@@ -73,7 +73,7 @@ export class UserResponse {
     totalLoan: number;
 
     @ApiProperty()
-    totalDebt: number; 
+    totalDebt: number;
 
     @Exclude()
     role: UserRole;
@@ -97,6 +97,20 @@ export class GetListUsersRequest extends DateAndPaginationType {
     @IsString()
     @IsOptional()
     role: UserRole
+
+    @ApiProperty({
+        required: false
+    })
+    @IsString()
+    @IsOptional()
+    search: string;
+
+    @ApiProperty({
+        required: false
+    })
+    @IsBoolean()
+    @IsOptional()
+    isVip: boolean
 }
 
 @Expose()

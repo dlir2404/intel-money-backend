@@ -5,13 +5,32 @@ import { Op, WhereOptions } from "sequelize";
 
 @Injectable()
 export class AdminUserService {
-    constructor() {}
+    constructor() { }
 
     async getListUsers(params: GetListUsersRequest) {
         const where: WhereOptions<User> = {}
 
         if (params.role) {
             where.role = params.role
+        }
+
+        if (params.search) {
+            where[Op.or] = [
+                {
+                    name: {
+                        [Op.like]: `%${params.search}%`
+                    }
+                },
+                {
+                    email: {
+                        [Op.like]: `%${params.search}%`
+                    }
+                }
+            ]
+        }
+
+        if (params.isVip != undefined) {
+            where.isVip = params.isVip ? 1 : 0
         }
 
         if (params.from && params.to) {
