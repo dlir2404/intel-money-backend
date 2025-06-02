@@ -1,5 +1,6 @@
+import { BadRequestException } from "@nestjs/common";
 import { ApiProperty } from "@nestjs/swagger";
-import { Exclude, Expose, Type } from "class-transformer";
+import { Exclude, Expose, Transform, Type } from "class-transformer";
 import { IsBoolean, IsDefined, IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString, IsTimeZone, IsUrl } from "class-validator";
 import { UserRole } from "src/shared/enums/user";
 import { DateAndPaginationType } from "src/shared/types/base";
@@ -108,7 +109,17 @@ export class GetListUsersRequest extends DateAndPaginationType {
     @ApiProperty({
         required: false
     })
-    @Type(() => Boolean)
+    @Transform(({ value }) => {
+        if (value == "true") {
+            return true;
+        }
+
+        if (value == "false") {
+            return false
+        }
+
+        throw new BadRequestException('isVip must be "true" or "false"')
+    })
     @IsBoolean()
     @IsOptional()
     isVip: boolean
