@@ -23,7 +23,7 @@ import { BaseResponse } from "src/shared/types/base";
 export class TransactionController {
     constructor(private readonly transactionService: TransactionService) {}
 
-    @Get("all")
+    @Get("time-range")
     @UserAuth()
     @ApiResponse({
         status: 200,
@@ -34,11 +34,11 @@ export class TransactionController {
         summary: "Get all transactions, in the compact format, not include extra info",
     })
     async getAllTransactions(@CurrentUserId() userId: number, @Query() query: GetAllTransactionsRequest) {
-        const transactions = await this.transactionService.getAllTransactions(userId, query);
+        const transactions = await this.transactionService.getTransactions(userId, query);
         return transactions;
     }
 
-    @Get("all/test-only")
+    @Get("all")
     @UserAuth()
     @ApiResponse({
         status: 200,
@@ -46,10 +46,10 @@ export class TransactionController {
         isArray: true
     })
     @ApiOperation({
-        summary: "Get all transactions in all time, just for test only",
+        summary: "Get all transactions in all time",
     })
     async getAllTransactionsTestOnly(@CurrentUserId() userId: number) {
-        const transactions = await this.transactionService.getAllTransactionsTestOnly(userId);
+        const transactions = await this.transactionService.getAllTransactions(userId);
         return transactions;
     }
 

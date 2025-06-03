@@ -73,7 +73,7 @@ export class TransactionService {
         };
     }
 
-    async getAllTransactionsTestOnly(userId: number) {
+    async getAllTransactions(userId: number) {
         const where: WhereOptions<GeneralTransaction> = {
             userId: userId,
         };
@@ -89,7 +89,7 @@ export class TransactionService {
     }
 
 
-    async getAllTransactions(userId: number, query: GetAllTransactionsRequest) {
+    async getTransactions(userId: number, query: GetAllTransactionsRequest) {
         const { from, to } = query;
 
         const where: WhereOptions<GeneralTransaction> = {
