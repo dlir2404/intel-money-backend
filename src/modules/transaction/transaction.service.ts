@@ -420,7 +420,6 @@ export class TransactionService {
         const transaction = await this.createGeneralTransaction({
             type: TransactionType.LEND,
             ...body,
-            categoryId: null,
             userId
         }, t);
 
@@ -510,7 +509,6 @@ export class TransactionService {
         const transaction = await this.createGeneralTransaction({
             type: TransactionType.BORROW,
             ...body,
-            categoryId: null,
             userId
         }, t);
 
