@@ -1,8 +1,8 @@
-import {BadRequestException, Injectable, InternalServerErrorException, NotFoundException} from "@nestjs/common";
-import {Sequelize} from "sequelize-typescript";
-import {BorrowTransaction, GeneralTransaction, LendTransaction, TransferTransaction} from "src/database/models";
-import {TransactionType} from "src/shared/enums/transaction";
-import {CreateGeneralTrans} from "src/shared/types/transactions/general";
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
+import { Sequelize } from "sequelize-typescript";
+import { BorrowTransaction, GeneralTransaction, LendTransaction, TransferTransaction } from "src/database/models";
+import { TransactionType } from "src/shared/enums/transaction";
+import { CreateGeneralTrans } from "src/shared/types/transactions/general";
 import {
     CreateBorrowTransactionRequest,
     CreateGeneralTransactionRequest, CreateLendTransactionRequest,
@@ -10,13 +10,13 @@ import {
     GetAllTransactionsRequest, UpdateBorrowTransactionRequest, UpdateExpenseTransactionRequest,
     UpdateIncomeTransactionRequest, UpdateLendTransactionRequest
 } from "./transaction.dto";
-import {UserService} from "../user/user.service";
-import {WalletService} from "../wallet/wallet.service";
-import {CategoryService} from "../category/category.service";
-import {CategoryType} from "src/shared/enums/category";
-import {RelatedUserService} from "../related-user/related-user.service";
-import {Op, Transaction, WhereOptions} from "sequelize";
-import {StatisticService} from "../statistic/statistic.service";
+import { UserService } from "../user/user.service";
+import { WalletService } from "../wallet/wallet.service";
+import { CategoryService } from "../category/category.service";
+import { CategoryType } from "src/shared/enums/category";
+import { RelatedUserService } from "../related-user/related-user.service";
+import { Op, Transaction, WhereOptions } from "sequelize";
+import { StatisticService } from "../statistic/statistic.service";
 
 @Injectable()
 export class TransactionService {
@@ -27,7 +27,7 @@ export class TransactionService {
         private readonly relatedUserService: RelatedUserService,
         private readonly sequelize: Sequelize,
         private readonly statisticService: StatisticService,
-    ) {}
+    ) { }
 
     async getTransactionById(userId: number, transactionId: number) {
         const transaction = await GeneralTransaction.findOne({
@@ -65,7 +65,7 @@ export class TransactionService {
                 raw: true
             })
         }
-        
+
 
         return {
             ...transaction.dataValues,
@@ -81,11 +81,66 @@ export class TransactionService {
 
         const transactions = await GeneralTransaction.findAll({
             where,
-            raw: true,
+            include: [
+                {
+                    model: LendTransaction,
+                    required: false,
+                    attributes: ['borrowerId', 'collectionDate', 'collectedAmount']
+                },
+                {
+                    model: BorrowTransaction,
+                    required: false,
+                    attributes: ['lenderId', 'repaymentDate', 'repaymentAmount']
+                },
+                {
+                    model: TransferTransaction,
+                    required: false,
+                    attributes: ['destinationWalletId']
+                }
+            ],
             order: [['transactionDate', 'DESC']],
         });
 
-        return transactions;
+        // Transform data để tạo extraInfo
+        return transactions.map(transaction => {
+            const data = transaction.toJSON();
+            let extraInfo = null;
+
+            switch (data.type) {
+                case 'LEND':
+                    if (data.lendTransaction) {
+                        extraInfo = {
+                            borrowerId: data.lendTransaction.borrowerId,
+                            collectionDate: data.lendTransaction.collectionDate,
+                            collectedAmount: data.lendTransaction.collectedAmount
+                        };
+                    }
+                    break;
+                case 'BORROW':
+                    if (data.borrowTransaction) {
+                        extraInfo = {
+                            lenderId: data.borrowTransaction.lenderId,
+                            repaymentDate: data.borrowTransaction.repaymentDate,
+                            repaymentAmount: data.borrowTransaction.repaymentAmount
+                        };
+                    }
+                    break;
+                case 'TRANSFER':
+                    if (data.transferTransaction) {
+                        extraInfo = {
+                            destinationWalletId: data.transferTransaction.destinationWalletId
+                        };
+                    }
+                    break;
+            }
+
+            // Remove nested objects và add extraInfo
+            delete data.lendTransaction;
+            delete data.borrowTransaction;
+            delete data.transferTransaction;
+
+            return { ...data, extraInfo };
+        });
     }
 
 
@@ -108,7 +163,7 @@ export class TransactionService {
 
         return transactions;
     }
-        
+
 
 
     async createGeneralTransaction(params: CreateGeneralTrans, t?: any): Promise<GeneralTransaction> {
@@ -145,7 +200,7 @@ export class TransactionService {
 
                 // Update user's total balance
                 await this.userService.increaseTotalBalance(userId, body.amount, t);
-                
+
                 // Update wallet balance
                 await this.walletService.increaseBalance(body.sourceWalletId, body.amount, t);
 
@@ -183,7 +238,7 @@ export class TransactionService {
 
         // Update user's total balance
         await this.userService.increaseTotalBalance(userId, body.amount, t);
-        
+
         // Update wallet balance
         await this.walletService.increaseBalance(body.sourceWalletId, body.amount, t);
 
@@ -213,7 +268,7 @@ export class TransactionService {
 
                 // Update user's total balance
                 await this.userService.decreaseTotalBalance(userId, body.amount, t);
-                
+
                 // Update wallet balance
                 await this.walletService.decreaseBalance(body.sourceWalletId, body.amount, t);
 
@@ -496,7 +551,7 @@ export class TransactionService {
                 await this.removeTransactionWithSTransaction(userId, id, t);
 
                 const newTransaction = await this.createIncomeWithTransaction(
-                    {...body},
+                    { ...body },
                     userId,
                     t
                 );
@@ -527,7 +582,7 @@ export class TransactionService {
                 await this.removeTransactionWithSTransaction(userId, id, t);
 
                 const newTransaction = await this.createExpenseWithTransaction(
-                    {...body},
+                    { ...body },
                     userId,
                     t
                 );
@@ -545,7 +600,7 @@ export class TransactionService {
                 await this.removeTransactionWithSTransaction(userId, id, t);
 
                 const newTransaction = await this.createLendWithTransaction(
-                    {...body},
+                    { ...body },
                     userId,
                     t
                 );
@@ -563,7 +618,7 @@ export class TransactionService {
                 await this.removeTransactionWithSTransaction(userId, id, t);
 
                 const newTransaction = await this.createBorrowWithTransaction(
-                    {...body},
+                    { ...body },
                     userId,
                     t
                 );
@@ -575,7 +630,7 @@ export class TransactionService {
         }
     }
 
-    async removeTransaction(userId: number, transactionId: number){
+    async removeTransaction(userId: number, transactionId: number) {
         const transaction = await GeneralTransaction.findByPk(transactionId);
 
         if (!transaction) {
@@ -660,7 +715,7 @@ export class TransactionService {
         }
     }
 
-    async removeTransactionWithSTransaction(userId: number, transactionId: number, t: Transaction){
+    async removeTransactionWithSTransaction(userId: number, transactionId: number, t: Transaction) {
         const transaction = await GeneralTransaction.findByPk(transactionId);
 
         if (!transaction) {

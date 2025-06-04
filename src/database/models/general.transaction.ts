@@ -1,8 +1,11 @@
-import { BelongsTo, Column, DataType, ForeignKey, Model, Table } from "sequelize-typescript";
+import { BelongsTo, Column, DataType, ForeignKey, HasOne, Model, Table } from "sequelize-typescript";
 import { Wallet } from "./wallet";
 import { Category } from "./category";
 import { TransactionType } from "src/shared/enums/transaction";
 import { User } from "./user";
+import { LendTransaction } from "./lend.transaction";
+import { BorrowTransaction } from "./borrow.transaction";
+import { TransferTransaction } from "./transfer.transaction";
 
 @Table({ timestamps: false })
 export class GeneralTransaction extends Model{
@@ -57,4 +60,13 @@ export class GeneralTransaction extends Model{
         type: DataType.STRING(1024),
     })
     image: string;
+
+    @HasOne(() => LendTransaction)
+    lendTransaction: LendTransaction;
+
+    @HasOne(() => BorrowTransaction)
+    borrowTransaction: BorrowTransaction;
+
+    @HasOne(() => TransferTransaction)
+    transferTransaction: TransferTransaction;
 }
