@@ -349,9 +349,9 @@ export class TransactionService {
 
             return {
                 ...result.dataValues,
-                sourceWallet,
-                destinationWalletId: body.destinationWalletId,
-                destinationWallet
+                extraInfo: {
+                    destinationWalletId: body.destinationWalletId,
+                }
             };
         } catch (error) {
             throw new BadRequestException(`Failed to create transfer transaction: ${error.message}`);
@@ -400,8 +400,9 @@ export class TransactionService {
 
             return {
                 ...result.dataValues,
-                sourceWallet,
-                borrower
+                extraInfo: {
+                    borrowerId: body.borrowerId,
+                }
             };
         } catch (error) {
             throw new BadRequestException(`Failed to create lend transaction: ${error.message}`);
@@ -488,8 +489,9 @@ export class TransactionService {
 
             return {
                 ...result.dataValues,
-                sourceWallet,
-                lender
+                extraInfo: {
+                    lenderId: body.lenderId,
+                },
             };
         } catch (error) {
             throw new BadRequestException(`Failed to create borrow transaction: ${error.message}`);
@@ -605,7 +607,12 @@ export class TransactionService {
                     t
                 );
 
-                return newTransaction.dataValues;
+                return {
+                    ...newTransaction.dataValues,
+                    extraInfo: {
+                        borrowerId: body.borrowerId,
+                    }
+                }
             });
         } catch (error) {
             throw new InternalServerErrorException("Failed to update transaction: " + error.message);
@@ -623,7 +630,12 @@ export class TransactionService {
                     t
                 );
 
-                return newTransaction.dataValues;
+                return {
+                    ...newTransaction.dataValues,
+                    extraInfo: {
+                        lenderId: body.lenderId,
+                    }
+                };
             });
         } catch (error) {
             throw new InternalServerErrorException("Failed to update transaction: " + error.message);

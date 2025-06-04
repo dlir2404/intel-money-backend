@@ -153,13 +153,7 @@ export class CreateTransferTransactionRequest {
 @Expose()
 export class TransferTransactionResponse extends GeneralTransactionResponse {
   @ApiProperty()
-  destinationWalletId: number;
-
-  @ApiProperty({
-    type: CompactWalletResponse
-  })
-  @Type(() => CompactWalletResponse)
-  destinationWallet: any;
+  extraInfo: any;
 
   constructor(partial: Partial<TransferTransactionResponse>) {
     super(partial);
@@ -227,16 +221,7 @@ export class CreateLendTransactionRequest {
 @Expose()
 export class LendTransactionResponse extends GeneralTransactionResponse {
   @ApiProperty()
-  collectionDate?: string;
-
-  @ApiProperty()
-  collectedAmount: number;
-
-  @ApiProperty({
-    type: CompactRelatedUserResponse
-  })
-  @Type(() => CompactRelatedUserResponse)
-  borrower: any;
+  exraInfo: any;
 
   constructor(partial: Partial<TransferTransactionResponse>) {
     super(partial);
@@ -303,16 +288,7 @@ export class CreateBorrowTransactionRequest {
 @Expose()
 export class BorrowTransactionResponse extends GeneralTransactionResponse {
   @ApiProperty()
-  repaymentDate?: string;
-
-  @ApiProperty()
-  repaymentAmount: number;
-
-  @ApiProperty({
-    type: CompactRelatedUserResponse
-  })
-  @Type(() => CompactRelatedUserResponse)
-  lender: any;
+  extraInfo: any;
 
   constructor(partial: Partial<TransferTransactionResponse>) {
     super(partial);
