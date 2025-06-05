@@ -837,6 +837,8 @@ export class TransactionService {
 
             await this.walletService.increaseBalance(transaction.sourceWalletId, transaction.amount, t);
             await this.walletService.decreaseBalance(transferTransaction.destinationWalletId, transaction.amount, t);
+
+            await transferTransaction.destroy({ transaction: t });
         }
 
         // Delete the transaction record
