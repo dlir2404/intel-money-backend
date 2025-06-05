@@ -13,7 +13,8 @@ import {
     GetAllTransactionsRequest,
     LendTransactionResponse,
     TransferTransactionResponse, UpdateBorrowTransactionRequest, UpdateExpenseTransactionRequest,
-    UpdateIncomeTransactionRequest, UpdateLendTransactionRequest
+    UpdateIncomeTransactionRequest, UpdateLendTransactionRequest,
+    UpdateTransferTransactionRequest
 } from "./transaction.dto";
 import { CurrentUserId, UserAuth } from "src/shared/decorators/auth";
 import { BaseResponse } from "src/shared/types/base";
@@ -119,6 +120,17 @@ export class TransactionController {
     @UserAuth()
     async createTransfer(@Body() body: CreateTransferTransactionRequest, @CurrentUserId() userId: number) {
         const transaction = await this.transactionService.createTransfer(body, userId);
+        return new TransferTransactionResponse(transaction);
+    }
+
+    @Put("transfer/update/:id")
+    @ApiResponse({
+        status: 200,
+        type: TransferTransactionResponse
+    })
+    @UserAuth()
+    async updateTransfer(@Param("id") id: number, @Body() body: UpdateTransferTransactionRequest, @CurrentUserId() userId: number) {
+        const transaction = await this.transactionService.updateTransfer(id, body, userId);
         return new TransferTransactionResponse(transaction);
     }
 

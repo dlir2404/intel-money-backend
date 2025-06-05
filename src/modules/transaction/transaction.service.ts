@@ -8,7 +8,8 @@ import {
     CreateGeneralTransactionRequest, CreateLendTransactionRequest,
     CreateTransferTransactionRequest,
     GetAllTransactionsRequest, UpdateBorrowTransactionRequest, UpdateExpenseTransactionRequest,
-    UpdateIncomeTransactionRequest, UpdateLendTransactionRequest
+    UpdateIncomeTransactionRequest, UpdateLendTransactionRequest,
+    UpdateTransferTransactionRequest
 } from "./transaction.dto";
 import { UserService } from "../user/user.service";
 import { WalletService } from "../wallet/wallet.service";
@@ -358,6 +359,35 @@ export class TransactionService {
         }
     }
 
+    async createTransferWithTransaction(body: CreateTransferTransactionRequest, userId: number, t: Transaction) {
+        if (body.amount <= 0) {
+            throw new BadRequestException('Transaction amount must be positive');
+        }
+
+        const sourceWallet = await this.walletService.findById(body.sourceWalletId, userId);
+        const destinationWallet = await this.walletService.findById(body.destinationWalletId, userId);
+        if (sourceWallet.id === destinationWallet.id) {
+            throw new BadRequestException('Source wallet and destination wallet must be different');
+        }
+        // Create the transaction record
+        const transaction = await this.createGeneralTransaction({
+            type: TransactionType.TRANSFER,
+            ...body,
+            categoryId: null,
+            userId
+        }, t);
+        // Update source wallet balance
+        await this.walletService.decreaseBalance(body.sourceWalletId, body.amount, t);
+        // Update destination wallet balance
+        await this.walletService.increaseBalance(body.destinationWalletId, body.amount, t);
+        await TransferTransaction.create({
+            generalTransactionId: transaction.id,
+            destinationWalletId: body.destinationWalletId
+        }, { transaction: t });
+        
+        return transaction;
+    }
+
     async createLend(body: CreateLendTransactionRequest, userId: number) {
         if (body.amount <= 0) {
             throw new BadRequestException('Transaction amount must be positive');
@@ -576,6 +606,29 @@ export class TransactionService {
                 );
 
                 return newTransaction.dataValues;
+            });
+        } catch (error) {
+            throw new InternalServerErrorException("Failed to update transaction: " + error.message);
+        }
+    }
+
+    async updateTransfer(id: number, body: UpdateTransferTransactionRequest, userId: number) {
+        try {
+            return await this.sequelize.transaction(async (t) => {
+                await this.removeTransactionWithSTransaction(userId, id, t);
+
+                const newTransaction = await this.createTransferWithTransaction(
+                    { ...body },
+                    userId,
+                    t
+                );
+
+                return {
+                    ...newTransaction.dataValues,
+                    extraInfo: {
+                        destinationWalletId: body.destinationWalletId,
+                    }
+                };
             });
         } catch (error) {
             throw new InternalServerErrorException("Failed to update transaction: " + error.message);
