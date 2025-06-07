@@ -174,8 +174,6 @@ export class TransactionService {
             ...params
         }, { transaction: t });
 
-        await this.updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction, t);
-        
         // await this.statisticService.updateCacheAfterCreateTransaction(params.userId, transaction);
 
         return transaction;
@@ -202,11 +200,23 @@ export class TransactionService {
                     userId
                 }, t);
 
-                // Update user's total balance
-                await this.userService.increaseTotalBalance(userId, body.amount, t);
+                const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterDate(
+                    userId,
+                    body.sourceWalletId,
+                    body.transactionDate,
+                    t
+                );
 
-                // Update wallet balance
-                await this.walletService.increaseBalance(body.sourceWalletId, body.amount, t);
+                if (mostSoonModifyBalanceTransaction) {
+                    // Update the most soon modify balance transaction
+                    await this.updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction, mostSoonModifyBalanceTransaction, t);
+                } else {
+                    // Update user's total balance
+                    await this.userService.increaseTotalBalance(userId, body.amount, t);
+
+                    // Update wallet balance
+                    await this.walletService.increaseBalance(body.sourceWalletId, body.amount, t);
+                }
 
                 return transaction;
             });
@@ -240,11 +250,23 @@ export class TransactionService {
             userId
         }, t);
 
-        // Update user's total balance
-        await this.userService.increaseTotalBalance(userId, body.amount, t);
+        const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterDate(
+            userId,
+            body.sourceWalletId,
+            body.transactionDate,
+            t
+        );
 
-        // Update wallet balance
-        await this.walletService.increaseBalance(body.sourceWalletId, body.amount, t);
+        if (mostSoonModifyBalanceTransaction) {
+            // Update the most soon modify balance transaction
+            await this.updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction, mostSoonModifyBalanceTransaction, t);
+        } else {
+            // Update user's total balance
+            await this.userService.increaseTotalBalance(userId, body.amount, t);
+
+            // Update wallet balance
+            await this.walletService.increaseBalance(body.sourceWalletId, body.amount, t);
+        }
 
         return transaction;
     }
@@ -270,11 +292,23 @@ export class TransactionService {
                     userId
                 }, t);
 
-                // Update user's total balance
-                await this.userService.decreaseTotalBalance(userId, body.amount, t);
+                const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterDate(
+                    userId,
+                    body.sourceWalletId,
+                    body.transactionDate,
+                    t
+                );
 
-                // Update wallet balance
-                await this.walletService.decreaseBalance(body.sourceWalletId, body.amount, t);
+                if (mostSoonModifyBalanceTransaction) {
+                    // Update the most soon modify balance transaction
+                    await this.updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction, mostSoonModifyBalanceTransaction, t);
+                } else {
+                    // Update user's total balance
+                    await this.userService.decreaseTotalBalance(userId, body.amount, t);
+
+                    // Update wallet balance
+                    await this.walletService.decreaseBalance(body.sourceWalletId, body.amount, t);
+                }
 
                 return transaction;
             });
@@ -306,11 +340,23 @@ export class TransactionService {
             userId
         }, t);
 
-        // Update user's total balance
-        await this.userService.decreaseTotalBalance(userId, body.amount, t);
+        const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterDate(
+            userId,
+            body.sourceWalletId,
+            body.transactionDate,
+            t
+        );
 
-        // Update wallet balance
-        await this.walletService.decreaseBalance(body.sourceWalletId, body.amount, t);
+        if (mostSoonModifyBalanceTransaction) {
+            // Update the most soon modify balance transaction
+            await this.updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction, mostSoonModifyBalanceTransaction, t);
+        } else {
+            // Update user's total balance
+            await this.userService.decreaseTotalBalance(userId, body.amount, t);
+
+            // Update wallet balance
+            await this.walletService.decreaseBalance(body.sourceWalletId, body.amount, t);
+        }
 
         return transaction;
     }
@@ -337,11 +383,39 @@ export class TransactionService {
                     userId
                 }, t);
 
-                // Update source wallet balance
-                await this.walletService.decreaseBalance(body.sourceWalletId, body.amount, t);
+                const mostSoonModifyBalanceTransactionOfSourceWallet = await this.getMostSoonModifyBalanceTransactionAfterDate(
+                    userId,
+                    body.sourceWalletId,
+                    body.transactionDate,
+                    t
+                );
 
-                // Update destination wallet balance
-                await this.walletService.increaseBalance(body.destinationWalletId, body.amount, t);
+                const mostSoonModifyBalanceTransactionOfDestinationWallet = await this.getMostSoonModifyBalanceTransactionAfterDate(
+                    userId,
+                    body.destinationWalletId,
+                    body.transactionDate,
+                    t
+                );
+
+                if (!mostSoonModifyBalanceTransactionOfSourceWallet && !mostSoonModifyBalanceTransactionOfDestinationWallet) {
+                    // If both wallets do not have a most soon modify balance transaction, we can safely update the balances
+                    await this.walletService.decreaseBalance(body.sourceWalletId, body.amount, t);
+                    await this.walletService.increaseBalance(body.destinationWalletId, body.amount, t);
+                } else if (mostSoonModifyBalanceTransactionOfSourceWallet && !mostSoonModifyBalanceTransactionOfDestinationWallet) {
+                    await this.userService.increaseTotalBalance(userId, body.amount, t);
+
+                    await this.updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction, mostSoonModifyBalanceTransactionOfSourceWallet, t);
+                    await this.walletService.increaseBalance(body.destinationWalletId, body.amount, t);
+                } else if (!mostSoonModifyBalanceTransactionOfSourceWallet && mostSoonModifyBalanceTransactionOfDestinationWallet) {
+                    await this.userService.decreaseTotalBalance(userId, body.amount, t);
+
+                    await this.walletService.decreaseBalance(body.sourceWalletId, body.amount, t);
+                    await this.updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction, mostSoonModifyBalanceTransactionOfDestinationWallet, t);
+                } else if (mostSoonModifyBalanceTransactionOfSourceWallet && mostSoonModifyBalanceTransactionOfDestinationWallet) {
+                    await this.updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction, mostSoonModifyBalanceTransactionOfSourceWallet, t);
+                    await this.updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction, mostSoonModifyBalanceTransactionOfDestinationWallet, t);
+                }
+
 
                 await TransferTransaction.create({
                     generalTransactionId: transaction.id,
@@ -379,10 +453,41 @@ export class TransactionService {
             categoryId: null,
             userId
         }, t);
-        // Update source wallet balance
-        await this.walletService.decreaseBalance(body.sourceWalletId, body.amount, t);
-        // Update destination wallet balance
-        await this.walletService.increaseBalance(body.destinationWalletId, body.amount, t);
+
+
+        const mostSoonModifyBalanceTransactionOfSourceWallet = await this.getMostSoonModifyBalanceTransactionAfterDate(
+            userId,
+            body.sourceWalletId,
+            body.transactionDate,
+            t
+        );
+
+        const mostSoonModifyBalanceTransactionOfDestinationWallet = await this.getMostSoonModifyBalanceTransactionAfterDate(
+            userId,
+            body.destinationWalletId,
+            body.transactionDate,
+            t
+        );
+
+        if (!mostSoonModifyBalanceTransactionOfSourceWallet && !mostSoonModifyBalanceTransactionOfDestinationWallet) {
+            // If both wallets do not have a most soon modify balance transaction, we can safely update the balances
+            await this.walletService.decreaseBalance(body.sourceWalletId, body.amount, t);
+            await this.walletService.increaseBalance(body.destinationWalletId, body.amount, t);
+        } else if (mostSoonModifyBalanceTransactionOfSourceWallet && !mostSoonModifyBalanceTransactionOfDestinationWallet) {
+            await this.userService.increaseTotalBalance(userId, body.amount, t);
+
+            await this.updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction, mostSoonModifyBalanceTransactionOfSourceWallet, t);
+            await this.walletService.increaseBalance(body.destinationWalletId, body.amount, t);
+        } else if (!mostSoonModifyBalanceTransactionOfSourceWallet && mostSoonModifyBalanceTransactionOfDestinationWallet) {
+            await this.userService.decreaseTotalBalance(userId, body.amount, t);
+
+            await this.walletService.decreaseBalance(body.sourceWalletId, body.amount, t);
+            await this.updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction, mostSoonModifyBalanceTransactionOfDestinationWallet, t);
+        } else if (mostSoonModifyBalanceTransactionOfSourceWallet && mostSoonModifyBalanceTransactionOfDestinationWallet) {
+            await this.updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction, mostSoonModifyBalanceTransactionOfSourceWallet, t);
+            await this.updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction, mostSoonModifyBalanceTransactionOfDestinationWallet, t);
+        }
+
         await TransferTransaction.create({
             generalTransactionId: transaction.id,
             destinationWalletId: body.destinationWalletId
@@ -408,14 +513,26 @@ export class TransactionService {
                     userId
                 }, t);
 
-                // Update source wallet balance
-                await this.walletService.decreaseBalance(body.sourceWalletId, body.amount, t);
+                const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterDate(
+                    userId,
+                    body.sourceWalletId,
+                    body.transactionDate,
+                    t
+                );
+
+                if (mostSoonModifyBalanceTransaction) {
+                    // Update the most soon modify balance transaction
+                    await this.updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction, mostSoonModifyBalanceTransaction, t);
+                } else {
+                    // Update wallet balance
+                    await this.walletService.decreaseBalance(body.sourceWalletId, body.amount, t);
+                }
 
                 // Update user's total loan
                 await this.userService.increaseTotalLoan(userId, body.amount, t);
 
                 // Update borrower's total debt
-                await this.relatedUserService.increaseTotalDebt(borrower.userId, body.amount, t);
+                await this.relatedUserService.increaseTotalDebt(body.borrowerId, body.amount, t);
 
                 //add extra info to table
                 await LendTransaction.create({
@@ -453,14 +570,26 @@ export class TransactionService {
             userId
         }, t);
 
-        // Update source wallet balance
-        await this.walletService.decreaseBalance(body.sourceWalletId, body.amount, t);
+        const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterDate(
+            userId,
+            body.sourceWalletId,
+            body.transactionDate,
+            t
+        );
+
+        if (mostSoonModifyBalanceTransaction) {
+            // Update the most soon modify balance transaction
+            await this.updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction, mostSoonModifyBalanceTransaction, t);
+        } else {
+            // Update wallet balance
+            await this.walletService.decreaseBalance(body.sourceWalletId, body.amount, t);
+        }
 
         // Update user's total loan
         await this.userService.increaseTotalLoan(userId, body.amount, t);
 
         // Update borrower's total debt
-        await this.relatedUserService.increaseTotalDebt(borrower.userId, body.amount, t);
+        await this.relatedUserService.increaseTotalDebt(body.borrowerId, body.amount, t);
 
         //add extra info to table
         await LendTransaction.create({
@@ -490,14 +619,26 @@ export class TransactionService {
                     userId
                 }, t);
 
-                // Update source wallet balance
-                await this.walletService.increaseBalance(body.sourceWalletId, body.amount, t);
+                const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterDate(
+                    userId,
+                    body.sourceWalletId,
+                    body.transactionDate,
+                    t
+                );
+
+                if (mostSoonModifyBalanceTransaction) {
+                    // Update the most soon modify balance transaction
+                    await this.updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction, mostSoonModifyBalanceTransaction, t);
+                } else {
+                    // Update source wallet balance
+                    await this.walletService.increaseBalance(body.sourceWalletId, body.amount, t);
+                }
 
                 // Update user's total debt
                 await this.userService.increaseTotalDebt(userId, body.amount, t);
 
                 // Update lender's total loan
-                await this.relatedUserService.increaseTotalLoan(lender.userId, body.amount, t);
+                await this.relatedUserService.increaseTotalLoan(body.lenderId, body.amount, t);
 
                 //add extra info to table
                 await BorrowTransaction.create({
@@ -536,14 +677,26 @@ export class TransactionService {
             userId
         }, t);
 
-        // Update source wallet balance
-        await this.walletService.increaseBalance(body.sourceWalletId, body.amount, t);
+        const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterDate(
+            userId,
+            body.sourceWalletId,
+            body.transactionDate,
+            t
+        );
+
+        if (mostSoonModifyBalanceTransaction) {
+            // Update the most soon modify balance transaction
+            await this.updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction, mostSoonModifyBalanceTransaction, t);
+        } else {
+            // Update source wallet balance
+            await this.walletService.increaseBalance(body.sourceWalletId, body.amount, t);
+        }
 
         // Update user's total debt
         await this.userService.increaseTotalDebt(userId, body.amount, t);
 
         // Update lender's total loan
-        await this.relatedUserService.increaseTotalLoan(lender.userId, body.amount, t);
+        await this.relatedUserService.increaseTotalLoan(body.lenderId, body.amount, t);
 
         //add extra info to table
         await BorrowTransaction.create({
@@ -588,16 +741,27 @@ export class TransactionService {
                     userId
                 }, t);
 
+                const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterDate(
+                    userId,
+                    body.sourceWalletId,
+                    body.transactionDate,
+                    t
+                );
 
-                // Update wallet balance
-                await this.walletService.setBalance(body.sourceWalletId, body.newRealBalance, t);
-                // Update user's total balance
-                if (differ > 0) {
-                    await this.userService.increaseTotalBalance(userId, differ, t);
+                if (mostSoonModifyBalanceTransaction) {
+                    // Update the most soon modify balance transaction
+                    await this.updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction, mostSoonModifyBalanceTransaction, t);
                 } else {
-                    await this.userService.decreaseTotalBalance(userId, -differ, t);
-                }
+                    // If there is no most soon modify balance transaction, we can safely update the wallet balance
+                    await this.walletService.setBalance(body.sourceWalletId, body.newRealBalance, t);
 
+                    // Update user's total balance
+                    if (differ > 0) {
+                        await this.userService.increaseTotalBalance(userId, differ, t);
+                    } else {
+                        await this.userService.decreaseTotalBalance(userId, -differ, t);
+                    }
+                }
 
                 // Create modify balance transaction record
                 await ModifyBalanceTransaction.create({
@@ -624,23 +788,7 @@ export class TransactionService {
      * @param transaction 
      * @param t 
      */
-    async updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction: GeneralTransaction, t: Transaction) {
-        const mostSoonModifyBalanceTransaction = await GeneralTransaction.findOne({
-            where: {
-                type: TransactionType.MODIFY_BALANCE,
-                transactionDate: {
-                    [Op.gt]: transaction.transactionDate // greater than the current transaction date
-                }
-            },
-            order: [['transactionDate', 'ASC']], // ascending to get the nearest one after
-            transaction: t
-        });
-
-        // If there is no modify balance transaction after the current transaction, we don't need to do anything
-        if (!mostSoonModifyBalanceTransaction) {
-            return;
-        }
-
+    async updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction: GeneralTransaction, mostSoonModifyBalanceTransaction: GeneralTransaction, t: Transaction) {
         const oldDiff = mostSoonModifyBalanceTransaction.amount;
         let newDiff: number;
 
@@ -687,23 +835,7 @@ export class TransactionService {
         }
     }
 
-    async updateMostSoonModifyBalanceTransactionBeforeRemoveTransaction(transaction: GeneralTransaction, t: Transaction) {
-        const mostSoonModifyBalanceTransaction = await GeneralTransaction.findOne({
-            where: {
-                type: TransactionType.MODIFY_BALANCE,
-                transactionDate: {
-                    [Op.gt]: transaction.transactionDate // greater than the current transaction date
-                }
-            },
-            order: [['transactionDate', 'ASC']], // ascending to get the nearest one after
-            transaction: t
-        });
-
-        // If there is no modify balance transaction after the current transaction, we don't need to do anything
-        if (!mostSoonModifyBalanceTransaction) {
-            return;
-        }
-
+    async updateMostSoonModifyBalanceTransactionBeforeRemoveTransaction(transaction: GeneralTransaction, mostSoonModifyBalanceTransaction: GeneralTransaction, t: Transaction) {
         const oldDiff = mostSoonModifyBalanceTransaction.amount;
         let newDiff: number;
 
@@ -752,7 +884,8 @@ export class TransactionService {
     async getLatestModifyBalanceTransactionAtDate(
         userId: number,
         sourceWalletId: number,
-        date: Date
+        date: Date,
+        t?: Transaction
     ) {
         const transaction = await GeneralTransaction.findOne(
             {
@@ -770,6 +903,36 @@ export class TransactionService {
                     attributes: ['newRealBalance']
                 }],
                 order: [['transactionDate', 'DESC']], // descending to get the latest one
+                transaction: t
+            }
+        )
+
+        return transaction ? transaction : null;
+    }
+
+    async getMostSoonModifyBalanceTransactionAfterDate(
+        userId: number,
+        sourceWalletId: number,
+        date: string | Date,
+        t?: Transaction
+    ) {
+        const transaction = await GeneralTransaction.findOne(
+            {
+                where: {
+                    userId: userId,
+                    sourceWalletId: sourceWalletId,
+                    type: TransactionType.MODIFY_BALANCE,
+                    transactionDate: {
+                        [Op.gt]: date // greater than the given date
+                    }
+                },
+                include: [{
+                    model: ModifyBalanceTransaction,
+                    required: true,
+                    attributes: ['newRealBalance']
+                }],
+                order: [['transactionDate', 'ASC']], // ascending to get the nearest one after
+                transaction: t
             }
         )
 
@@ -793,22 +956,33 @@ export class TransactionService {
             balance = latestModifyBalanceTransaction.modifyBalanceTransaction.newRealBalance;
         }
 
+
+        //GET ALL RELATED TRANSACTIONS
         const where: WhereOptions<GeneralTransaction> = {
             userId: userId,
-            sourceWalletId: sourceWalletId,
+            [Op.or]: [
+                // Transactions with this wallet as source
+                { sourceWalletId: sourceWalletId },
+                // Transfer transactions with this wallet as destination
+                {
+                    type: TransactionType.TRANSFER,
+                    '$transferTransaction.destinationWalletId$': sourceWalletId
+                }
+            ],
             transactionDate: {
                 [Op.lte]: date // less than or equal to the given date
             },
         };
 
-        if (latestModifyBalanceTransaction) {
-            where.transactionDate = {
-                [Op.gt]: latestModifyBalanceTransaction.transactionDate
-            };
-        }
-
         const recentTransactionsFromLatestModifyBalance = await GeneralTransaction.findAll({
             where,
+            include: [
+                {
+                    model: TransferTransaction,
+                    required: false,
+                    attributes: ['destinationWalletId']
+                }
+            ],
             order: [['transactionDate', 'ASC']],
             raw: true
         });
@@ -978,67 +1152,80 @@ export class TransactionService {
             const result = await this.sequelize.transaction(async (t) => {
                 // await this.statisticService.updateCacheAfterRemoveTransaction(transaction.userId, transaction);
 
-                await this.updateMostSoonModifyBalanceTransactionBeforeRemoveTransaction(transaction, t);
+                const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterDate(
+                    transaction.userId,
+                    transaction.sourceWalletId,
+                    new Date(transaction.transactionDate),
+                    t
+                );
 
-                //case 1: income
-                if (transaction.type === TransactionType.INCOME) {
-                    await this.userService.decreaseTotalBalance(transaction.userId, transaction.amount, t);
-                    await this.walletService.decreaseBalance(transaction.sourceWalletId, transaction.amount, t);
+                // Update the most soon modify balance transaction if it exists
+                if (mostSoonModifyBalanceTransaction) {
+                    await this.updateMostSoonModifyBalanceTransactionBeforeRemoveTransaction(transaction, mostSoonModifyBalanceTransaction, t);
+                } else {
+                    //else update current balance of wallet, user
+
+                    //case 1: income
+                    if (transaction.type === TransactionType.INCOME) {
+                        await this.userService.decreaseTotalBalance(transaction.userId, transaction.amount, t);
+                        await this.walletService.decreaseBalance(transaction.sourceWalletId, transaction.amount, t);
+                    }
+
+                    //case 2: expense
+                    if (transaction.type === TransactionType.EXPENSE) {
+                        await this.userService.increaseTotalBalance(transaction.userId, transaction.amount, t);
+                        await this.walletService.increaseBalance(transaction.sourceWalletId, transaction.amount, t);
+                    }
+
+                    //case 3: lend
+                    if (transaction.type === TransactionType.LEND) {
+                        const lendTransaction = await LendTransaction.findOne({
+                            where: {
+                                generalTransactionId: transaction.id
+                            }
+                        });
+
+                        await this.userService.increaseTotalBalance(transaction.userId, transaction.amount, t);
+                        await this.walletService.increaseBalance(transaction.sourceWalletId, transaction.amount, t);
+                        await this.userService.decreaseTotalLoan(transaction.userId, transaction.amount, t);
+                        await this.relatedUserService.decreaseTotalDebt(lendTransaction.borrowerId, transaction.amount, t);
+
+                        // Delete the lend transaction record
+                        await lendTransaction.destroy({ transaction: t });
+                    }
+
+                    //case 4: borrow
+                    if (transaction.type === TransactionType.BORROW) {
+                        const borrowTransaction = await BorrowTransaction.findOne({
+                            where: {
+                                generalTransactionId: transaction.id
+                            }
+                        });
+
+                        await this.userService.decreaseTotalBalance(transaction.userId, transaction.amount, t);
+                        await this.walletService.decreaseBalance(transaction.sourceWalletId, transaction.amount, t);
+                        await this.userService.decreaseTotalDebt(transaction.userId, transaction.amount, t);
+                        await this.relatedUserService.decreaseTotalLoan(borrowTransaction.lenderId, transaction.amount, t);
+
+                        // Delete the borrow transaction record
+                        await borrowTransaction.destroy({ transaction: t });
+                    }
+
+                    //case 5: transfer
+                    if (transaction.type === TransactionType.TRANSFER) {
+                        const transferTransaction = await TransferTransaction.findOne({
+                            where: {
+                                generalTransactionId: transaction.id
+                            }
+                        });
+
+                        await this.walletService.increaseBalance(transaction.sourceWalletId, transaction.amount, t);
+                        await this.walletService.decreaseBalance(transferTransaction.destinationWalletId, transaction.amount, t);
+
+                        await transferTransaction.destroy({ transaction: t });
+                    }
                 }
 
-                //case 2: expense
-                if (transaction.type === TransactionType.EXPENSE) {
-                    await this.userService.increaseTotalBalance(transaction.userId, transaction.amount, t);
-                    await this.walletService.increaseBalance(transaction.sourceWalletId, transaction.amount, t);
-                }
-
-                //case 3: lend
-                if (transaction.type === TransactionType.LEND) {
-                    const lendTransaction = await LendTransaction.findOne({
-                        where: {
-                            generalTransactionId: transaction.id
-                        }
-                    });
-
-                    await this.userService.increaseTotalBalance(transaction.userId, transaction.amount, t);
-                    await this.walletService.increaseBalance(transaction.sourceWalletId, transaction.amount, t);
-                    await this.userService.decreaseTotalLoan(transaction.userId, transaction.amount, t);
-                    await this.relatedUserService.decreaseTotalDebt(lendTransaction.borrowerId, transaction.amount, t);
-
-                    // Delete the lend transaction record
-                    await lendTransaction.destroy({ transaction: t });
-                }
-
-                //case 4: borrow
-                if (transaction.type === TransactionType.BORROW) {
-                    const borrowTransaction = await BorrowTransaction.findOne({
-                        where: {
-                            generalTransactionId: transaction.id
-                        }
-                    });
-
-                    await this.userService.decreaseTotalBalance(transaction.userId, transaction.amount, t);
-                    await this.walletService.decreaseBalance(transaction.sourceWalletId, transaction.amount, t);
-                    await this.userService.decreaseTotalDebt(transaction.userId, transaction.amount, t);
-                    await this.relatedUserService.decreaseTotalLoan(borrowTransaction.lenderId, transaction.amount, t);
-
-                    // Delete the borrow transaction record
-                    await borrowTransaction.destroy({ transaction: t });
-                }
-
-                //case 5: transfer
-                if (transaction.type === TransactionType.TRANSFER) {
-                    const transferTransaction = await TransferTransaction.findOne({
-                        where: {
-                            generalTransactionId: transaction.id
-                        }
-                    });
-
-                    await this.walletService.increaseBalance(transaction.sourceWalletId, transaction.amount, t);
-                    await this.walletService.decreaseBalance(transferTransaction.destinationWalletId, transaction.amount, t);
-
-                    await transferTransaction.destroy({ transaction: t });
-                }
 
                 // Delete the transaction record
                 await transaction.destroy({ transaction: t });

@@ -74,7 +74,8 @@ export class RelatedUserService {
             by: amount,
             where: {
                 id,
-            }
+            },
+            transaction: t
         });
     }
 
@@ -83,7 +84,8 @@ export class RelatedUserService {
             by: amount,
             where: {
                 id,
-            }
+            },
+            transaction: t
         });
     }
 
@@ -92,7 +94,8 @@ export class RelatedUserService {
             by: amount,
             where: {
                 id,
-            }
+            }, 
+            transaction: t
         });
     }
 
@@ -101,7 +104,8 @@ export class RelatedUserService {
             by: amount,
             where: {
                 id,
-            }
+            },
+            transaction: t
         });
     }
 }
