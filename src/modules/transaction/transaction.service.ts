@@ -174,7 +174,6 @@ export class TransactionService {
             ...params
         }, { transaction: t });
 
-        console.log("vaooo dayyyyy")
         await this.updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction, t);
         
         // await this.statisticService.updateCacheAfterCreateTransaction(params.userId, transaction);
@@ -660,10 +659,71 @@ export class TransactionService {
         } else if (transaction.type === TransactionType.BORROW) {
             newDiff = oldDiff - transaction.amount; // borrow in
         } else if (transaction.type === TransactionType.MODIFY_BALANCE) {
-            //TODO: review this
             newDiff = oldDiff - transaction.amount; // modify balance
         }
 
+
+        if (oldDiff <= 0 && newDiff > 0) {
+            //It means that change from expense to income
+            const otherIncomeCategory = await this.categoryService.findOtherIncomeCategory(transaction.userId);
+
+            await mostSoonModifyBalanceTransaction.update({
+                categoryId: otherIncomeCategory.id,
+                amount: newDiff
+            }, { transaction: t });
+        } else if (oldDiff > 0 && newDiff <= 0) {
+            //It means that change from income to expense
+            const otherExpenseCategory = await this.categoryService.findOtherExpenseCategory(transaction.userId);
+
+            await mostSoonModifyBalanceTransaction.update({
+                categoryId: otherExpenseCategory.id,
+                amount: newDiff
+            }, { transaction: t });
+        } else {
+            //normal case, just update the amount
+            await mostSoonModifyBalanceTransaction.update({
+                amount: newDiff
+            }, { transaction: t });
+        }
+    }
+
+    async updateMostSoonModifyBalanceTransactionBeforeRemoveTransaction(transaction: GeneralTransaction, t: Transaction) {
+        const mostSoonModifyBalanceTransaction = await GeneralTransaction.findOne({
+            where: {
+                type: TransactionType.MODIFY_BALANCE,
+                transactionDate: {
+                    [Op.gt]: transaction.transactionDate // greater than the current transaction date
+                }
+            },
+            order: [['transactionDate', 'ASC']], // ascending to get the nearest one after
+            transaction: t
+        });
+
+        // If there is no modify balance transaction after the current transaction, we don't need to do anything
+        if (!mostSoonModifyBalanceTransaction) {
+            return;
+        }
+
+        const oldDiff = mostSoonModifyBalanceTransaction.amount;
+        let newDiff: number;
+
+        if (transaction.type === TransactionType.INCOME) {
+            newDiff = oldDiff + transaction.amount;
+        } else if (transaction.type === TransactionType.EXPENSE) {
+            newDiff = oldDiff - transaction.amount;
+        } else if (transaction.type === TransactionType.TRANSFER) {
+            if (transaction.sourceWalletId === mostSoonModifyBalanceTransaction.sourceWalletId) {
+                newDiff = oldDiff - transaction.amount; // transfer out
+            } else {
+                newDiff = oldDiff + transaction.amount; // transfer in
+            }
+        } else if (transaction.type === TransactionType.LEND) {
+            newDiff = oldDiff - transaction.amount; // lend out
+        } else if (transaction.type === TransactionType.BORROW) {
+            newDiff = oldDiff + transaction.amount; // borrow in
+        } else if (transaction.type === TransactionType.MODIFY_BALANCE) {
+            newDiff = oldDiff + transaction.amount; // modify balance
+        }
 
         if (oldDiff <= 0 && newDiff > 0) {
             //It means that change from expense to income
@@ -731,10 +791,6 @@ export class TransactionService {
 
         if (latestModifyBalanceTransaction != null) {
             balance = latestModifyBalanceTransaction.modifyBalanceTransaction.newRealBalance;
-        } else {
-            //just return wallet balance at the date
-            const wallet = await this.walletService.findById(sourceWalletId, userId);
-            return wallet.balance;
         }
 
         const where: WhereOptions<GeneralTransaction> = {
@@ -920,7 +976,9 @@ export class TransactionService {
 
         try {
             const result = await this.sequelize.transaction(async (t) => {
-                await this.statisticService.updateCacheAfterRemoveTransaction(transaction.userId, transaction);
+                // await this.statisticService.updateCacheAfterRemoveTransaction(transaction.userId, transaction);
+
+                await this.updateMostSoonModifyBalanceTransactionBeforeRemoveTransaction(transaction, t);
 
                 //case 1: income
                 if (transaction.type === TransactionType.INCOME) {
