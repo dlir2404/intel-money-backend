@@ -217,6 +217,63 @@ export class CreateLendTransactionRequest {
   image?: string;
 }
 
+export class CreateModifyBalanceTransactionRequest {
+  @ApiProperty({
+    description: 'New real balance after this transaction',
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  newRealBalance: number;
+  
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  categoryId: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  description: string;
+
+  @ApiProperty({
+    required: false,
+    example: '2025-05-23T10:13:35.494Z'
+  })
+  @IsString()
+  @IsOptional()
+  transactionDate?: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  sourceWalletId: number;
+
+  //TODO: review this
+  @ApiProperty({
+    required: false
+  })
+  @IsBoolean()
+  @IsOptional()
+  notAddToReport?: boolean;
+
+  @ApiProperty({
+    required: false
+  })
+  @IsString()
+  @IsOptional()
+  image?: string;
+}
+
+@Expose()
+export class ModifyBalanceTransactionResponse extends GeneralTransactionResponse {
+  @ApiProperty()
+  extraInfo: any;
+
+  constructor(partial: Partial<TransferTransactionResponse>) {
+    super(partial);
+  }
+}
+
 
 @Expose()
 export class LendTransactionResponse extends GeneralTransactionResponse {

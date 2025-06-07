@@ -7,11 +7,13 @@ import {
     CreateBulkIncomeTransactionRequest,
     CreateGeneralTransactionRequest,
     CreateLendTransactionRequest,
+    CreateModifyBalanceTransactionRequest,
     CreateTransferTransactionRequest,
     FullInfoTransactionResponse,
     GeneralTransactionResponse,
     GetAllTransactionsRequest,
     LendTransactionResponse,
+    ModifyBalanceTransactionResponse,
     TransferTransactionResponse, UpdateBorrowTransactionRequest, UpdateExpenseTransactionRequest,
     UpdateIncomeTransactionRequest, UpdateLendTransactionRequest,
     UpdateTransferTransactionRequest
@@ -176,6 +178,17 @@ export class TransactionController {
     async updateBorrow(@Param("id") id: number, @Body() body: UpdateBorrowTransactionRequest, @CurrentUserId() userId: number) {
         const transaction = await this.transactionService.updateBorrow(id, body, userId);
         return new BorrowTransactionResponse(transaction);
+    }
+
+    @Post("modify-balance/create")
+    @ApiResponse({
+        status: 201,
+        type: GeneralTransactionResponse
+    })
+    @UserAuth()
+    async createModifyBalance(@Body() body: CreateModifyBalanceTransactionRequest, @CurrentUserId() userId: number) {
+        const transaction = await this.transactionService.createModifyBalance(body, userId);
+        return new ModifyBalanceTransactionResponse(transaction);
     }
 
     @Delete(":id")

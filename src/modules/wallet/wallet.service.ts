@@ -92,4 +92,12 @@ export class WalletService {
     async decreaseBalance(walletId: number, amount: number, t: Transaction) {
         await Wallet.decrement({ balance: amount }, { where: { id: walletId }, transaction: t });
     }
+
+    async setBalance(walletId: number, newBalance: number, t: Transaction) {
+        const wallet = await Wallet.findByPk(walletId, { transaction: t });
+        if (!wallet) {
+            throw new NotFoundException("Wallet not found");
+        }
+        await wallet.update({ balance: newBalance }, { transaction: t });
+    }
 }

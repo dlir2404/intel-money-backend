@@ -258,6 +258,12 @@ export const categories: CategoryData[] = [
         ]
     },
     {
+        name: "Other",
+        icon: "default",
+        type: CategoryType.EXPENSE,
+        editable: false,
+    },
+    {
         name: "Lend",
         icon: "cash-minus",
         type: CategoryType.LEND,
@@ -278,6 +284,12 @@ export const categories: CategoryData[] = [
     {
         name: "Investments",
         icon: "trending_up",
+        type: CategoryType.INCOME,
+        editable: true
+    },
+    {
+        name: "Other",
+        icon: "default",
         type: CategoryType.INCOME,
         editable: false
     }

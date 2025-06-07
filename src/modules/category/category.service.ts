@@ -131,4 +131,38 @@ export class CategoryService {
             };
         }));
     }
+
+    async findOtherIncomeCategory(userId: number) {
+        const category = await Category.findOne({
+            where: {
+                userId,
+                type: "INCOME",
+                name: "Other"
+            },
+            raw: true
+        });
+
+        if (!category) {
+            throw new NotFoundException("Other Income category not found");
+        }
+
+        return category;
+    }
+
+    async findOtherExpenseCategory(userId: number) {
+        const category = await Category.findOne({
+            where: {
+                userId,
+                type: "EXPENSE",
+                name: "Other"
+            },
+            raw: true
+        });
+
+        if (!category) {
+            throw new NotFoundException("Other Expense category not found");
+        }
+
+        return category;
+    }
 }

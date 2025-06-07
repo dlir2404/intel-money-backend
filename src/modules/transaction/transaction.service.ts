@@ -1,11 +1,12 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { Sequelize } from "sequelize-typescript";
-import { BorrowTransaction, GeneralTransaction, LendTransaction, TransferTransaction } from "src/database/models";
+import { BorrowTransaction, GeneralTransaction, LendTransaction, ModifyBalanceTransaction, TransferTransaction } from "src/database/models";
 import { TransactionType } from "src/shared/enums/transaction";
 import { CreateGeneralTrans } from "src/shared/types/transactions/general";
 import {
     CreateBorrowTransactionRequest,
     CreateGeneralTransactionRequest, CreateLendTransactionRequest,
+    CreateModifyBalanceTransactionRequest,
     CreateTransferTransactionRequest,
     GetAllTransactionsRequest, UpdateBorrowTransactionRequest, UpdateExpenseTransactionRequest,
     UpdateIncomeTransactionRequest, UpdateLendTransactionRequest,
@@ -18,6 +19,7 @@ import { CategoryType } from "src/shared/enums/category";
 import { RelatedUserService } from "../related-user/related-user.service";
 import { Op, Transaction, WhereOptions } from "sequelize";
 import { StatisticService } from "../statistic/statistic.service";
+import e from "express";
 
 @Injectable()
 export class TransactionService {
@@ -172,8 +174,10 @@ export class TransactionService {
             ...params
         }, { transaction: t });
 
-
-        await this.statisticService.updateCacheAfterCreateTransaction(params.userId, transaction);
+        console.log("vaooo dayyyyy")
+        await this.updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction, t);
+        
+        // await this.statisticService.updateCacheAfterCreateTransaction(params.userId, transaction);
 
         return transaction;
     }
@@ -384,7 +388,7 @@ export class TransactionService {
             generalTransactionId: transaction.id,
             destinationWalletId: body.destinationWalletId
         }, { transaction: t });
-        
+
         return transaction;
     }
 
@@ -552,6 +556,228 @@ export class TransactionService {
 
         return transaction;
     }
+
+    async createModifyBalance(body: CreateModifyBalanceTransactionRequest, userId: number) {
+        const wallet = await this.walletService.findById(body.sourceWalletId, userId);
+
+        //cho nay can la balance cua wallet tai thoi diem cua giao dich nay
+        //=> can phai tinh toan tu lan dieu chinh so du gan nhat
+        const oldBalance = await this.calculateBalanceAtDate(userId, body.sourceWalletId, new Date(body.transactionDate));
+
+        const differ = body.newRealBalance - oldBalance;
+        if (differ <= 0) {
+            //category must be expense category
+            const category = await this.categoryService.findById(body.categoryId, userId);
+            if (category.type !== CategoryType.EXPENSE) {
+                throw new BadRequestException('Invalid category type for modify balance transaction');
+            }
+        } else {
+            //category must be income category
+            const category = await this.categoryService.findById(body.categoryId, userId);
+            if (category.type !== CategoryType.INCOME) {
+                throw new BadRequestException('Invalid category type for modify balance transaction');
+            }
+        }
+
+        try {
+            return await this.sequelize.transaction(async (t) => {
+                // Create the transaction record
+                const transaction = await this.createGeneralTransaction({
+                    type: TransactionType.MODIFY_BALANCE,
+                    amount: differ,
+                    ...body,
+                    userId
+                }, t);
+
+
+                // Update wallet balance
+                await this.walletService.setBalance(body.sourceWalletId, body.newRealBalance, t);
+                // Update user's total balance
+                if (differ > 0) {
+                    await this.userService.increaseTotalBalance(userId, differ, t);
+                } else {
+                    await this.userService.decreaseTotalBalance(userId, -differ, t);
+                }
+
+
+                // Create modify balance transaction record
+                await ModifyBalanceTransaction.create({
+                    generalTransactionId: transaction.id,
+                    newRealBalance: body.newRealBalance
+                }, { transaction: t });
+
+                return {
+                    ...transaction.dataValues,
+                    extraInfo: {
+                        newRealBalance: body.newRealBalance,
+                    },
+                };
+            });
+        } catch (error) {
+            throw new BadRequestException(`Failed to create modify balance transaction: ${error.message}`);
+        }
+    }
+
+
+    /**
+     * this function must be called after other transaction types are created.
+     * It is used to sync the modify balance transaction with the general transaction.
+     * @param transaction 
+     * @param t 
+     */
+    async updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction: GeneralTransaction, t: Transaction) {
+        const mostSoonModifyBalanceTransaction = await GeneralTransaction.findOne({
+            where: {
+                type: TransactionType.MODIFY_BALANCE,
+                transactionDate: {
+                    [Op.gt]: transaction.transactionDate // greater than the current transaction date
+                }
+            },
+            order: [['transactionDate', 'ASC']], // ascending to get the nearest one after
+            transaction: t
+        });
+
+        // If there is no modify balance transaction after the current transaction, we don't need to do anything
+        if (!mostSoonModifyBalanceTransaction) {
+            return;
+        }
+
+        const oldDiff = mostSoonModifyBalanceTransaction.amount;
+        let newDiff: number;
+
+        if (transaction.type === TransactionType.INCOME) {
+            newDiff = oldDiff - transaction.amount;
+        } else if (transaction.type === TransactionType.EXPENSE) {
+            newDiff = oldDiff + transaction.amount;
+        } else if (transaction.type === TransactionType.TRANSFER) {
+            if (transaction.sourceWalletId === mostSoonModifyBalanceTransaction.sourceWalletId) {
+                newDiff = oldDiff + transaction.amount; // transfer out
+            } else {
+                newDiff = oldDiff - transaction.amount; // transfer in
+            }
+        } else if (transaction.type === TransactionType.LEND) {
+            newDiff = oldDiff + transaction.amount; // lend out
+        } else if (transaction.type === TransactionType.BORROW) {
+            newDiff = oldDiff - transaction.amount; // borrow in
+        } else if (transaction.type === TransactionType.MODIFY_BALANCE) {
+            //TODO: review this
+            newDiff = oldDiff - transaction.amount; // modify balance
+        }
+
+
+        if (oldDiff <= 0 && newDiff > 0) {
+            //It means that change from expense to income
+            const otherIncomeCategory = await this.categoryService.findOtherIncomeCategory(transaction.userId);
+
+            await mostSoonModifyBalanceTransaction.update({
+                categoryId: otherIncomeCategory.id,
+                amount: newDiff
+            }, { transaction: t });
+        } else if (oldDiff > 0 && newDiff <= 0) {
+            //It means that change from income to expense
+            const otherExpenseCategory = await this.categoryService.findOtherExpenseCategory(transaction.userId);
+
+            await mostSoonModifyBalanceTransaction.update({
+                categoryId: otherExpenseCategory.id,
+                amount: newDiff
+            }, { transaction: t });
+        } else {
+            //normal case, just update the amount
+            await mostSoonModifyBalanceTransaction.update({
+                amount: newDiff
+            }, { transaction: t });
+        }
+    }
+
+    async getLatestModifyBalanceTransactionAtDate(
+        userId: number,
+        sourceWalletId: number,
+        date: Date
+    ) {
+        const transaction = await GeneralTransaction.findOne(
+            {
+                where: {
+                    userId: userId,
+                    sourceWalletId: sourceWalletId,
+                    type: TransactionType.MODIFY_BALANCE,
+                    transactionDate: {
+                        [Op.lte]: date // less than or equal to the given date
+                    }
+                },
+                include: [{
+                    model: ModifyBalanceTransaction,
+                    required: true,
+                    attributes: ['newRealBalance']
+                }],
+                order: [['transactionDate', 'DESC']], // descending to get the latest one
+            }
+        )
+
+        return transaction ? transaction : null;
+    }
+
+    async calculateBalanceAtDate(
+        userId: number,
+        sourceWalletId: number,
+        date: Date
+    ) {
+        let balance = 0;
+
+        const latestModifyBalanceTransaction = await this.getLatestModifyBalanceTransactionAtDate(
+            userId,
+            sourceWalletId,
+            date
+        );
+
+        if (latestModifyBalanceTransaction != null) {
+            balance = latestModifyBalanceTransaction.modifyBalanceTransaction.newRealBalance;
+        } else {
+            //just return wallet balance at the date
+            const wallet = await this.walletService.findById(sourceWalletId, userId);
+            return wallet.balance;
+        }
+
+        const where: WhereOptions<GeneralTransaction> = {
+            userId: userId,
+            sourceWalletId: sourceWalletId,
+            transactionDate: {
+                [Op.lte]: date // less than or equal to the given date
+            },
+        };
+
+        if (latestModifyBalanceTransaction) {
+            where.transactionDate = {
+                [Op.gt]: latestModifyBalanceTransaction.transactionDate
+            };
+        }
+
+        const recentTransactionsFromLatestModifyBalance = await GeneralTransaction.findAll({
+            where,
+            order: [['transactionDate', 'ASC']],
+            raw: true
+        });
+
+        for (const transaction of recentTransactionsFromLatestModifyBalance) {
+            if (transaction.type === TransactionType.INCOME) {
+                balance += transaction.amount;
+            } else if (transaction.type === TransactionType.EXPENSE) {
+                balance -= transaction.amount;
+            } else if (transaction.type === TransactionType.TRANSFER) {
+                if (transaction.sourceWalletId === sourceWalletId) {
+                    balance -= transaction.amount; // transfer out
+                } else {
+                    balance += transaction.amount; // transfer in
+                }
+            } else if (transaction.type === TransactionType.LEND) {
+                balance -= transaction.amount; // lend out
+            } else if (transaction.type === TransactionType.BORROW) {
+                balance += transaction.amount; // borrow in
+            }
+        }
+
+        return balance;
+    }
+
 
     /**
      * There are some important attrs and some not important attrs.
