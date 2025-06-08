@@ -19,7 +19,6 @@ import { CategoryType } from "src/shared/enums/category";
 import { RelatedUserService } from "../related-user/related-user.service";
 import { Op, Transaction, WhereOptions } from "sequelize";
 import { StatisticService } from "../statistic/statistic.service";
-import e from "express";
 
 @Injectable()
 export class TransactionService {
@@ -99,6 +98,11 @@ export class TransactionService {
                     model: TransferTransaction,
                     required: false,
                     attributes: ['destinationWalletId']
+                },
+                {
+                    model: ModifyBalanceTransaction,
+                    required: false,
+                    attributes: ['newRealBalance']
                 }
             ],
             order: [['transactionDate', 'DESC']],
@@ -135,12 +139,20 @@ export class TransactionService {
                         };
                     }
                     break;
+                case 'MODIFY_BALANCE':
+                    if (data.modifyBalanceTransaction) {
+                        extraInfo = {
+                            newRealBalance: data.modifyBalanceTransaction.newRealBalance
+                        };
+                    }
+                    break;
             }
 
             // Remove nested objects và add extraInfo
             delete data.lendTransaction;
             delete data.borrowTransaction;
             delete data.transferTransaction;
+            delete data.modifyBalanceTransaction;
 
             return { ...data, extraInfo };
         });
