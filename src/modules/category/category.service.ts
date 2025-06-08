@@ -12,27 +12,19 @@ export class CategoryService {
                 const { children, ...parentCategory } = categoryData;
 
                 // Create parent category
-                const [parent] = await Category.findOrCreate({
-                    where: { name: parentCategory.name, userId },
-                    defaults: {
-                        ...parentCategory,
-                        userId
-                    },
-                    transaction: t
-                });
+                const parent = await Category.create({
+                    ...parentCategory,
+                    userId
+                }, { transaction: t });
 
                 // Create children categories if they exist
                 if (children && Array.isArray(children)) {
                     for (const childData of children) {
-                        await Category.findOrCreate({
-                            where: { name: childData.name, userId },
-                            defaults: {
-                                ...childData,
-                                userId,
-                                parentId: parent.id
-                            },
-                            transaction: t
-                        });
+                        await Category.create({
+                            ...childData,
+                            userId,
+                            parentId: parent.id
+                        }, { transaction: t });
                     }
                 }
             }
