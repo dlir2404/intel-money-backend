@@ -1202,7 +1202,6 @@ export class TransactionService {
                     if (mostSoonModifyBalanceTransaction) {
                         await this.updateMostSoonModifyBalanceTransactionBeforeRemoveTransaction(transaction, mostSoonModifyBalanceTransaction, t);
                     } else {
-                        await this.userService.increaseTotalBalance(transaction.userId, transaction.amount, t);
                         await this.walletService.increaseBalance(transaction.sourceWalletId, transaction.amount, t);
                     }
 
@@ -1224,7 +1223,6 @@ export class TransactionService {
                     if (mostSoonModifyBalanceTransaction) {
                         await this.updateMostSoonModifyBalanceTransactionBeforeRemoveTransaction(transaction, mostSoonModifyBalanceTransaction, t);
                     } else {
-                        await this.userService.decreaseTotalBalance(transaction.userId, transaction.amount, t);
                         await this.walletService.decreaseBalance(transaction.sourceWalletId, transaction.amount, t);
                     }
 
