@@ -183,7 +183,7 @@ export class TransactionController {
     @Post("modify-balance/create")
     @ApiResponse({
         status: 201,
-        type: GeneralTransactionResponse
+        type: ModifyBalanceTransactionResponse
     })
     @UserAuth()
     async createModifyBalance(@Body() body: CreateModifyBalanceTransactionRequest, @CurrentUserId() userId: number) {
