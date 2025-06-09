@@ -106,7 +106,10 @@ export class TransactionService {
                     attributes: ['newRealBalance']
                 }
             ],
-            order: [['transactionDate', 'DESC']],
+            order: [
+                ['transactionDate', 'DESC'],
+                ['id', 'DESC']
+            ],
         });
 
         // Transform data để tạo extraInfo
