@@ -10,6 +10,7 @@ import {
     CreateTransferTransactionRequest,
     GetAllTransactionsRequest, UpdateBorrowTransactionRequest, UpdateExpenseTransactionRequest,
     UpdateIncomeTransactionRequest, UpdateLendTransactionRequest,
+    UpdateModifyBalanceTransactionRequest,
     UpdateTransferTransactionRequest
 } from "./transaction.dto";
 import { UserService } from "../user/user.service";
@@ -793,6 +794,67 @@ export class TransactionService {
         }
     }
 
+    async createModifyBalanceWithTransaction(body: CreateModifyBalanceTransactionRequest, userId: number, t: Transaction) {
+        const wallet = await this.walletService.findById(body.sourceWalletId, userId);
+
+        //cho nay can la balance cua wallet tai thoi diem cua giao dich nay
+        //=> can phai tinh toan tu lan dieu chinh so du gan nhat
+        const oldBalance = await this.calculateBalanceAtDate(userId, body.sourceWalletId, new Date(body.transactionDate));
+
+        const differ = body.newRealBalance - oldBalance;
+        if (differ <= 0) {
+            //category must be expense category
+            const category = await this.categoryService.findById(body.categoryId, userId);
+            if (category.type !== CategoryType.EXPENSE) {
+                throw new BadRequestException('Invalid category type for modify balance transaction');
+            }
+        } else {
+            //category must be income category
+            const category = await this.categoryService.findById(body.categoryId, userId);
+            if (category.type !== CategoryType.INCOME) {
+                throw new BadRequestException('Invalid category type for modify balance transaction');
+            }
+        }
+
+        // Create the transaction record
+        const transaction = await this.createGeneralTransaction({
+            type: TransactionType.MODIFY_BALANCE,
+            amount: differ,
+            ...body,
+            userId
+        }, t);
+
+        const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterDate(
+            userId,
+            body.sourceWalletId,
+            body.transactionDate,
+            t
+        );
+
+        if (mostSoonModifyBalanceTransaction) {
+            // Update the most soon modify balance transaction
+            await this.updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction, mostSoonModifyBalanceTransaction, t);
+        } else {
+            // If there is no most soon modify balance transaction, we can safely update the wallet balance
+            await this.walletService.setBalance(body.sourceWalletId, body.newRealBalance, t);
+
+            // Update user's total balance
+            if (differ > 0) {
+                await this.userService.increaseTotalBalance(userId, differ, t);
+            } else {
+                await this.userService.decreaseTotalBalance(userId, -differ, t);
+            }
+        }
+
+        // Create modify balance transaction record
+        await ModifyBalanceTransaction.create({
+            generalTransactionId: transaction.id,
+            newRealBalance: body.newRealBalance
+        }, { transaction: t });
+
+        return transaction;
+    }
+
 
     /**
      * this function must be called after other transaction types are created.
@@ -1141,6 +1203,29 @@ export class TransactionService {
                     ...newTransaction.dataValues,
                     extraInfo: {
                         lenderId: body.lenderId,
+                    }
+                };
+            });
+        } catch (error) {
+            throw new InternalServerErrorException("Failed to update transaction: " + error.message);
+        }
+    }
+
+    async updateModifyBalance(id: number, body: UpdateModifyBalanceTransactionRequest, userId: number) {
+        try {
+            return await this.sequelize.transaction(async (t) => {
+                await this.removeTransactionWithSTransaction(userId, id, t);
+
+                const newTransaction = await this.createModifyBalanceWithTransaction(
+                    { ...body },
+                    userId,
+                    t
+                );
+
+                return {
+                    ...newTransaction.dataValues,
+                    extraInfo: {
+                        newRealBalance: body.newRealBalance,
                     }
                 };
             });

@@ -16,6 +16,7 @@ import {
     ModifyBalanceTransactionResponse,
     TransferTransactionResponse, UpdateBorrowTransactionRequest, UpdateExpenseTransactionRequest,
     UpdateIncomeTransactionRequest, UpdateLendTransactionRequest,
+    UpdateModifyBalanceTransactionRequest,
     UpdateTransferTransactionRequest
 } from "./transaction.dto";
 import { CurrentUserId, UserAuth } from "src/shared/decorators/auth";
@@ -188,6 +189,17 @@ export class TransactionController {
     @UserAuth()
     async createModifyBalance(@Body() body: CreateModifyBalanceTransactionRequest, @CurrentUserId() userId: number) {
         const transaction = await this.transactionService.createModifyBalance(body, userId);
+        return new ModifyBalanceTransactionResponse(transaction);
+    }
+
+    @Put("modify-balance/update/:id")
+    @ApiResponse({
+        status: 200,
+        type: ModifyBalanceTransactionResponse
+    })
+    @UserAuth()
+    async updateModifyBalance(@Param("id") id: number, @Body() body: UpdateModifyBalanceTransactionRequest, @CurrentUserId() userId: number) {
+        const transaction = await this.transactionService.updateModifyBalance(id, body, userId);
         return new ModifyBalanceTransactionResponse(transaction);
     }
 
