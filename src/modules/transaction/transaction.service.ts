@@ -968,7 +968,7 @@ export class TransactionService {
                     sourceWalletId: sourceWalletId,
                     type: TransactionType.MODIFY_BALANCE,
                     transactionDate: {
-                        [Op.lte]: date // less than or equal to the given date
+                        [Op.lt]: date // less than or equal to the given date
                     }
                 },
                 include: [{
