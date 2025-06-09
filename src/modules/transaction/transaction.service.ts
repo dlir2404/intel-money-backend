@@ -1044,9 +1044,16 @@ export class TransactionService {
                 }
             ],
             transactionDate: {
-                [Op.lte]: date // less than or equal to the given date
+                [Op.lt]: date
             },
         };
+
+        if (latestModifyBalanceTransaction) {
+            where['transactionDate'] = {
+                [Op.lt]: date,
+                [Op.gte]: latestModifyBalanceTransaction.transactionDate
+            };
+        }
 
         const recentTransactionsFromLatestModifyBalance = await GeneralTransaction.findAll({
             where,
