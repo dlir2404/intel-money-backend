@@ -794,14 +794,15 @@ export class TransactionService {
         }
     }
 
-    async createModifyBalanceWithTransaction(body: CreateModifyBalanceTransactionRequest, userId: number, t: Transaction) {
+    async createModifyBalanceWithTransaction(body: CreateModifyBalanceTransactionRequest, userId: number, t: Transaction, excludeTransactionId?: number) {
         const wallet = await this.walletService.findById(body.sourceWalletId, userId);
 
         //cho nay can la balance cua wallet tai thoi diem cua giao dich nay
         //=> can phai tinh toan tu lan dieu chinh so du gan nhat
-        const oldBalance = await this.calculateBalanceAtDate(userId, body.sourceWalletId, new Date(body.transactionDate));
+        const oldBalance = await this.calculateBalanceAtDate(userId, body.sourceWalletId, new Date(body.transactionDate), excludeTransactionId);
 
         const differ = body.newRealBalance - oldBalance;
+
         if (differ <= 0) {
             //category must be expense category
             const category = await this.categoryService.findById(body.categoryId, userId);
@@ -959,18 +960,27 @@ export class TransactionService {
         userId: number,
         sourceWalletId: number,
         date: Date,
-        t?: Transaction
+        t?: Transaction,
+        excludeTransactionId?: number
     ) {
+        const where: WhereOptions<GeneralTransaction> = {
+            userId: userId,
+            sourceWalletId: sourceWalletId,
+            type: TransactionType.MODIFY_BALANCE,
+            transactionDate: {
+                [Op.lte]: date // less than to the given date
+            }
+        };
+
+        if (excludeTransactionId) {
+            where['id'] = {
+                [Op.ne]: excludeTransactionId // exclude the transaction being updated or deleted
+            };
+        }
+
         const transaction = await GeneralTransaction.findOne(
             {
-                where: {
-                    userId: userId,
-                    sourceWalletId: sourceWalletId,
-                    type: TransactionType.MODIFY_BALANCE,
-                    transactionDate: {
-                        [Op.lt]: date // less than or equal to the given date
-                    }
-                },
+                where,
                 include: [{
                     model: ModifyBalanceTransaction,
                     required: true,
@@ -1013,17 +1023,21 @@ export class TransactionService {
         return transaction ? transaction : null;
     }
 
+    //exclude transaction is used to exclude the transaction that is being updated or deleted, and the new transaction date is modified to be after the origin
     async calculateBalanceAtDate(
         userId: number,
         sourceWalletId: number,
-        date: Date
+        date: Date,
+        exludeTransactionId?: number
     ) {
         let balance = 0;
 
         const latestModifyBalanceTransaction = await this.getLatestModifyBalanceTransactionAtDate(
             userId,
             sourceWalletId,
-            date
+            date,
+            undefined,
+            exludeTransactionId
         );
 
         if (latestModifyBalanceTransaction != null) {
@@ -1069,6 +1083,10 @@ export class TransactionService {
         });
 
         for (const transaction of recentTransactionsFromLatestModifyBalance) {
+            if (exludeTransactionId && transaction.id === exludeTransactionId) {
+                continue; // Skip the excluded transaction
+            }
+
             if (transaction.type === TransactionType.INCOME) {
                 balance += transaction.amount;
             } else if (transaction.type === TransactionType.EXPENSE) {
@@ -1226,7 +1244,8 @@ export class TransactionService {
                 const newTransaction = await this.createModifyBalanceWithTransaction(
                     { ...body },
                     userId,
-                    t
+                    t,
+                    id
                 );
 
                 return {
