@@ -20,6 +20,7 @@ import { CategoryType } from "src/shared/enums/category";
 import { RelatedUserService } from "../related-user/related-user.service";
 import { Op, Transaction, WhereOptions } from "sequelize";
 import { StatisticService } from "../statistic/statistic.service";
+import { Time } from "src/shared/ultils/time";
 
 @Injectable()
 export class TransactionService {
@@ -761,7 +762,8 @@ export class TransactionService {
                     userId,
                     body.sourceWalletId,
                     body.transactionDate,
-                    t
+                    t,
+                    transaction.id
                 );
 
                 if (mostSoonModifyBalanceTransaction) {
@@ -832,7 +834,8 @@ export class TransactionService {
             userId,
             body.sourceWalletId,
             body.transactionDate,
-            t
+            t,
+            transaction.id
         );
 
         if (mostSoonModifyBalanceTransaction) {
@@ -1001,16 +1004,20 @@ export class TransactionService {
         userId: number,
         sourceWalletId: number,
         date: string | Date,
-        t?: Transaction
+        t?: Transaction,
+        excludeTransactionId?: number
     ) {
         const transaction = await GeneralTransaction.findOne(
             {
                 where: {
+                    id : {
+                        [Op.ne]: excludeTransactionId // exclude the transaction being updated or deleted
+                    },
                     userId: userId,
                     sourceWalletId: sourceWalletId,
                     type: TransactionType.MODIFY_BALANCE,
                     transactionDate: {
-                        [Op.gt]: date // greater than the given date
+                        [Op.gte]: date // greater than the given date
                     }
                 },
                 include: [{
@@ -1018,7 +1025,10 @@ export class TransactionService {
                     required: true,
                     attributes: ['newRealBalance']
                 }],
-                order: [['transactionDate', 'ASC']], // ascending to get the nearest one after
+                order: [
+                    ['transactionDate', 'ASC'],
+                    ['id', 'ASC']
+                ], // ascending to get the nearest one after
                 transaction: t
             }
         )
@@ -1061,13 +1071,13 @@ export class TransactionService {
                 }
             ],
             transactionDate: {
-                [Op.lt]: date
+                [Op.lte]: date
             },
         };
 
         if (latestModifyBalanceTransaction) {
             where['transactionDate'] = {
-                [Op.lt]: date,
+                [Op.lte]: date,
                 [Op.gte]: latestModifyBalanceTransaction.transactionDate
             };
         }
@@ -1081,13 +1091,27 @@ export class TransactionService {
                     attributes: ['destinationWalletId']
                 }
             ],
-            order: [['transactionDate', 'ASC']],
+            order: [
+                ['transactionDate', 'ASC'],
+                ['id', 'ASC']
+            ],
             raw: true
         });
 
         for (const transaction of recentTransactionsFromLatestModifyBalance) {
+            if (latestModifyBalanceTransaction && transaction.id === latestModifyBalanceTransaction.id) {
+                continue; // Skip the latest modify balance transaction
+            }
+
             if (exludeTransactionId && transaction.id === exludeTransactionId) {
                 continue; // Skip the excluded transaction
+            }
+
+            if (latestModifyBalanceTransaction && Time.isSame(transaction.transactionDate, latestModifyBalanceTransaction.transactionDate)) {
+                //there can be multiple transactions at the same time, we compare them by id
+                if (transaction.id < latestModifyBalanceTransaction.id) {
+                    continue; // Skip this transaction if it is before the latest modify balance transaction
+                }
             }
 
             if (transaction.type === TransactionType.INCOME) {
@@ -1282,7 +1306,8 @@ export class TransactionService {
                     transaction.userId,
                     transaction.sourceWalletId,
                     new Date(transaction.transactionDate),
-                    t
+                    t,
+                    transaction.id
                 );
 
                 //case 1: income
@@ -1447,7 +1472,8 @@ export class TransactionService {
             transaction.userId,
             transaction.sourceWalletId,
             new Date(transaction.transactionDate),
-            t
+            t,
+            transaction.id
         );
 
         //case 1: income

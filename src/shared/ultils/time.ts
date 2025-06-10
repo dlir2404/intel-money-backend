@@ -3,10 +3,14 @@ import * as dayjs from 'dayjs';
 import * as utc from 'dayjs/plugin/utc';
 import * as timezone from 'dayjs/plugin/timezone';
 import * as quarterOfYear from 'dayjs/plugin/quarterOfYear';
+import * as isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import * as isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.extend(quarterOfYear);
+dayjs.extend(isSameOrBefore);
+dayjs.extend(isSameOrAfter);
 
 export class Time {
     static test() {
@@ -104,5 +108,25 @@ export class Time {
         }
 
         return years;
+    }
+
+    static isBefore(date1: dayjs.Dayjs | Date | string, date2: dayjs.Dayjs | Date | string): boolean {
+        return dayjs(date1).isBefore(dayjs(date2));
+    }
+
+    static isAfter(date1: dayjs.Dayjs | Date | string, date2: dayjs.Dayjs | Date | string): boolean {
+        return dayjs(date1).isAfter(dayjs(date2));
+    }
+
+    static isSame(date1: dayjs.Dayjs | Date | string, date2: dayjs.Dayjs | Date | string): boolean {
+        return dayjs(date1).isSame(dayjs(date2));
+    }
+
+    static isSameOrBefore(date1: dayjs.Dayjs | Date | string, date2: dayjs.Dayjs | Date | string): boolean {
+        return dayjs(date1).isSameOrBefore(dayjs(date2));
+    }
+
+    static isSameOrAfter(date1: dayjs.Dayjs | Date | string, date2: dayjs.Dayjs | Date | string): boolean {
+        return dayjs(date1).isSameOrAfter(dayjs(date2));
     }
 }
