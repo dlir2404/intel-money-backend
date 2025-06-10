@@ -217,10 +217,9 @@ export class TransactionService {
                     userId
                 }, t);
 
-                const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterDate(
-                    userId,
-                    body.sourceWalletId,
-                    body.transactionDate,
+                const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterTransaction(
+                    transaction,
+                    transaction.sourceWalletId,
                     t
                 );
 
@@ -267,10 +266,9 @@ export class TransactionService {
             userId
         }, t);
 
-        const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterDate(
-            userId,
-            body.sourceWalletId,
-            body.transactionDate,
+        const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterTransaction(
+            transaction,
+            transaction.sourceWalletId,
             t
         );
 
@@ -309,10 +307,9 @@ export class TransactionService {
                     userId
                 }, t);
 
-                const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterDate(
-                    userId,
-                    body.sourceWalletId,
-                    body.transactionDate,
+                const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterTransaction(
+                    transaction,
+                    transaction.sourceWalletId,
                     t
                 );
 
@@ -357,10 +354,9 @@ export class TransactionService {
             userId
         }, t);
 
-        const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterDate(
-            userId,
-            body.sourceWalletId,
-            body.transactionDate,
+        const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterTransaction(
+            transaction,
+            transaction.sourceWalletId,
             t
         );
 
@@ -400,17 +396,15 @@ export class TransactionService {
                     userId
                 }, t);
 
-                const mostSoonModifyBalanceTransactionOfSourceWallet = await this.getMostSoonModifyBalanceTransactionAfterDate(
-                    userId,
+                const mostSoonModifyBalanceTransactionOfSourceWallet = await this.getMostSoonModifyBalanceTransactionAfterTransaction(
+                    transaction,
                     body.sourceWalletId,
-                    body.transactionDate,
                     t
                 );
 
-                const mostSoonModifyBalanceTransactionOfDestinationWallet = await this.getMostSoonModifyBalanceTransactionAfterDate(
-                    userId,
+                const mostSoonModifyBalanceTransactionOfDestinationWallet = await this.getMostSoonModifyBalanceTransactionAfterTransaction(
+                    transaction,
                     body.destinationWalletId,
-                    body.transactionDate,
                     t
                 );
 
@@ -472,17 +466,15 @@ export class TransactionService {
         }, t);
 
 
-        const mostSoonModifyBalanceTransactionOfSourceWallet = await this.getMostSoonModifyBalanceTransactionAfterDate(
-            userId,
+        const mostSoonModifyBalanceTransactionOfSourceWallet = await this.getMostSoonModifyBalanceTransactionAfterTransaction(
+            transaction,
             body.sourceWalletId,
-            body.transactionDate,
             t
         );
 
-        const mostSoonModifyBalanceTransactionOfDestinationWallet = await this.getMostSoonModifyBalanceTransactionAfterDate(
-            userId,
+        const mostSoonModifyBalanceTransactionOfDestinationWallet = await this.getMostSoonModifyBalanceTransactionAfterTransaction(
+            transaction,
             body.destinationWalletId,
-            body.transactionDate,
             t
         );
 
@@ -530,10 +522,9 @@ export class TransactionService {
                     userId
                 }, t);
 
-                const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterDate(
-                    userId,
+                const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterTransaction(
+                    transaction,
                     body.sourceWalletId,
-                    body.transactionDate,
                     t
                 );
 
@@ -587,10 +578,9 @@ export class TransactionService {
             userId
         }, t);
 
-        const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterDate(
-            userId,
+        const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterTransaction(
+            transaction,
             body.sourceWalletId,
-            body.transactionDate,
             t
         );
 
@@ -636,10 +626,9 @@ export class TransactionService {
                     userId
                 }, t);
 
-                const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterDate(
-                    userId,
+                const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterTransaction(
+                    transaction,
                     body.sourceWalletId,
-                    body.transactionDate,
                     t
                 );
 
@@ -694,10 +683,9 @@ export class TransactionService {
             userId
         }, t);
 
-        const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterDate(
-            userId,
+        const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterTransaction(
+            transaction,
             body.sourceWalletId,
-            body.transactionDate,
             t
         );
 
@@ -758,12 +746,10 @@ export class TransactionService {
                     userId
                 }, t);
 
-                const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterDate(
-                    userId,
+                const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterTransaction(
+                    transaction,
                     body.sourceWalletId,
-                    body.transactionDate,
-                    t,
-                    transaction.id
+                    t
                 );
 
                 if (mostSoonModifyBalanceTransaction) {
@@ -830,12 +816,10 @@ export class TransactionService {
             userId
         }, t);
 
-        const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterDate(
-            userId,
+        const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterTransaction(
+            transaction,
             body.sourceWalletId,
-            body.transactionDate,
-            t,
-            transaction.id
+            t
         );
 
         if (mostSoonModifyBalanceTransaction) {
@@ -992,7 +976,10 @@ export class TransactionService {
                     required: true,
                     attributes: ['newRealBalance']
                 }],
-                order: [['transactionDate', 'DESC']], // descending to get the latest one
+                order: [
+                    ['transactionDate', 'DESC'],
+                    ['id', 'DESC']
+                ], // descending to get the latest one
                 transaction: t
             }
         )
@@ -1000,40 +987,43 @@ export class TransactionService {
         return transaction ? transaction : null;
     }
 
-    async getMostSoonModifyBalanceTransactionAfterDate(
-        userId: number,
+    async getMostSoonModifyBalanceTransactionAfterTransaction(
+        transaction: GeneralTransaction,
         sourceWalletId: number,
-        date: string | Date,
         t?: Transaction,
-        excludeTransactionId?: number
     ) {
-        const transaction = await GeneralTransaction.findOne(
+        const where: WhereOptions<GeneralTransaction> = {
+            userId: transaction.userId,
+            sourceWalletId: sourceWalletId,
+            type: TransactionType.MODIFY_BALANCE,
+            transactionDate: {
+                [Op.gte]: transaction.transactionDate // greater than the given date
+            }
+        };
+
+        const result = await GeneralTransaction.findAll(
             {
-                where: {
-                    id : {
-                        [Op.ne]: excludeTransactionId // exclude the transaction being updated or deleted
-                    },
-                    userId: userId,
-                    sourceWalletId: sourceWalletId,
-                    type: TransactionType.MODIFY_BALANCE,
-                    transactionDate: {
-                        [Op.gte]: date // greater than the given date
-                    }
-                },
-                include: [{
-                    model: ModifyBalanceTransaction,
-                    required: true,
-                    attributes: ['newRealBalance']
-                }],
+                where,
                 order: [
                     ['transactionDate', 'ASC'],
                     ['id', 'ASC']
-                ], // ascending to get the nearest one after
+                ], // ascending to get the nearest after
                 transaction: t
             }
         )
 
-        return transaction ? transaction : null;
+        for (const trans of result) {
+            if (Time.isSame(transaction.transactionDate, trans.transactionDate)) {
+                if (trans.id > transaction.id) {
+                    // If there are multiple transactions at the same time, we take the one with the greater id
+                    return trans;
+                }
+            } else {
+                return trans
+            }
+        }
+
+        return null;
     }
 
     //exclude transaction is used to exclude the transaction that is being updated or deleted, and the new transaction date is modified to be after the origin
@@ -1302,12 +1292,10 @@ export class TransactionService {
             const result = await this.sequelize.transaction(async (t) => {
                 // await this.statisticService.updateCacheAfterRemoveTransaction(transaction.userId, transaction);
 
-                const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterDate(
-                    transaction.userId,
+                const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterTransaction(
+                    transaction,
                     transaction.sourceWalletId,
-                    new Date(transaction.transactionDate),
-                    t,
-                    transaction.id
+                    t
                 );
 
                 //case 1: income
@@ -1380,17 +1368,15 @@ export class TransactionService {
                         }
                     });
 
-                    const mostSoonModifyBalanceTransactionOfSourceWallet = await this.getMostSoonModifyBalanceTransactionAfterDate(
-                        transaction.userId,
+                    const mostSoonModifyBalanceTransactionOfSourceWallet = await this.getMostSoonModifyBalanceTransactionAfterTransaction(
+                        transaction,
                         transaction.sourceWalletId,
-                        new Date(transaction.transactionDate),
                         t
                     );
 
-                    const mostSoonModifyBalanceTransactionOfDestinationWallet = await this.getMostSoonModifyBalanceTransactionAfterDate(
-                        transaction.userId,
+                    const mostSoonModifyBalanceTransactionOfDestinationWallet = await this.getMostSoonModifyBalanceTransactionAfterTransaction(
+                        transaction,
                         transferTransaction.destinationWalletId,
-                        new Date(transaction.transactionDate),
                         t
                     );
 
@@ -1468,12 +1454,10 @@ export class TransactionService {
 
         // await this.statisticService.updateCacheAfterRemoveTransaction(transaction.userId, transaction);
 
-        const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterDate(
-            transaction.userId,
+        const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterTransaction(
+            transaction,
             transaction.sourceWalletId,
-            new Date(transaction.transactionDate),
             t,
-            transaction.id
         );
 
         //case 1: income
@@ -1546,17 +1530,15 @@ export class TransactionService {
                 }
             });
 
-            const mostSoonModifyBalanceTransactionOfSourceWallet = await this.getMostSoonModifyBalanceTransactionAfterDate(
-                transaction.userId,
+            const mostSoonModifyBalanceTransactionOfSourceWallet = await this.getMostSoonModifyBalanceTransactionAfterTransaction(
+                transaction,
                 transaction.sourceWalletId,
-                new Date(transaction.transactionDate),
                 t
             );
 
-            const mostSoonModifyBalanceTransactionOfDestinationWallet = await this.getMostSoonModifyBalanceTransactionAfterDate(
-                transaction.userId,
+            const mostSoonModifyBalanceTransactionOfDestinationWallet = await this.getMostSoonModifyBalanceTransactionAfterTransaction(
+                transaction,
                 transferTransaction.destinationWalletId,
-                new Date(transaction.transactionDate),
                 t
             );
 

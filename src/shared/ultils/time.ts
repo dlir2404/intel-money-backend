@@ -111,22 +111,22 @@ export class Time {
     }
 
     static isBefore(date1: dayjs.Dayjs | Date | string, date2: dayjs.Dayjs | Date | string): boolean {
-        return dayjs(date1).isBefore(dayjs(date2));
+        return dayjs(date1).isBefore(dayjs(date2), 'second');
     }
 
     static isAfter(date1: dayjs.Dayjs | Date | string, date2: dayjs.Dayjs | Date | string): boolean {
-        return dayjs(date1).isAfter(dayjs(date2));
+        return dayjs(date1).isAfter(dayjs(date2), 'second');
     }
 
     static isSame(date1: dayjs.Dayjs | Date | string, date2: dayjs.Dayjs | Date | string): boolean {
-        return dayjs(date1).isSame(dayjs(date2));
+        return dayjs(date1).isSame(dayjs(date2), 'second');
     }
 
     static isSameOrBefore(date1: dayjs.Dayjs | Date | string, date2: dayjs.Dayjs | Date | string): boolean {
-        return dayjs(date1).isSameOrBefore(dayjs(date2));
+        return dayjs(date1).isSameOrBefore(dayjs(date2), 'second');
     }
 
     static isSameOrAfter(date1: dayjs.Dayjs | Date | string, date2: dayjs.Dayjs | Date | string): boolean {
-        return dayjs(date1).isSameOrAfter(dayjs(date2));
+        return dayjs(date1).isSameOrAfter(dayjs(date2), 'second');
     }
 }
