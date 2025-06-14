@@ -129,7 +129,7 @@ export class CategoryService {
             where: {
                 userId,
                 type: "INCOME",
-                name: "Other"
+                name: "Khác"
             },
             raw: true
         });
@@ -146,7 +146,7 @@ export class CategoryService {
             where: {
                 userId,
                 type: "EXPENSE",
-                name: "Other"
+                name: "Khác"
             },
             raw: true
         });
