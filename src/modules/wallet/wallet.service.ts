@@ -8,8 +8,8 @@ import { Transaction } from "sequelize";
 export class WalletService {
     async createDefaultWallets(userId: number, t?: Transaction) {
         const defaultWallet = {
-            name: "Default Wallet",
-            description: "Default wallet created for the user",
+            name: "Tiền mặt",
+            description: "",
             icon: "default-icon.png",
             balance: 0,
             userId: userId,
