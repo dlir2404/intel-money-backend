@@ -262,7 +262,7 @@ If user does not provide time, set transactionDate to now. Now is: ${new Date().
             properties: {
                 advice: {
                     type: "string",
-                    description: "An advice for spending money",
+                    description: "An advice for spending money, IN VIETNAMESE",
                 }
             },
             additionalProperties: false,
