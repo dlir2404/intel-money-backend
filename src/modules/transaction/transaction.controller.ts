@@ -3,20 +3,24 @@ import { ApiOperation, ApiProperty, ApiResponse, ApiTags } from "@nestjs/swagger
 import { TransactionService } from "./transaction.service";
 import {
     BorrowTransactionResponse,
+    CollectingDebtTransactionResponse,
     CreateBorrowTransactionRequest,
-    CreateBulkIncomeTransactionRequest,
+    CreateCollectingDebtTransactionRequest,
     CreateGeneralTransactionRequest,
     CreateLendTransactionRequest,
     CreateModifyBalanceTransactionRequest,
+    CreateRepaymentTransactionRequest,
     CreateTransferTransactionRequest,
     FullInfoTransactionResponse,
     GeneralTransactionResponse,
     GetAllTransactionsRequest,
     LendTransactionResponse,
     ModifyBalanceTransactionResponse,
-    TransferTransactionResponse, UpdateBorrowTransactionRequest, UpdateExpenseTransactionRequest,
+    RepaymentTransactionResponse,
+    TransferTransactionResponse, UpdateBorrowTransactionRequest, UpdateCollectingDebtTransactionRequest, UpdateExpenseTransactionRequest,
     UpdateIncomeTransactionRequest, UpdateLendTransactionRequest,
     UpdateModifyBalanceTransactionRequest,
+    UpdateRepaymentTransactionRequest,
     UpdateTransferTransactionRequest
 } from "./transaction.dto";
 import { CurrentUserId, UserAuth } from "src/shared/decorators/auth";
@@ -201,6 +205,50 @@ export class TransactionController {
     async updateModifyBalance(@Param("id") id: number, @Body() body: UpdateModifyBalanceTransactionRequest, @CurrentUserId() userId: number) {
         const transaction = await this.transactionService.updateModifyBalance(id, body, userId);
         return new ModifyBalanceTransactionResponse(transaction);
+    }
+
+    @Post("collecting-debt/create")
+    @ApiResponse({
+        status: 201,
+        type: CollectingDebtTransactionResponse
+    })
+    @UserAuth()
+    async createCollectingDebt(@Body() body: CreateCollectingDebtTransactionRequest, @CurrentUserId() userId: number) {
+        const transaction = await this.transactionService.createCollectingDebt(body, userId);
+        return new CollectingDebtTransactionResponse(transaction);
+    }
+
+    @Put("collecting-debt/update/:id")
+    @ApiResponse({
+        status: 200,
+        type: CollectingDebtTransactionResponse
+    })
+    @UserAuth()
+    async updateCollectingDebt(@Param("id") id: number, @Body() body: UpdateCollectingDebtTransactionRequest, @CurrentUserId() userId: number) {
+        const transaction = await this.transactionService.updateCollectingDebt(id, body, userId);
+        return new CollectingDebtTransactionResponse(transaction);
+    }
+
+    @Post("repayment/create")
+    @ApiResponse({
+        status: 201,
+        type: RepaymentTransactionResponse
+    })
+    @UserAuth()
+    async createRepayment(@Body() body: CreateRepaymentTransactionRequest, @CurrentUserId() userId: number) {
+        const result = await this.transactionService.createRepayment(body, userId);
+        return new RepaymentTransactionResponse(result);
+    }
+
+    @Put("repayment/update/:id")
+    @ApiResponse({
+        status: 200,
+        type: RepaymentTransactionResponse
+    })
+    @UserAuth()
+    async updateRepayment(@Param("id") id: number, @Body() body: UpdateRepaymentTransactionRequest, @CurrentUserId() userId: number) {
+        const result = await this.transactionService.updateRepayment(id, body, userId);
+        return new RepaymentTransactionResponse(result);
     }
 
     @Delete(":id")

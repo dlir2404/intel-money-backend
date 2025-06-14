@@ -7,6 +7,8 @@ import { LendTransaction } from "./lend.transaction";
 import { BorrowTransaction } from "./borrow.transaction";
 import { TransferTransaction } from "./transfer.transaction";
 import { ModifyBalanceTransaction } from "./modify-balance.transaction";
+import { CollectingDebtTransaction } from "./collecting-debt.transaction";
+import { RepaymentTransaction } from "./repayment.transaction";
 
 @Table({ timestamps: false })
 export class GeneralTransaction extends Model{
@@ -73,4 +75,10 @@ export class GeneralTransaction extends Model{
 
     @HasOne(() => ModifyBalanceTransaction)
     modifyBalanceTransaction: ModifyBalanceTransaction;
+
+    @HasOne(() => CollectingDebtTransaction)
+    collectingDebtTransaction: CollectingDebtTransaction;
+
+    @HasOne(() => RepaymentTransaction)
+    repaymentTransaction: RepaymentTransaction;
 }

@@ -276,6 +276,18 @@ export const categories: CategoryData[] = [
         editable: false,
     },
     {
+        name: "Thu nợ",
+        icon: "cash-plus",
+        type: CategoryType.COLLECTING_DEBT,
+        editable: false,
+    },
+    {
+        name: "Trả nợ",
+        icon: "cash-minus",
+        type: CategoryType.REPAYMENT,
+        editable: false,
+    },
+    {
         name: "Lương",
         icon: "cashMultiple",
         type: CategoryType.INCOME,

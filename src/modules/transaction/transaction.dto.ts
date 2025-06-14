@@ -275,6 +275,227 @@ export class ModifyBalanceTransactionResponse extends GeneralTransactionResponse
 }
 
 
+export class CreateCollectingDebtTransactionRequest {
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  amount: number;
+  
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  categoryId: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  description: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  borrowerId: number;
+
+  @ApiProperty({
+    required: false,
+    example: '2025-05-23T10:13:35.494Z'
+  })
+  @IsString()
+  @IsOptional()
+  transactionDate?: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  sourceWalletId: number;
+
+  //TODO: review this
+  @ApiProperty({
+    required: false
+  })
+  @IsBoolean()
+  @IsOptional()
+  notAddToReport?: boolean;
+
+  @ApiProperty({
+    required: false
+  })
+  @IsString()
+  @IsOptional()
+  image?: string;
+}
+
+export class UpdateCollectingDebtTransactionRequest {
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  amount: number;
+  
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  categoryId: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  description: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  borrowerId: number;
+
+  @ApiProperty({
+    required: false,
+    example: '2025-05-23T10:13:35.494Z'
+  })
+  @IsString()
+  @IsOptional()
+  transactionDate?: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  sourceWalletId: number;
+
+  //TODO: review this
+  @ApiProperty({
+    required: false
+  })
+  @IsBoolean()
+  @IsOptional()
+  notAddToReport?: boolean;
+
+  @ApiProperty({
+    required: false
+  })
+  @IsString()
+  @IsOptional()
+  image?: string;
+}
+
+@Expose()
+export class CollectingDebtTransactionResponse extends GeneralTransactionResponse {
+  @ApiProperty()
+  extraInfo: any;
+
+  constructor(partial: Partial<TransferTransactionResponse>) {
+    super(partial);
+  }
+}
+
+export class CreateRepaymentTransactionRequest {
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  amount: number;
+  
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  categoryId: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  description: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  lenderId: number;
+
+  @ApiProperty({
+    required: false,
+    example: '2025-05-23T10:13:35.494Z'
+  })
+  @IsString()
+  @IsOptional()
+  transactionDate?: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  sourceWalletId: number;
+
+  //TODO: review this
+  @ApiProperty({
+    required: false
+  })
+  @IsBoolean()
+  @IsOptional()
+  notAddToReport?: boolean;
+
+  @ApiProperty({
+    required: false
+  })
+  @IsString()
+  @IsOptional()
+  image?: string;
+}
+
+export class UpdateRepaymentTransactionRequest {
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  amount: number;
+  
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  categoryId: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  description: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  lenderId: number;
+
+  @ApiProperty({
+    required: false,
+    example: '2025-05-23T10:13:35.494Z'
+  })
+  @IsString()
+  @IsOptional()
+  transactionDate?: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  sourceWalletId: number;
+
+  //TODO: review this
+  @ApiProperty({
+    required: false
+  })
+  @IsBoolean()
+  @IsOptional()
+  notAddToReport?: boolean;
+
+  @ApiProperty({
+    required: false
+  })
+  @IsString()
+  @IsOptional()
+  image?: string;
+}
+
+
+@Expose()
+export class RepaymentTransactionResponse extends GeneralTransactionResponse {
+  @ApiProperty()
+  extraInfo: any;
+
+  constructor(partial: Partial<TransferTransactionResponse>) {
+    super(partial);
+  }
+}
+
 @Expose()
 export class LendTransactionResponse extends GeneralTransactionResponse {
   @ApiProperty()

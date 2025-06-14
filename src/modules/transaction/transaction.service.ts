@@ -1,16 +1,19 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { Sequelize } from "sequelize-typescript";
-import { BorrowTransaction, GeneralTransaction, LendTransaction, ModifyBalanceTransaction, TransferTransaction } from "src/database/models";
+import { BorrowTransaction, CollectingDebtTransaction, GeneralTransaction, LendTransaction, ModifyBalanceTransaction, RepaymentTransaction, TransferTransaction } from "src/database/models";
 import { TransactionType } from "src/shared/enums/transaction";
 import { CreateGeneralTrans } from "src/shared/types/transactions/general";
 import {
     CreateBorrowTransactionRequest,
+    CreateCollectingDebtTransactionRequest,
     CreateGeneralTransactionRequest, CreateLendTransactionRequest,
     CreateModifyBalanceTransactionRequest,
+    CreateRepaymentTransactionRequest,
     CreateTransferTransactionRequest,
-    GetAllTransactionsRequest, UpdateBorrowTransactionRequest, UpdateExpenseTransactionRequest,
+    GetAllTransactionsRequest, UpdateBorrowTransactionRequest, UpdateCollectingDebtTransactionRequest, UpdateExpenseTransactionRequest,
     UpdateIncomeTransactionRequest, UpdateLendTransactionRequest,
     UpdateModifyBalanceTransactionRequest,
+    UpdateRepaymentTransactionRequest,
     UpdateTransferTransactionRequest
 } from "./transaction.dto";
 import { UserService } from "../user/user.service";
@@ -459,6 +462,91 @@ export class TransactionService {
     }
 
 
+    async createCollectingDebt(body: CreateCollectingDebtTransactionRequest, userId: number) {
+        if (body.amount <= 0) {
+            throw new BadRequestException('Transaction amount must be positive');
+        }
+
+        const sourceWallet = await this.walletService.findById(body.sourceWalletId, userId);
+        const borrower = await this.relatedUserService.findById(body.borrowerId, userId);
+
+        try {
+            const result = await this.sequelize.transaction(async (t) => {
+                // Create the transaction record
+                const transaction = await this.createGeneralTransaction({
+                    type: TransactionType.COLLECTING_DEBT,
+                    ...body,
+                    userId
+                }, t);
+
+                //add extra info to table
+                const collectingDebtTransaction = await CollectingDebtTransaction.create({
+                    generalTransactionId: transaction.id,
+                    borrowerId: body.borrowerId,
+                }, { transaction: t });
+
+                //attach collectingDebtTransaction to transaction
+                transaction.collectingDebtTransaction = collectingDebtTransaction;
+
+                await this.updateDataAfterCreateTransaction(transaction, t);
+
+                return transaction;
+            });
+
+            return {
+                ...result.dataValues,
+                extraInfo: {
+                    lenderId: body.borrowerId,
+                },
+            };
+        } catch (error) {
+            throw new BadRequestException(`Failed to create borrow transaction: ${error.message}`);
+        }
+    }
+
+    async createRepayment(body: CreateRepaymentTransactionRequest, userId: number) {
+        if (body.amount <= 0) {
+            throw new BadRequestException('Transaction amount must be positive');
+        }
+
+        const sourceWallet = await this.walletService.findById(body.sourceWalletId, userId);
+        const lender = await this.relatedUserService.findById(body.lenderId, userId);
+
+        try {
+            const result = await this.sequelize.transaction(async (t) => {
+                // Create the transaction record
+                const transaction = await this.createGeneralTransaction({
+                    type: TransactionType.REPAYMENT,
+                    ...body,
+                    userId
+                }, t);
+
+                //add extra info to table
+                const repaymentTransaction = await RepaymentTransaction.create({
+                    generalTransactionId: transaction.id,
+                    lenderId: body.lenderId,
+                }, { transaction: t });
+
+                //attach repaymentTransaction to transaction
+                transaction.repaymentTransaction = repaymentTransaction;
+
+                await this.updateDataAfterCreateTransaction(transaction, t);
+
+                return transaction;
+            });
+
+            return {
+                ...result.dataValues,
+                extraInfo: {
+                    lenderId: body.lenderId,
+                }
+            };
+        } catch (error) {
+            throw new BadRequestException(`Failed to create lend transaction: ${error.message}`);
+        }
+    }
+
+
     /**
      * this function must be called after other transaction types are created.
      * It is used to sync the modify balance transaction with the general transaction.
@@ -485,6 +573,10 @@ export class TransactionService {
             newDiff = oldDiff - transaction.amount; // borrow in
         } else if (transaction.type === TransactionType.MODIFY_BALANCE) {
             newDiff = oldDiff - transaction.amount; // modify balance
+        } else if (transaction.type === TransactionType.COLLECTING_DEBT) {
+            newDiff = oldDiff - transaction.amount;
+        } else if (transaction.type === TransactionType.REPAYMENT) {
+            newDiff = oldDiff + transaction.amount;
         }
 
 
@@ -532,6 +624,10 @@ export class TransactionService {
             newDiff = oldDiff + transaction.amount; // borrow in
         } else if (transaction.type === TransactionType.MODIFY_BALANCE) {
             newDiff = oldDiff + transaction.amount; // modify balance
+        } else if (transaction.type === TransactionType.COLLECTING_DEBT) {
+            newDiff = oldDiff + transaction.amount;
+        } else if (transaction.type === TransactionType.REPAYMENT) {
+            newDiff = oldDiff - transaction.amount;
         }
 
         if (oldDiff < 0 && newDiff > 0) {
@@ -730,6 +826,10 @@ export class TransactionService {
                 balance -= transaction.amount; // lend out
             } else if (transaction.type === TransactionType.BORROW) {
                 balance += transaction.amount; // borrow in
+            } else if (transaction.type === TransactionType.COLLECTING_DEBT) {
+                balance += transaction.amount; // collecting debt
+            } else if (transaction.type === TransactionType.REPAYMENT) {
+                balance -= transaction.amount; // repayment
             }
         }
 
@@ -969,6 +1069,94 @@ export class TransactionService {
         }
     }
 
+    async updateCollectingDebt(id: number, body: UpdateCollectingDebtTransactionRequest, userId: number) {
+        try {
+            return await this.sequelize.transaction(async (t) => {
+                const transaction = await GeneralTransaction.findOne({
+                    where: {
+                        id: id,
+                        userId: userId
+                    },
+                    include: [{
+                        model: CollectingDebtTransaction,
+                        required: true,
+                        attributes: ['id', 'borrowerId']
+                    }]
+                });
+
+                //act like remove then create new
+                await this.updateDataBeforeRemoveTransaction(transaction, t);
+
+                await transaction.update({
+                    ...body,
+                    userId: userId,
+                }, { transaction: t });
+
+                if (body.borrowerId != transaction.collectingDebtTransaction.borrowerId) {
+                    // If lenderId is changed, we need to update the collectingDebtTransaction
+                    await transaction.collectingDebtTransaction.update({
+                        borrowerId: body.borrowerId,
+                    }, { transaction: t });
+                }
+
+                await this.updateDataAfterCreateTransaction(transaction, t);
+
+                return {
+                    ...transaction.dataValues,
+                    extraInfo: {
+                        borrowerId: body.borrowerId,
+                    }
+                };
+            });
+        } catch (error) {
+            throw new InternalServerErrorException("Failed to update transaction: " + error.message);
+        }
+    }
+
+    async updateRepayment(id: number, body: UpdateRepaymentTransactionRequest, userId: number) {
+        try {
+            return await this.sequelize.transaction(async (t) => {
+                const transaction = await GeneralTransaction.findOne({
+                    where: {
+                        id: id,
+                        userId: userId
+                    },
+                    include: [{
+                        model: RepaymentTransaction,
+                        required: true,
+                        attributes: ['id', 'lenderId']
+                    }]
+                });
+
+                //act like remove then create new
+                await this.updateDataBeforeRemoveTransaction(transaction, t);
+
+                await transaction.update({
+                    ...body,
+                    userId: userId,
+                }, { transaction: t });
+
+                if (body.lenderId != transaction.repaymentTransaction.lenderId) {
+                    // If lenderId is changed, we need to update the repaymentTransaction
+                    await transaction.repaymentTransaction.update({
+                        lenderId: body.lenderId,
+                    }, { transaction: t });
+                }
+
+                await this.updateDataAfterCreateTransaction(transaction, t);
+
+                return {
+                    ...transaction.dataValues,
+                    extraInfo: {
+                        lenderId: body.lenderId,
+                    }
+                };
+            });
+        } catch (error) {
+            throw new InternalServerErrorException("Failed to update transaction: " + error.message);
+        }
+    }
+
     async removeTransaction(userId: number, transactionId: number) {
         const transaction = await GeneralTransaction.findByPk(transactionId);
 
@@ -989,7 +1177,7 @@ export class TransactionService {
 
                 //case 3: lend
                 if (transaction.type === TransactionType.LEND) {
-                    const lendTransaction = await LendTransaction.destroy({
+                    await LendTransaction.destroy({
                         where: {
                             generalTransactionId: transaction.id
                         }
@@ -998,7 +1186,7 @@ export class TransactionService {
 
                 //case 4: borrow
                 if (transaction.type === TransactionType.BORROW) {
-                    const borrowTransaction = await BorrowTransaction.destroy({
+                    await BorrowTransaction.destroy({
                         where: {
                             generalTransactionId: transaction.id
                         }
@@ -1007,7 +1195,7 @@ export class TransactionService {
 
                 //case 5: transfer
                 if (transaction.type === TransactionType.TRANSFER) {
-                    const transferTransaction = await TransferTransaction.destroy({
+                    await TransferTransaction.destroy({
                         where: {
                             generalTransactionId: transaction.id
                         }
@@ -1016,7 +1204,25 @@ export class TransactionService {
 
                 // case 6: modify balance
                 if (transaction.type === TransactionType.MODIFY_BALANCE) {
-                    const modifyBalanceTransaction = await ModifyBalanceTransaction.destroy({
+                    await ModifyBalanceTransaction.destroy({
+                        where: {
+                            generalTransactionId: transaction.id
+                        }
+                    });
+                }
+
+                // case 7: collecting debt
+                if (transaction.type === TransactionType.COLLECTING_DEBT) {
+                    await CollectingDebtTransaction.destroy({
+                        where: {
+                            generalTransactionId: transaction.id
+                        }
+                    });
+                }
+
+                // case 8: repayment
+                if (transaction.type === TransactionType.REPAYMENT) {
+                    await RepaymentTransaction.destroy({
                         where: {
                             generalTransactionId: transaction.id
                         }
@@ -1083,6 +1289,20 @@ export class TransactionService {
                 // Update borrower's total debt
                 await this.relatedUserService.increaseTotalDebt(transaction.lendTransaction.borrowerId, transaction.amount, t);
                 break;
+            case TransactionType.COLLECTING_DEBT:
+                if (mostSoonModifyBalanceTransaction) {
+                    // Update the most soon modify balance transaction
+                    await this.updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction, mostSoonModifyBalanceTransaction, t);
+                } else {
+                    // Update wallet balance
+                    await this.walletService.increaseBalance(transaction.sourceWalletId, transaction.amount, t);
+                }
+
+                // Update user's total loan
+                await this.userService.decreaseTotalLoan(transaction.userId, transaction.amount, t);
+                // Update borrower's total loan
+                await this.relatedUserService.decreaseTotalDebt(transaction.collectingDebtTransaction.borrowerId, transaction.amount, t);
+                break;
             case TransactionType.BORROW:
                 if (mostSoonModifyBalanceTransaction) {
                     // Update the most soon modify balance transaction
@@ -1097,6 +1317,20 @@ export class TransactionService {
 
                 // Update lender's total loan
                 await this.relatedUserService.increaseTotalLoan(transaction.borrowTransaction.lenderId, transaction.amount, t);
+                break;
+            case TransactionType.REPAYMENT:
+                if (mostSoonModifyBalanceTransaction) {
+                    // Update the most soon modify balance transaction
+                    await this.updateMostSoonModifyBalanceTransactionAfterCreateTransaction(transaction, mostSoonModifyBalanceTransaction, t);
+                } else {
+                    // Update source wallet balance
+                    await this.walletService.decreaseBalance(transaction.sourceWalletId, transaction.amount, t);
+                }
+
+                // Update user's total debt
+                await this.userService.decreaseTotalDebt(transaction.userId, transaction.amount, t);
+                // Update lender's total loan
+                await this.relatedUserService.decreaseTotalLoan(transaction.repaymentTransaction.lenderId, transaction.amount, t);
                 break;
             case TransactionType.TRANSFER:
                 const mostSoonModifyBalanceTransactionOfSourceWallet = mostSoonModifyBalanceTransaction;
@@ -1189,6 +1423,23 @@ export class TransactionService {
                 await this.relatedUserService.decreaseTotalDebt(lendTransaction.borrowerId, transaction.amount, t);
 
                 break;
+            case TransactionType.COLLECTING_DEBT:
+                const collectingDebtTransaction = await CollectingDebtTransaction.findOne({
+                    where: {
+                        generalTransactionId: transaction.id
+                    }
+                });
+
+                if (mostSoonModifyBalanceTransaction) {
+                    await this.updateMostSoonModifyBalanceTransactionBeforeRemoveTransaction(transaction, mostSoonModifyBalanceTransaction, t);
+                } else {
+                    await this.walletService.decreaseBalance(transaction.sourceWalletId, transaction.amount, t);
+                }
+
+                await this.userService.increaseTotalLoan(transaction.userId, transaction.amount, t);
+                await this.relatedUserService.increaseTotalDebt(collectingDebtTransaction.borrowerId, transaction.amount, t);
+
+                break;
             case TransactionType.BORROW:
                 const borrowTransaction = await BorrowTransaction.findOne({
                     where: {
@@ -1204,6 +1455,23 @@ export class TransactionService {
 
                 await this.userService.decreaseTotalDebt(transaction.userId, transaction.amount, t);
                 await this.relatedUserService.decreaseTotalLoan(borrowTransaction.lenderId, transaction.amount, t);
+
+                break;
+            case TransactionType.REPAYMENT:
+                const repaymentTransaction = await RepaymentTransaction.findOne({
+                    where: {
+                        generalTransactionId: transaction.id
+                    }
+                });
+
+                if (mostSoonModifyBalanceTransaction) {
+                    await this.updateMostSoonModifyBalanceTransactionBeforeRemoveTransaction(transaction, mostSoonModifyBalanceTransaction, t);
+                } else {
+                    await this.walletService.increaseBalance(transaction.sourceWalletId, transaction.amount, t);
+                }
+
+                await this.userService.increaseTotalDebt(transaction.userId, transaction.amount, t);
+                await this.relatedUserService.increaseTotalLoan(repaymentTransaction.lenderId, transaction.amount, t);
 
                 break;
             case TransactionType.TRANSFER:

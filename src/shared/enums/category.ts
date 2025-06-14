@@ -4,4 +4,6 @@ export enum CategoryType {
     TRANSFER = 'TRANSFER',
     LEND = 'LEND',
     BORROW = 'BORROW',
+    COLLECTING_DEBT = 'COLLECTING_DEBT',
+    REPAYMENT = 'REPAYMENT',
 }
