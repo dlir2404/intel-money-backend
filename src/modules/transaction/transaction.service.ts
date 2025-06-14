@@ -108,6 +108,16 @@ export class TransactionService {
                     model: ModifyBalanceTransaction,
                     required: false,
                     attributes: ['newRealBalance']
+                },
+                {
+                    model: CollectingDebtTransaction,
+                    required: false,
+                    attributes: ['borrowerId']
+                },
+                {
+                    model: RepaymentTransaction,
+                    required: false,
+                    attributes: ['lenderId']
                 }
             ],
             order: [
@@ -175,6 +185,8 @@ export class TransactionService {
             delete data.borrowTransaction;
             delete data.transferTransaction;
             delete data.modifyBalanceTransaction;
+            delete data.collectingDebtTransaction;
+            delete data.repaymentTransaction;
 
             return { ...data, extraInfo };
         });
