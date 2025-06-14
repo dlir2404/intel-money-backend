@@ -10,37 +10,37 @@ interface CategoryData {
 
 export const categories: CategoryData[] = [
     {
-        name: "Food & Drinks",
+        name: "Ăn uống",
         icon: "fastfood",
         type: CategoryType.EXPENSE,
         editable: true,
         children: [
             {
-                name: "Restaurant",
+                name: "Ăn tiệm",
                 icon: "receipt",
                 type: CategoryType.EXPENSE,
                 editable: true
             },
             {
-                name: "Dinner",
+                name: "Ăn tối",
                 icon: "food-turkey",
                 type: CategoryType.EXPENSE,
                 editable: true
             },
             {
-                name: "Fast Food",
+                name: "Ăn vặt",
                 icon: "hamburger",
                 type: CategoryType.EXPENSE,
                 editable: true
             },
             {
-                name: "Coffee",
+                name: "Cà phê",
                 icon: "local_cafe",
                 type: CategoryType.EXPENSE,
                 editable: true
             },
             {
-                name: "Wine & Beer",
+                name: "Bia rượu",
                 icon: "local_bar_sharp",
                 type: CategoryType.EXPENSE,
                 editable: true
@@ -48,37 +48,37 @@ export const categories: CategoryData[] = [
         ]
     },
     {
-        name: "Children",
+        name: "Con cái",
         icon: 'groups',
         type: CategoryType.EXPENSE,
         editable: true,
         children: [
             {
-                name: "Study",
+                name: "Học tập",
                 icon: "school",
                 type: CategoryType.EXPENSE,
                 editable: true
             },
             {
-                name: "Toys",
+                name: "Đồ chơi",
                 icon: "gamepad-variant",
                 type: CategoryType.EXPENSE,
                 editable: true
             },
             {
-                name: "Books",
+                name: "Sách vở",
                 icon: "book-open-page-variant-outline",
                 type: CategoryType.EXPENSE,
                 editable: true
             },
             {
-                name: "Milk",
+                name: "Sữa",
                 icon: "baby-bottle-outline",
                 type: CategoryType.EXPENSE,
                 editable: true
             },
             {
-                name: "Money Gift",
+                name: "Tiền tiêu vặt",
                 icon: "cashMultiple",
                 type: CategoryType.EXPENSE,
                 editable: true
@@ -86,19 +86,19 @@ export const categories: CategoryData[] = [
         ]
     },
     {
-        name: "Daily Needs",
+        name: "Dịch vụ sinh hoạt",
         icon: "check_room",
         type: CategoryType.EXPENSE,
         editable: true,
         children: [
             {
-                name: "Elictricity",
+                name: "Tiền điện",
                 icon: "lightbulb",
                 type: CategoryType.EXPENSE,
                 editable: true
             },
             {
-                name: "Phone",
+                name: "Điện thoại",
                 icon: "phone_android_outlined",
                 type: CategoryType.EXPENSE,
                 editable: true
@@ -116,13 +116,13 @@ export const categories: CategoryData[] = [
                 editable: true
             },
             {
-                name: "Water",
+                name: "Tiền nước",
                 icon: "water_drop",
                 type: CategoryType.EXPENSE,
                 editable: true
             },
             {
-                name: "Household",
+                name: "Vệ sinh",
                 icon: "broom",
                 type: CategoryType.EXPENSE,
                 editable: true
@@ -136,31 +136,31 @@ export const categories: CategoryData[] = [
         ]
     },
     {
-        name: "Transportation",
+        name: "Đi lại",
         icon: "directions_bike",
         type: CategoryType.EXPENSE,
         editable: true,
         children: [
             {
-                name: "Public Transport",
+                name: "Phương tiện công cộng",
                 icon: "bus",
                 type: CategoryType.EXPENSE,
                 editable: true
             },
             {
-                name: "Parking",
+                name: "Gửi xe",
                 icon: "parking",
                 type: CategoryType.EXPENSE,
                 editable: true
             },
             {
-                name: "Fuel",
+                name: "Xăng xe",
                 icon: "local_gas_station",
                 type: CategoryType.EXPENSE,
                 editable: true
             },
             {
-                name: "Repair",
+                name: "Sửa chữa, bảo dưỡng",
                 icon: "toolbox",
                 type: CategoryType.EXPENSE,
                 editable: true
@@ -174,25 +174,25 @@ export const categories: CategoryData[] = [
         ]
     },
     {
-        name: "Health",
+        name: "Sức khỏe",
         icon: "hospital-building",
         type: CategoryType.EXPENSE,
         editable: true,
         children: [
             {
-                name: "Medicine",
+                name: "Tiền thuốc",
                 icon: "pill",
                 type: CategoryType.EXPENSE,
                 editable: true
             },
             {
-                name: "Doctor",
+                name: "Khám, chữa bệnh",
                 icon: "stethoscope",
                 type: CategoryType.EXPENSE,
                 editable: true
             },
             {
-                name: "Sports",
+                name: "Thể thao",
                 icon: "badminton",
                 type: CategoryType.EXPENSE,
                 editable: true
@@ -200,25 +200,25 @@ export const categories: CategoryData[] = [
         ]
     },
     {
-        name: "Clothes",
+        name: "Trang phục",
         icon: "tshirt-crew",
         type: CategoryType.EXPENSE,
         editable: true,
         children: [
             {
-                name: "Shoes",
+                name: "Giầy dép",
                 icon: "shoe-sneaker",
                 type: CategoryType.EXPENSE,
                 editable: true
             },
             {
-                name: "Accessories",
+                name: "Phụ kiện",
                 icon: "watch",
                 type: CategoryType.EXPENSE,
                 editable: true
             },
             {
-                name: "Clothes",
+                name: "Quần áo",
                 icon: "tshirt-crew",
                 type: CategoryType.EXPENSE,
                 editable: true
@@ -226,31 +226,31 @@ export const categories: CategoryData[] = [
         ]
     },
     {
-        name: "Social & Gifts",
+        name: "Hiếu hỉ",
         icon: "flower",
         type: CategoryType.EXPENSE,
         editable: true,
         children: [
             {
-                name: "Gift",
+                name: "Quà tặng",
                 icon: "gift",
                 type: CategoryType.EXPENSE,
                 editable: true
             },
             {
-                name: "Donation",
+                name: "Từ thiện",
                 icon: "heart-circle",
                 type: CategoryType.EXPENSE,
                 editable: true
             },
             {
-                name: "Party",
+                name: "Tiệc tùng",
                 icon: "groups",
                 type: CategoryType.EXPENSE,
                 editable: true
             },
             {
-                name: "Birthday",
+                name: "Sinh nhật",
                 icon: "cake",
                 type: CategoryType.EXPENSE,
                 editable: true
@@ -258,37 +258,37 @@ export const categories: CategoryData[] = [
         ]
     },
     {
-        name: "Other",
+        name: "Khác",
         icon: "default",
         type: CategoryType.EXPENSE,
         editable: false,
     },
     {
-        name: "Lend",
+        name: "Cho vay",
         icon: "cash-minus",
         type: CategoryType.LEND,
         editable: false,
     },
     {
-        name: "Borrow",
+        name: "Đi vay",
         icon: "cash-plus",
         type: CategoryType.BORROW,
         editable: false,
     },
     {
-        name: "Salary",
+        name: "Lương",
         icon: "cashMultiple",
         type: CategoryType.INCOME,
         editable: false
     },
     {
-        name: "Investments",
+        name: "Tiền lãi",
         icon: "trending_up",
         type: CategoryType.INCOME,
         editable: true
     },
     {
-        name: "Other",
+        name: "Khác",
         icon: "default",
         type: CategoryType.INCOME,
         editable: false
