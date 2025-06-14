@@ -154,6 +154,20 @@ export class TransactionService {
                         };
                     }
                     break;
+                case 'COLLECTING_DEBT':
+                    if (data.collectingDebtTransaction) {
+                        extraInfo = {
+                            borrowerId: data.collectingDebtTransaction.borrowerId,
+                        };
+                    }
+                    break;
+                case 'REPAYMENT':
+                    if (data.repaymentTransaction) {
+                        extraInfo = {
+                            lenderId: data.repaymentTransaction.lenderId,
+                        };
+                    }
+                    break;
             }
 
             // Remove nested objects và add extraInfo
@@ -496,7 +510,7 @@ export class TransactionService {
             return {
                 ...result.dataValues,
                 extraInfo: {
-                    lenderId: body.borrowerId,
+                    borrowerId: body.borrowerId,
                 },
             };
         } catch (error) {
