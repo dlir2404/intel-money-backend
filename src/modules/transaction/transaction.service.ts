@@ -488,7 +488,7 @@ export class TransactionService {
         }
 
 
-        if (oldDiff <= 0 && newDiff > 0) {
+        if (oldDiff < 0 && newDiff > 0) {
             //It means that change from expense to income
             const otherIncomeCategory = await this.categoryService.findOtherIncomeCategory(transaction.userId);
 
@@ -496,7 +496,7 @@ export class TransactionService {
                 categoryId: otherIncomeCategory.id,
                 amount: newDiff
             }, { transaction: t });
-        } else if (oldDiff > 0 && newDiff <= 0) {
+        } else if (oldDiff > 0 && newDiff < 0) {
             //It means that change from income to expense
             const otherExpenseCategory = await this.categoryService.findOtherExpenseCategory(transaction.userId);
 
@@ -534,7 +534,7 @@ export class TransactionService {
             newDiff = oldDiff + transaction.amount; // modify balance
         }
 
-        if (oldDiff <= 0 && newDiff > 0) {
+        if (oldDiff < 0 && newDiff > 0) {
             //It means that change from expense to income
             const otherIncomeCategory = await this.categoryService.findOtherIncomeCategory(transaction.userId);
 
@@ -542,7 +542,7 @@ export class TransactionService {
                 categoryId: otherIncomeCategory.id,
                 amount: newDiff
             }, { transaction: t });
-        } else if (oldDiff > 0 && newDiff <= 0) {
+        } else if (oldDiff > 0 && newDiff < 0) {
             //It means that change from income to expense
             const otherExpenseCategory = await this.categoryService.findOtherExpenseCategory(transaction.userId);
 
