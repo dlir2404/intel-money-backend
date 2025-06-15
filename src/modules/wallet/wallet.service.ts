@@ -92,17 +92,17 @@ export class WalletService {
                         await firstModifyBalanceTransactions.update({
                             amount: firstModifyBalanceTransactions.amount - differ
                         }, { transaction: t });
+                        const res = await wallet.update(body, { transaction: t });
+                        return res.dataValues;
                     } else {
                         if (differ > 0) {
                             await this.userService.increaseTotalBalance(userId, differ, t);
                         } else {
                             await this.userService.decreaseTotalBalance(userId, -differ, t);
                         }
+                        const res = await wallet.update({...body, balance: wallet.balance + differ}, { transaction: t });
+                        return res.dataValues;
                     }
-
-
-                    const res = await wallet.update({...body, balance: wallet.balance + differ}, { transaction: t });
-                    return res.dataValues;
                 });
 
                 return result;
