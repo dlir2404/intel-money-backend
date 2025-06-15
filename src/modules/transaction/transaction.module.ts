@@ -11,7 +11,7 @@ import { StatisticModule } from "../statistic/statistic.module";
     imports: [
         UserModule, 
         forwardRef(() => WalletModule), 
-        CategoryModule, 
+        forwardRef(() => CategoryModule), 
         RelatedUserModule,
         StatisticModule
     ],

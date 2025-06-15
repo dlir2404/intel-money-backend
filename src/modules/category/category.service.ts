@@ -1,11 +1,16 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { forwardRef, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { CreateCategoryRequest, EditCategoryRequest } from "./category.dto";
 import { Category } from "src/database/models";
 import { Transaction } from "sequelize";
 import { categories } from "./default.categories";
+import { TransactionService } from "../transaction/transaction.service";
 
 @Injectable()
 export class CategoryService {
+    constructor(
+        @Inject(forwardRef(() => TransactionService)) private readonly transactionService: TransactionService
+    ) { }
+
     async createDefaultCategories(userId: number, t?: Transaction) {
         try {
             for (const categoryData of categories) {
@@ -86,7 +91,11 @@ export class CategoryService {
             throw new NotFoundException("Category not found");
         }
 
-        return await category.destroy();
+        await this.transactionService.removeTransactionByCategoryId(userId, id, async (t: Transaction) => {
+            await category.destroy({ transaction: t });
+        });
+
+        return { result: true };
     }
 
     async getAll(userId: number) {

@@ -21,7 +21,7 @@ import { WalletService } from "../wallet/wallet.service";
 import { CategoryService } from "../category/category.service";
 import { CategoryType } from "src/shared/enums/category";
 import { RelatedUserService } from "../related-user/related-user.service";
-import { Op, Transaction, where, WhereOptions } from "sequelize";
+import { Op, Transaction, WhereOptions } from "sequelize";
 import { StatisticService } from "../statistic/statistic.service";
 import { Time } from "src/shared/ultils/time";
 
@@ -29,7 +29,7 @@ import { Time } from "src/shared/ultils/time";
 export class TransactionService {
     constructor(
         private readonly userService: UserService,
-        private readonly categoryService: CategoryService,
+        @Inject(forwardRef(() => CategoryService)) private readonly categoryService: CategoryService,
         @Inject(forwardRef(() => WalletService)) private readonly walletService: WalletService,
         private readonly relatedUserService: RelatedUserService,
         private readonly sequelize: Sequelize,
@@ -1693,6 +1693,39 @@ export class TransactionService {
             return { result: true }
         } catch (error) {
             throw new InternalServerErrorException("Failed to remove transactions by wallet ID: " + error.message);
+        }
+    }
+
+    async removeTransactionByCategoryId(
+        userId: number,
+        categoryId: number,
+        callback?: (t: Transaction) => Promise<void>
+    ) {
+        const where: WhereOptions<GeneralTransaction> = {
+            userId: userId,
+            categoryId: categoryId
+        };
+
+        try {
+            const result = await this.sequelize.transaction(async (t) => {
+                const transactions = await GeneralTransaction.findAll({
+                    where: where,
+                    order: [['transactionDate', 'DESC'], ['id', 'DESC']],
+                    transaction: t,
+                });
+
+                for (const transaction of transactions) {
+                    await this.removeTransactionInSequelizeTransaction(transaction, t);
+                }
+
+                if (callback) {
+                    await callback(t);
+                }
+            });
+
+            return { result: true }
+        } catch (error) {
+            throw new InternalServerErrorException("Failed to remove transactions by category ID: " + error.message);
         }
     }
 }
