@@ -89,6 +89,26 @@ export class RelatedUserService {
         });
     }
 
+    async increaseTotalCollected(id: number, amount: number, t: Transaction) {
+        return await RelatedUser.increment("totalCollected", {
+            by: amount,
+            where: {
+                id,
+            },
+            transaction: t
+        });
+    }
+
+    async decreaseTotalCollected(id: number, amount: number, t: Transaction) {
+        return await RelatedUser.decrement("totalCollected", {
+            by: amount,
+            where: {
+                id,
+            },
+            transaction: t
+        });
+    }
+
     async increaseTotalLoan(id: number, amount: number, t: Transaction) {
         return await RelatedUser.increment("totalLoan", {
             by: amount,
@@ -101,6 +121,26 @@ export class RelatedUserService {
 
     async decreaseTotalLoan(id: number, amount: number, t: Transaction) {
         return await RelatedUser.decrement("totalLoan", {
+            by: amount,
+            where: {
+                id,
+            },
+            transaction: t
+        });
+    }
+
+    async increaseTotalPaid(id: number, amount: number, t: Transaction) {
+        return await RelatedUser.increment("totalPaid", {
+            by: amount,
+            where: {
+                id,
+            },
+            transaction: t
+        });
+    }
+
+    async decreaseTotalPaid(id: number, amount: number, t: Transaction) {
+        return await RelatedUser.decrement("totalPaid", {
             by: amount,
             where: {
                 id,

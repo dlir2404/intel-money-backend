@@ -1327,7 +1327,7 @@ export class TransactionService {
                 // Update user's total loan
                 await this.userService.decreaseTotalLoan(transaction.userId, transaction.amount, t);
                 // Update borrower's total loan
-                await this.relatedUserService.decreaseTotalDebt(transaction.collectingDebtTransaction.borrowerId, transaction.amount, t);
+                await this.relatedUserService.increaseTotalCollected(transaction.collectingDebtTransaction.borrowerId, transaction.amount, t);
                 break;
             case TransactionType.BORROW:
                 if (mostSoonModifyBalanceTransaction) {
@@ -1356,7 +1356,7 @@ export class TransactionService {
                 // Update user's total debt
                 await this.userService.decreaseTotalDebt(transaction.userId, transaction.amount, t);
                 // Update lender's total loan
-                await this.relatedUserService.decreaseTotalLoan(transaction.repaymentTransaction.lenderId, transaction.amount, t);
+                await this.relatedUserService.increaseTotalPaid(transaction.repaymentTransaction.lenderId, transaction.amount, t);
                 break;
             case TransactionType.TRANSFER:
                 const mostSoonModifyBalanceTransactionOfSourceWallet = mostSoonModifyBalanceTransaction;
@@ -1463,7 +1463,7 @@ export class TransactionService {
                 }
 
                 await this.userService.increaseTotalLoan(transaction.userId, transaction.amount, t);
-                await this.relatedUserService.increaseTotalDebt(collectingDebtTransaction.borrowerId, transaction.amount, t);
+                await this.relatedUserService.decreaseTotalCollected(collectingDebtTransaction.borrowerId, transaction.amount, t);
 
                 break;
             case TransactionType.BORROW:
@@ -1497,7 +1497,7 @@ export class TransactionService {
                 }
 
                 await this.userService.increaseTotalDebt(transaction.userId, transaction.amount, t);
-                await this.relatedUserService.increaseTotalLoan(repaymentTransaction.lenderId, transaction.amount, t);
+                await this.relatedUserService.decreaseTotalPaid(repaymentTransaction.lenderId, transaction.amount, t);
 
                 break;
             case TransactionType.TRANSFER:
