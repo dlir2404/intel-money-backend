@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
+import { BadRequestException, forwardRef, Inject, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { Sequelize } from "sequelize-typescript";
 import { BorrowTransaction, CollectingDebtTransaction, GeneralTransaction, LendTransaction, ModifyBalanceTransaction, RepaymentTransaction, TransferTransaction } from "src/database/models";
 import { TransactionType } from "src/shared/enums/transaction";
@@ -30,7 +30,7 @@ export class TransactionService {
     constructor(
         private readonly userService: UserService,
         private readonly categoryService: CategoryService,
-        private readonly walletService: WalletService,
+        @Inject(forwardRef(() => WalletService)) private readonly walletService: WalletService,
         private readonly relatedUserService: RelatedUserService,
         private readonly sequelize: Sequelize,
         private readonly statisticService: StatisticService,
@@ -1268,6 +1268,68 @@ export class TransactionService {
         }
     }
 
+    async removeTransactionInSequelizeTransaction(transaction: GeneralTransaction, t: Transaction) {
+        await this.updateDataBeforeRemoveTransaction(transaction, t);
+
+        //case 3: lend
+        if (transaction.type === TransactionType.LEND) {
+            await LendTransaction.destroy({
+                where: {
+                    generalTransactionId: transaction.id
+                }
+            });
+        }
+
+        //case 4: borrow
+        if (transaction.type === TransactionType.BORROW) {
+            await BorrowTransaction.destroy({
+                where: {
+                    generalTransactionId: transaction.id
+                }
+            });
+        }
+
+        //case 5: transfer
+        if (transaction.type === TransactionType.TRANSFER) {
+            await TransferTransaction.destroy({
+                where: {
+                    generalTransactionId: transaction.id
+                }
+            });
+        }
+
+        // case 6: modify balance
+        if (transaction.type === TransactionType.MODIFY_BALANCE) {
+            await ModifyBalanceTransaction.destroy({
+                where: {
+                    generalTransactionId: transaction.id
+                }
+            });
+        }
+
+        // case 7: collecting debt
+        if (transaction.type === TransactionType.COLLECTING_DEBT) {
+            await CollectingDebtTransaction.destroy({
+                where: {
+                    generalTransactionId: transaction.id
+                }
+            });
+        }
+
+        // case 8: repayment
+        if (transaction.type === TransactionType.REPAYMENT) {
+            await RepaymentTransaction.destroy({
+                where: {
+                    generalTransactionId: transaction.id
+                }
+            });
+        }
+
+
+        // Delete the transaction record
+        await transaction.destroy({ transaction: t });
+    }
+
     async updateDataAfterCreateTransaction(transaction: GeneralTransaction, t: Transaction) {
         const mostSoonModifyBalanceTransaction = await this.getMostSoonModifyBalanceTransactionAfterTransaction(
             transaction,
@@ -1554,6 +1616,55 @@ export class TransactionService {
                         await this.userService.increaseTotalBalance(transaction.userId, -differ, t);
                     }
                 }
+        }
+    }
+
+
+    async removeTransactionByWalletId(
+        userId: number,
+        walletId: number,
+        callback?: (t: Transaction) => Promise<void>
+    ) {
+        const where: WhereOptions<GeneralTransaction> = {
+            userId: userId,
+            [Op.or]: [
+                // Transactions with this wallet as source
+                { sourceWalletId: walletId },
+                // Transfer transactions with this wallet as destination
+                {
+                    type: TransactionType.TRANSFER,
+                    '$transferTransaction.destinationWalletId$': walletId
+                }
+            ]
+        };
+
+        try {
+            const result = await this.sequelize.transaction(async (t) => {
+                const transactions = await GeneralTransaction.findAll({
+                    where: where,
+                    include: [
+                        {
+                            model: TransferTransaction,
+                            required: false,
+                            attributes: ['destinationWalletId']
+                        },
+                    ],
+                    order: [['transactionDate', 'DESC'], ['id', 'DESC']],
+                    transaction: t,
+                });
+
+                for (const transaction of transactions) {
+                    await this.removeTransactionInSequelizeTransaction(transaction, t);
+                }
+
+                if (callback) {
+                    await callback(t);
+                }
+            });
+
+            return { result: true }
+        } catch (error) {
+            throw new InternalServerErrorException("Failed to remove transactions by wallet ID: " + error.message);
         }
     }
 }

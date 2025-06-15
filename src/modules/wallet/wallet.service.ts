@@ -1,11 +1,13 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { forwardRef, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { CreateRequest } from "./wallet.dto";
 import { Wallet } from "src/database/models";
 import { Transaction } from "sequelize";
+import { TransactionService } from "../transaction/transaction.service";
 
 
 @Injectable()
 export class WalletService {
+    constructor(@Inject(forwardRef(() => TransactionService)) private readonly transactionService: TransactionService) { }
     async createDefaultWallets(userId: number, t?: Transaction) {
         const defaultWallet = {
             name: "Tiền mặt",
@@ -63,7 +65,9 @@ export class WalletService {
             throw new NotFoundException("Wallet not found");
         }
 
-        await wallet.destroy();
+        await this.transactionService.removeTransactionByWalletId(userId, id, async (t: Transaction) => {
+            await wallet.destroy({ transaction: t });
+        });
 
         return { result: true };
     }

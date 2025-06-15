@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { forwardRef, Module } from "@nestjs/common";
 import { TransactionController } from "./transaction.controller";
 import { TransactionService } from "./transaction.service";
 import { UserModule } from "../user/user.module";
@@ -10,7 +10,7 @@ import { StatisticModule } from "../statistic/statistic.module";
 @Module({
     imports: [
         UserModule, 
-        WalletModule, 
+        forwardRef(() => WalletModule), 
         CategoryModule, 
         RelatedUserModule,
         StatisticModule
