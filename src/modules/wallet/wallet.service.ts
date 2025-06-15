@@ -95,8 +95,10 @@ export class WalletService {
                     } else {
                         if (differ > 0) {
                             await this.userService.increaseTotalBalance(userId, differ, t);
+                            await this.increaseBalance(id, differ, t);
                         } else {
                             await this.userService.decreaseTotalBalance(userId, -differ, t);
+                            await this.decreaseBalance(id, -differ, t);
                         }
                     }
 
