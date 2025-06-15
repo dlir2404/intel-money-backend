@@ -21,6 +21,13 @@ export class Wallet extends Model {
         defaultValue: 0,
         allowNull: false
     })
+    baseBalance: number;
+
+    @Column({
+        type: DataType.DECIMAL(17, 2),
+        defaultValue: 0,
+        allowNull: false
+    })
     balance: number;
     
     @ForeignKey(() => User)

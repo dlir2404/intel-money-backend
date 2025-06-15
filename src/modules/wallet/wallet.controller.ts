@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put } from "@nestjs/common"
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WalletService } from "./wallet.service";
 import { CurrentUserId, UserAuth } from "src/shared/decorators/auth";
-import { CreateRequest, WalletListResponse, WalletResponse } from "./wallet.dto";
+import { CreateWalletRequest, WalletListResponse, WalletResponse } from "./wallet.dto";
 import { BaseResponse } from "src/shared/types/base";
 
 @Controller("wallet")
@@ -16,7 +16,7 @@ export class WalletController {
         type: WalletResponse
     })
     @UserAuth()
-    async create(@Body() body: CreateRequest, @CurrentUserId() userId: number) {
+    async create(@Body() body: CreateWalletRequest, @CurrentUserId() userId: number) {
         const response = await this.walletService.create(body, userId);
         return new WalletResponse(response);
     }
@@ -27,7 +27,7 @@ export class WalletController {
         type: WalletResponse
     })
     @UserAuth()
-    async update(@Body() body: CreateRequest, @CurrentUserId() userId: number, @Param("id") id: number) {
+    async update(@Body() body: CreateWalletRequest, @CurrentUserId() userId: number, @Param("id") id: number) {
         const response = await this.walletService.update(id, userId, body);
         return new WalletResponse(response);
     }

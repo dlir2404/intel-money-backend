@@ -1,6 +1,6 @@
 import { BadRequestException, forwardRef, Inject, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { Sequelize } from "sequelize-typescript";
-import { BorrowTransaction, CollectingDebtTransaction, GeneralTransaction, LendTransaction, ModifyBalanceTransaction, RepaymentTransaction, TransferTransaction } from "src/database/models";
+import { BorrowTransaction, CollectingDebtTransaction, GeneralTransaction, LendTransaction, ModifyBalanceTransaction, RepaymentTransaction, TransferTransaction, Wallet } from "src/database/models";
 import { TransactionType } from "src/shared/enums/transaction";
 import { CreateGeneralTrans } from "src/shared/types/transactions/general";
 import {
@@ -437,7 +437,7 @@ export class TransactionService {
 
         //cho nay can la balance cua wallet tai thoi diem cua giao dich nay
         //=> can phai tinh toan tu lan dieu chinh so du gan nhat
-        const oldBalance = await this.calculateBalanceAtDate(userId, body.sourceWalletId, new Date(body.transactionDate));
+        const oldBalance = await this.calculateBalanceAtDate(userId, wallet, new Date(body.transactionDate));
 
         const differ = body.newRealBalance - oldBalance;
         if (differ <= 0) {
@@ -760,18 +760,46 @@ export class TransactionService {
         return null;
     }
 
+    async getFirstModifyBalanceTransactions(
+        userId: number,
+        sourceWalletId: number,
+        t?: Transaction
+    ): Promise<GeneralTransaction | null> {
+        const where: WhereOptions<GeneralTransaction> = {
+            userId: userId,
+            sourceWalletId: sourceWalletId,
+            type: TransactionType.MODIFY_BALANCE
+        };
+
+        const transactions = await GeneralTransaction.findOne({
+            where,
+            include: [{
+                model: ModifyBalanceTransaction,
+                required: true,
+                attributes: ['newRealBalance']
+            }],
+            order: [
+                ['transactionDate', 'ASC'],
+                ['id', 'ASC']
+            ],
+            transaction: t
+        });
+
+        return transactions;
+    }
+
     //exclude transaction is used to exclude the transaction that is being updated or deleted, and the new transaction date is modified to be after the origin
     async calculateBalanceAtDate(
         userId: number,
-        sourceWalletId: number,
+        sourceWallet: Wallet,
         date: Date,
         exludeTransactionId?: number
     ) {
-        let balance = 0;
+        let balance = sourceWallet.baseBalance;
 
         const latestModifyBalanceTransaction = await this.getLatestModifyBalanceTransactionAtDate(
             userId,
-            sourceWalletId,
+            sourceWallet.id,
             date,
             undefined,
             exludeTransactionId
@@ -787,11 +815,11 @@ export class TransactionService {
             userId: userId,
             [Op.or]: [
                 // Transactions with this wallet as source
-                { sourceWalletId: sourceWalletId },
+                { sourceWalletId: sourceWallet.id },
                 // Transfer transactions with this wallet as destination
                 {
                     type: TransactionType.TRANSFER,
-                    '$transferTransaction.destinationWalletId$': sourceWalletId
+                    '$transferTransaction.destinationWalletId$': sourceWallet.id
                 }
             ],
             transactionDate: {
@@ -843,7 +871,7 @@ export class TransactionService {
             } else if (transaction.type === TransactionType.EXPENSE) {
                 balance -= transaction.amount;
             } else if (transaction.type === TransactionType.TRANSFER) {
-                if (transaction.sourceWalletId === sourceWalletId) {
+                if (transaction.sourceWalletId === sourceWallet.id) {
                     balance -= transaction.amount; // transfer out
                 } else {
                     balance += transaction.amount; // transfer in

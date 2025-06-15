@@ -1,19 +1,27 @@
-import { forwardRef, Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { CreateRequest } from "./wallet.dto";
+import { forwardRef, Inject, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
+import { CreateWalletRequest } from "./wallet.dto";
 import { Wallet } from "src/database/models";
 import { Transaction } from "sequelize";
 import { TransactionService } from "../transaction/transaction.service";
+import { UserService } from "../user/user.service";
+import { Sequelize } from "sequelize-typescript";
 
 
 @Injectable()
 export class WalletService {
-    constructor(@Inject(forwardRef(() => TransactionService)) private readonly transactionService: TransactionService) { }
+    constructor(
+        @Inject(forwardRef(() => TransactionService)) private readonly transactionService: TransactionService,
+        private readonly userService: UserService,
+        private readonly sequelize: Sequelize,
+
+    ) { }
     async createDefaultWallets(userId: number, t?: Transaction) {
         const defaultWallet = {
             name: "Tiền mặt",
             description: "",
             icon: "default-icon.png",
             balance: 0,
+            baseBalance: 0,
             userId: userId,
         }
 
@@ -38,12 +46,26 @@ export class WalletService {
         return wallet;
     }
 
-    async create(body: CreateRequest, userId: number) {
-        const res = await Wallet.create({ ...body, userId });
-        return res.dataValues;
+    async create(body: CreateWalletRequest, userId: number) {
+        try {
+            const result = await this.sequelize.transaction(async (t: Transaction) => {
+                const res = await Wallet.create({ ...body, balance: body.baseBalance, userId }, { transaction: t });
+
+                if (body.baseBalance > 0) {
+                    await this.userService.increaseTotalBalance(userId, body.baseBalance, t);
+                }
+
+                return res;
+            })
+
+            return result.dataValues;
+
+        } catch (error) {
+            throw new InternalServerErrorException("Failed to create wallet");
+        }
     }
 
-    async update(id: number, userId: number, body: CreateRequest) {
+    async update(id: number, userId: number, body: CreateWalletRequest) {
         const wallet = await Wallet.findOne({
             where: { id, userId }
         })
@@ -52,8 +74,42 @@ export class WalletService {
             throw new NotFoundException("Wallet not found");
         }
 
-        const res = await wallet.update(body);
-        return res.dataValues;
+        const firstModifyBalanceTransactions = await this.transactionService.getFirstModifyBalanceTransactions(userId, id);
+
+        //case 1: base balance is not changed
+        if (body.baseBalance == wallet.baseBalance) {
+            await wallet.update(body);
+            return wallet.dataValues;
+        } else {
+            try {
+                const result = await this.sequelize.transaction(async (t: Transaction) => {
+                    const differ = body.baseBalance - wallet.baseBalance;
+
+                    if (firstModifyBalanceTransactions) {
+                        //ex: base: 0, mod +100 => new base: 20 => only mod + 80
+                        //ex2: base: 20, mode +80 => new base: 0 => differ is -20 => mode +100
+
+                        await firstModifyBalanceTransactions.update({
+                            amount: firstModifyBalanceTransactions.amount - differ
+                        }, { transaction: t });
+                    } else {
+                        if (differ > 0) {
+                            await this.userService.increaseTotalBalance(userId, differ, t);
+                        } else {
+                            await this.userService.decreaseTotalBalance(userId, -differ, t);
+                        }
+                    }
+
+
+                    const res = await wallet.update(body);
+                    return res.dataValues;
+                });
+
+                return result;
+            } catch (error) {
+                throw new InternalServerErrorException("Failed to update wallet");
+            }
+        }
     }
 
     async delete(id: number, userId: number) {
@@ -66,6 +122,10 @@ export class WalletService {
         }
 
         await this.transactionService.removeTransactionByWalletId(userId, id, async (t: Transaction) => {
+            if (wallet.baseBalance > 0) {
+                await this.userService.decreaseTotalBalance(userId, wallet.baseBalance, t);
+            }
+
             await wallet.destroy({ transaction: t });
         });
 

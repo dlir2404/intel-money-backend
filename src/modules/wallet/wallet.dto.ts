@@ -2,7 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import { Exclude, Expose, Type } from "class-transformer";
 import { IsNumber, IsOptional, IsString } from "class-validator";
 
-export class CreateRequest {
+export class CreateWalletRequest {
     @ApiProperty()
     @IsString()
     name: string;
@@ -21,7 +21,7 @@ export class CreateRequest {
     @ApiProperty({ required: false })
     @IsNumber()
     @IsOptional()
-    balance?: number;
+    baseBalance?: number;
 }
 
 @Expose()
@@ -40,6 +40,9 @@ export class WalletResponse {
 
     @ApiProperty()
     balance: number;
+
+    @ApiProperty()
+    baseBalance?: number;
 
     @ApiProperty()
     userId: number;
