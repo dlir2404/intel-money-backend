@@ -44,4 +44,13 @@ export class UserController {
       result: true,
     })
   }
+
+  @Post('reset-data')
+  @UserAuth()
+  async resetData(@CurrentUserId() userId: number) {
+    await this.userService.resetData(userId);
+    return new BaseResponse({
+      result: true,
+    });
+  }
 }

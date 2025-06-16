@@ -148,4 +148,13 @@ export class RelatedUserService {
             transaction: t
         });
     }
+
+    async reset(userId: number, t: Transaction) {
+        await RelatedUser.destroy({
+            where: {
+                userId: userId
+            },
+            transaction: t
+        })
+    }
 }

@@ -28,7 +28,7 @@ import { Time } from "src/shared/ultils/time";
 @Injectable()
 export class TransactionService {
     constructor(
-        private readonly userService: UserService,
+        @Inject(forwardRef(() => UserService)) private readonly userService: UserService,
         @Inject(forwardRef(() => CategoryService)) private readonly categoryService: CategoryService,
         @Inject(forwardRef(() => WalletService)) private readonly walletService: WalletService,
         private readonly relatedUserService: RelatedUserService,
@@ -1727,5 +1727,83 @@ export class TransactionService {
         } catch (error) {
             throw new InternalServerErrorException("Failed to remove transactions by category ID: " + error.message);
         }
+    }
+
+    async reset(userId: number, t: Transaction) {
+        // First, get all general transaction IDs for this user
+        const generalTransactions = await GeneralTransaction.findAll({
+            where: {
+                userId: userId
+            },
+            attributes: ['id'],
+            transaction: t
+        });
+
+        const generalTransactionIds = generalTransactions.map(gt => gt.id);
+
+        if (generalTransactionIds.length > 0) {
+            // Reset all extra info transactions first using generalTransactionId
+            await LendTransaction.destroy({
+                where: {
+                    generalTransactionId: {
+                        [Op.in]: generalTransactionIds
+                    }
+                },
+                transaction: t
+            });
+
+            await BorrowTransaction.destroy({
+                where: {
+                    generalTransactionId: {
+                        [Op.in]: generalTransactionIds
+                    }
+                },
+                transaction: t
+            });
+
+            await TransferTransaction.destroy({
+                where: {
+                    generalTransactionId: {
+                        [Op.in]: generalTransactionIds
+                    }
+                },
+                transaction: t
+            });
+
+            await ModifyBalanceTransaction.destroy({
+                where: {
+                    generalTransactionId: {
+                        [Op.in]: generalTransactionIds
+                    }
+                },
+                transaction: t
+            });
+
+            await CollectingDebtTransaction.destroy({
+                where: {
+                    generalTransactionId: {
+                        [Op.in]: generalTransactionIds
+                    }
+                },
+                transaction: t
+            });
+
+            await RepaymentTransaction.destroy({
+                where: {
+                    generalTransactionId: {
+                        [Op.in]: generalTransactionIds
+                    }
+                },
+                transaction: t
+            });
+        }
+
+        // Then reset all general transactions
+        await GeneralTransaction.destroy({
+            where: {
+                userId: userId
+            },
+            transaction: t
+        });
     }
 }

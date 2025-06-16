@@ -166,4 +166,12 @@ export class CategoryService {
 
         return category;
     }
+
+    async reset(userId: number, t: Transaction) {
+        await Category.destroy({
+            where: { userId },
+            transaction: t
+        });
+        await this.createDefaultCategories(userId, t);
+    }
 }

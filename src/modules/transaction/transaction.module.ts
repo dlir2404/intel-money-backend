@@ -9,7 +9,7 @@ import { StatisticModule } from "../statistic/statistic.module";
 
 @Module({
     imports: [
-        UserModule, 
+        forwardRef(() => UserModule), 
         forwardRef(() => WalletModule), 
         forwardRef(() => CategoryModule), 
         RelatedUserModule,

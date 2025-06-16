@@ -11,7 +11,7 @@ import { Sequelize } from "sequelize-typescript";
 export class WalletService {
     constructor(
         @Inject(forwardRef(() => TransactionService)) private readonly transactionService: TransactionService,
-        private readonly userService: UserService,
+        @Inject(forwardRef(() => UserService)) private readonly userService: UserService,
         private readonly sequelize: Sequelize,
 
     ) { }
@@ -163,5 +163,13 @@ export class WalletService {
             throw new NotFoundException("Wallet not found");
         }
         await wallet.update({ balance: newBalance }, { transaction: t });
+    }
+
+    async reset(userId: number, t: Transaction) {
+        await Wallet.destroy({
+            where: { userId },
+            transaction: t
+        });
+        await this.createDefaultWallets(userId, t);
     }
 }

@@ -8,7 +8,7 @@ import { UserModule } from "../user/user.module";
 @Module({
     imports: [
         forwardRef(() => TransactionModule),
-        UserModule
+        forwardRef(() => UserModule)
     ],
     controllers: [WalletController],
     providers: [WalletService],
