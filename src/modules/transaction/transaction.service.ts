@@ -220,8 +220,6 @@ export class TransactionService {
             ...params
         }, { transaction: t });
 
-        // await this.statisticService.updateCacheAfterCreateTransaction(params.userId, transaction);
-
         return transaction;
     }
 
@@ -1491,6 +1489,8 @@ export class TransactionService {
                 }
 
         }
+
+        await this.statisticService.updateCacheAfterCreateTransaction(transaction.userId, transaction, mostSoonModifyBalanceTransaction);
     }
 
     async updateDataBeforeRemoveTransaction(
@@ -1645,6 +1645,8 @@ export class TransactionService {
                     }
                 }
         }
+
+        await this.statisticService.updateCacheAfterRemoveTransaction(transaction.userId, transaction, mostSoonModifyBalanceTransaction);
     }
 
 

@@ -8,7 +8,6 @@ import {
     StatisticDataByDayRequest
 } from "./statistic.dto";
 import { CurrentUserId, UserAuth } from "src/shared/decorators/auth";
-import { query } from "express";
 
 @Controller("statistic")
 export class StatisticController {

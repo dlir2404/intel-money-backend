@@ -134,13 +134,13 @@ export class StatisticService {
         const month: number = dayjs().tz(timezone).month(); // 0-11
         const year: number = dayjs().tz(timezone).year();
 
-        return await this.getMonthlyStatistic({userId, month, year, timezone});
+        return await this.getMonthlyStatistic({ userId, month, year, timezone });
     }
 
 
     //month is from 0 to 11 already in user timezone
     //user must already exist in this step
-    async getMonthlyStatistic({userId, month, year, timezone, categories, sourceWallets}:{userId: number, month: number, year: number, timezone: string, categories?: number[], sourceWallets?: number[]}) {
+    async getMonthlyStatistic({ userId, month, year, timezone, categories, sourceWallets }: { userId: number, month: number, year: number, timezone: string, categories?: number[], sourceWallets?: number[] }) {
         let timeRange = `${year}-${month + 1}`;
         if (month < 9) {
             timeRange = `${year}-0${month + 1}`;
@@ -272,7 +272,7 @@ export class StatisticService {
             console.log(">>>> lay duoc cache roi ne. key: ", cacheKey);
             let byMonthStatistic = [];
             for (let month = 0; month < 12; month++) {
-                let data = await this.getMonthlyStatistic({userId, month, year, timezone});
+                let data = await this.getMonthlyStatistic({ userId, month, year, timezone });
                 byMonthStatistic.push(data);
             }
             cachedData.byMonthStatistic = byMonthStatistic;
@@ -314,7 +314,7 @@ export class StatisticService {
         //these extra statistics are cached in those own cache keys so do not need to cache them again
         let byMonthStatistic = [];
         for (let month = 0; month < 12; month++) {
-            let data = await this.getMonthlyStatistic({userId, month, year, timezone});
+            let data = await this.getMonthlyStatistic({ userId, month, year, timezone });
             byMonthStatistic.push(data);
         }
         statisticData.byMonthStatistic = byMonthStatistic;
@@ -344,7 +344,7 @@ export class StatisticService {
             console.log(">>>> lay duoc cache roi ne. key: ", cacheKey);
             let byMonthStatistic = [];
             for (let month = 0; month < 12; month++) {
-                let data = await this.getMonthlyStatistic({userId, month, year, timezone});
+                let data = await this.getMonthlyStatistic({ userId, month, year, timezone });
                 byMonthStatistic.push(data);
             }
             cachedData.byMonthStatistic = byMonthStatistic;
@@ -386,7 +386,7 @@ export class StatisticService {
         //these extra statistics are cached in those own cache keys so do not need to cache them again
         let byMonthStatistic = [];
         for (let month = 0; month < 12; month++) {
-            let data = await this.getMonthlyStatistic({userId, month, year, timezone});
+            let data = await this.getMonthlyStatistic({ userId, month, year, timezone });
             byMonthStatistic.push(data);
         }
         statisticData.byMonthStatistic = byMonthStatistic;
@@ -459,6 +459,52 @@ export class StatisticService {
                     statisticData.byCategoryExpense[categoryIndex].transactionIds.push(transaction.id);
                 }
 
+            } else if (transaction.type === TransactionType.MODIFY_BALANCE) {
+                if (transaction.amount > 0) {
+                    //handle as income
+                    statisticData.totalIncome += +transaction.amount;
+
+                    let parentId = transaction.category.parentId;
+                    if (!parentId) {
+                        parentId = transaction.category.id;
+                    }
+
+                    if (!addedIncomeCategories.includes(parentId)) {
+                        addedIncomeCategories.push(parentId);
+
+                        statisticData.byCategoryIncome.push({
+                            id: parentId,
+                            amount: +transaction.amount,
+                            transactionIds: [transaction.id],
+                        });
+                    } else {
+                        const categoryIndex = statisticData.byCategoryIncome.findIndex((category) => category.id === parentId);
+                        statisticData.byCategoryIncome[categoryIndex].amount += +transaction.amount;
+                        statisticData.byCategoryIncome[categoryIndex].transactionIds.push(transaction.id);
+                    }
+                } else {
+                    //handle as expense
+                    statisticData.totalExpense += -transaction.amount;
+
+                    let parentId = transaction.category.parentId;
+                    if (!parentId) {
+                        parentId = transaction.category.id;
+                    }
+
+                    if (!addedExpenseCategories.includes(parentId)) {
+                        addedExpenseCategories.push(parentId);
+
+                        statisticData.byCategoryExpense.push({
+                            id: parentId,
+                            amount: -transaction.amount,
+                            transactionIds: [transaction.id],
+                        });
+                    } else {
+                        const categoryIndex = statisticData.byCategoryExpense.findIndex((category) => category.id === parentId);
+                        statisticData.byCategoryExpense[categoryIndex].amount += -transaction.amount;
+                        statisticData.byCategoryExpense[categoryIndex].transactionIds.push(transaction.id);
+                    }
+                }
             }
         })
 
@@ -476,6 +522,13 @@ export class StatisticService {
                 statisticData.totalIncome += +transaction.amount;
             } else if (transaction.type === TransactionType.EXPENSE) {
                 statisticData.totalExpense += +transaction.amount;
+            } else if (transaction.type === TransactionType.MODIFY_BALANCE) {
+                if (transaction.amount > 0) {
+                    statisticData.totalIncome += +transaction.amount;
+                }
+                else {
+                    statisticData.totalExpense += -transaction.amount;
+                }
             }
         })
 
@@ -517,19 +570,25 @@ export class StatisticService {
     }
 
 
-    async updateCacheAfterCreateTransaction(userId: number, transaction: GeneralTransaction) {
+    async updateCacheAfterCreateTransaction(userId: number, transaction: GeneralTransaction, mostSoonModifyBalanceTransaction?: GeneralTransaction) {
         const affectedCacheKeys = await this.getAffectedCacheKeys(userId, transaction.transactionDate);
         for (const key of affectedCacheKeys) {
-            const cachedData = await this.cacheService.get(key);
+            if (mostSoonModifyBalanceTransaction) {
+                //just remove cache, this case is too complicated to handle
+                //new data will be updated when user call get statistic again
+                await this.cacheService.del(key);
+            } else {
+                const cachedData = await this.cacheService.get(key);
 
-            if (!cachedData) {
-                //just continue, data will be updated when user call get statistic again
-                continue;
+                if (!cachedData) {
+                    //just continue, data will be updated when user call get statistic again
+                    continue;
+                }
+
+                const newData = await this.getNewDataWithNewTransaction(transaction, cachedData as StatisticData);
+
+                await this.cacheService.set(key, newData, this.getCachedKeyTtl(key));
             }
-
-            const newData = await this.getNewDataWithNewTransaction(transaction, cachedData as StatisticData);
-
-            await this.cacheService.set(key, newData, this.getCachedKeyTtl(key));
         }
     }
 
@@ -574,24 +633,68 @@ export class StatisticService {
                 newData.byCategoryExpense[categoryIndex].amount += +transaction.amount;
                 newData.byCategoryExpense[categoryIndex].transactionIds.push(transaction.id);
             }
+        } else if (transaction.type === TransactionType.MODIFY_BALANCE) {
+            if (transaction.amount > 0) {
+                newData.totalIncome += +transaction.amount;
+                const categoryId = category.parentId || category.id;
+
+                if (newData.byCategoryIncome.findIndex((category) => category.id === categoryId) === -1) {
+                    //if categoryId is not in the list, add it
+                    newData.byCategoryIncome.push({
+                        id: categoryId,
+                        amount: +transaction.amount,
+                        transactionIds: [transaction.id],
+                    });
+                } else {
+                    //if categoryId is already in the list, update the amount
+                    const categoryIndex = newData.byCategoryIncome.findIndex((category) => category.id === categoryId);
+                    newData.byCategoryIncome[categoryIndex].amount += +transaction.amount;
+                    newData.byCategoryIncome[categoryIndex].transactionIds.push(transaction.id);
+                }
+
+            } else {
+                newData.totalExpense += -transaction.amount;
+                const categoryId = category.parentId || category.id;
+
+                if (newData.byCategoryExpense.findIndex((category) => category.id === categoryId) === -1) {
+                    //if categoryId is not in the list, add it
+                    newData.byCategoryExpense.push({
+                        id: categoryId,
+                        amount: -transaction.amount,
+                        transactionIds: [transaction.id],
+                    });
+                } else {
+                    //if categoryId is already in the list, update the amount
+                    const categoryIndex = newData.byCategoryExpense.findIndex((category) => category.id === categoryId);
+                    newData.byCategoryExpense[categoryIndex].amount += -transaction.amount;
+                    newData.byCategoryExpense[categoryIndex].transactionIds.push(transaction.id);
+                }
+
+            }
         }
 
         return newData;
     }
 
-    async updateCacheAfterRemoveTransaction(userId: number, transaction: GeneralTransaction) {
+    async updateCacheAfterRemoveTransaction(userId: number, transaction: GeneralTransaction, mostSoonModifyBalanceTransaction?: GeneralTransaction) {
         const affectedCacheKeys = await this.getAffectedCacheKeys(userId, transaction.transactionDate);
         for (const key of affectedCacheKeys) {
-            const cachedData = await this.cacheService.get(key);
+            if (mostSoonModifyBalanceTransaction) {
+                //just remove cache, this case is too complicated to handle
+                //new data will be updated when user call get statistic again
+                await this.cacheService.del(key);
+            } else {
+                const cachedData = await this.cacheService.get(key);
 
-            if (!cachedData) {
-                //just continue, data will be updated when user call get statistic again
-                continue;
+                if (!cachedData) {
+                    //just continue, data will be updated when user call get statistic again
+                    continue;
+                }
+
+                const newData = await this.getNewDataAfterRemoveTransaction(transaction, cachedData as StatisticData);
+
+                await this.cacheService.set(key, newData, this.getCachedKeyTtl(key));
             }
-
-            const newData = await this.getNewDataAfterRemoveTransaction(transaction, cachedData as StatisticData);
-
-            await this.cacheService.set(key, newData, this.getCachedKeyTtl(key));
         }
     }
 
@@ -636,6 +739,43 @@ export class StatisticService {
                 const transactionIndex = newData.byCategoryExpense[categoryIndex].transactionIds.findIndex((id) => id === transaction.id);
                 newData.byCategoryExpense[categoryIndex].transactionIds.splice(transactionIndex, 1);
                 newData.byCategoryExpense[categoryIndex].amount += +transaction.amount;
+            }
+        } else if (transaction.type === TransactionType.MODIFY_BALANCE) {
+            if (transaction.amount > 0) {
+                newData.totalIncome -= +transaction.amount;
+
+                const categoryId = category.parentId || category.id;
+
+                //100% sure that this categoryId is in the list
+                const categoryIndex = newData.byCategoryIncome.findIndex((category) => category.id === categoryId);
+
+                //if only one transactionId in the list, remove it
+                if (newData.byCategoryIncome[categoryIndex].transactionIds.length === 1) {
+                    newData.byCategoryIncome.splice(categoryIndex, 1);
+                } else {
+                    //remove the transactionId from the list
+                    const transactionIndex = newData.byCategoryIncome[categoryIndex].transactionIds.findIndex((id) => id === transaction.id);
+                    newData.byCategoryIncome[categoryIndex].transactionIds.splice(transactionIndex, 1);
+                    newData.byCategoryIncome[categoryIndex].amount -= +transaction.amount;
+                }
+
+            } else {
+                newData.totalExpense -= -transaction.amount;
+
+                const categoryId = category.parentId || category.id;
+
+                //100% sure that this categoryId is in the list
+                const categoryIndex = newData.byCategoryExpense.findIndex((category) => category.id === categoryId);
+
+                //if only one transactionId in the list, remove it
+                if (newData.byCategoryExpense[categoryIndex].transactionIds.length === 1) {
+                    newData.byCategoryExpense.splice(categoryIndex, 1);
+                } else {
+                    //remove the transactionId from the list
+                    const transactionIndex = newData.byCategoryExpense[categoryIndex].transactionIds.findIndex((id) => id === transaction.id);
+                    newData.byCategoryExpense[categoryIndex].transactionIds.splice(transactionIndex, 1);
+                    newData.byCategoryExpense[categoryIndex].amount += -transaction.amount;
+                }
             }
         }
     }
@@ -713,7 +853,7 @@ export class StatisticService {
 
         transactions.forEach((transaction) => {
             const dateKey = dayjs(transaction.transactionDate).format('YYYY-MM-DD');
-            
+
             if (!transactionsByDay[dateKey]) {
                 transactionsByDay[dateKey] = [];
             }
@@ -736,7 +876,7 @@ export class StatisticService {
         return dataByDay;
     }
 
-    async getByMonthStatistic(userId: number, query: { from: string, to: string, categories?: number[], sourceWallets?: number[]  }) {
+    async getByMonthStatistic(userId: number, query: { from: string, to: string, categories?: number[], sourceWallets?: number[] }) {
         const user = await User.findOne({ where: { id: userId } });
         if (!user) {
             throw new UnauthorizedException('User not found');
@@ -749,7 +889,7 @@ export class StatisticService {
 
         let byMonthStatistic = [];
         for (let month of monthRange) {
-            let data = await this.getMonthlyStatistic({userId, month: month.month(), year: month.year(), timezone, categories: query.categories, sourceWallets: query.sourceWallets});
+            let data = await this.getMonthlyStatistic({ userId, month: month.month(), year: month.year(), timezone, categories: query.categories, sourceWallets: query.sourceWallets });
             byMonthStatistic.push({
                 date: month.toISOString(),
                 statisticData: data
@@ -787,7 +927,7 @@ export class StatisticService {
 
     // from & to in format ISO 8601 UTC
     async getCustomRangeStatistic(userId: number, query: { from: string, to: string }) {
-        const user = await User.findOne({where: {id: userId}});
+        const user = await User.findOne({ where: { id: userId } });
         if (!user) {
             throw new UnauthorizedException('User not found');
         }
