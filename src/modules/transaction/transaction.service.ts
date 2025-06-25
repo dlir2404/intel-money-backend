@@ -379,6 +379,7 @@ export class TransactionService {
                 ...result.dataValues,
                 extraInfo: {
                     borrowerId: body.borrowerId,
+                    collectionDate: body.collectionDate,
                 }
             };
         } catch (error) {
