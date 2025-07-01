@@ -424,6 +424,7 @@ export class TransactionService {
                 ...result.dataValues,
                 extraInfo: {
                     lenderId: body.lenderId,
+                    repaymentDate: body.repaymentDate,
                 },
             };
         } catch (error) {
