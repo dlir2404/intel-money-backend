@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: intel-money
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    container_name: mysql-db
+
+  redis:
+    image: redis:7
+    restart: always
+    container_name: redis-cache
+
+  be:
+    image: dlir2404/intel-money-backend:latest
+    restart: always
+    environment:
+      GOOGLE_CLIENT_ID: example.apps.googleusercontent.com
+      GOOGLE_CLIENT_SECRET: example-secret
+      JWT_SECRET: intel-money-dlir
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USERNAME: root
+      DB_PASSWORD: db_password
+      DB_NAME: intel-money
+      OPENAI_API_KEY: openai_api_key
+      REDIS_CONNECTION: redis://redis:6379
+      DISCORD_WEBHOOK_URL: discord_webhook
+      MAIL_HOST: smtp.gmail.com
+      MAIL_PORT: 587
+      MAIL_USER: mail_user
+      MAIL_PASSWORD: app_mail_password
+      MAIL_FROM_NAME: 'Intel Money'
+      MAIL_FROM_EMAIL: from_email
+    ports:
+      - "3002:3002"
+    depends_on:
+      - db
+      - redis
+
+  mysql-backup:
+    image: fradelg/mysql-cron-backup
+    restart: always
+    environment:
+      MYSQL_HOST: db
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASS: password
+      MYSQL_DB: intel-money
+      CRON_TIME: "0 2 * * *"  # backup lúc 2h sáng mỗi ngày
+      MAX_BACKUPS: "7"
+      TZ: "Asia/Ho_Chi_Minh"
+    volumes:
+      - ./data/db-backups:/backup
+    depends_on:
+      - db
+volumes:
+  db_data:
